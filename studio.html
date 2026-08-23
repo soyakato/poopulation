@@ -29,7 +29,7 @@
 </style>
 </head>
 <body>
-<header><h1>POOPULATION STUDIO</h1><nav><a href="realtime.html">REALTIME</a><a href="tactics.html">TACTICS</a></nav></header>
+<header><h1>POOPULATION STUDIO</h1><nav><a href="realtime.html">REALTIME</a><a href="tactics.html">TACTICS</a><a href="stages.html">STAGES</a><a href="characters.html">CHARACTERS</a></nav></header>
 <main>
   <aside>
     <h2>ゲームエディタ</h2>
@@ -50,8 +50,8 @@
       </div>
     </section>
     <section class="pane" id="masterPane" hidden>
-      <p class="note">タクティクス版の次回開始時に反映されます。初期マップと全判定は固定され、同じ操作なら同じ結果になります。</p>
-      <div class="group">
+      <p class="note">キャラクター性能の共通マスタです。キャンペーンのステージ数・ラウンド・襲撃・難易度は <a href="stages.html">STAGE EDITOR</a> で編集します。初期マップと全判定は固定され、同じ操作なら同じ結果になります。</p>
+      <div class="group" hidden>
         <label>ステージ数<input id="stageCount" type="number" min="1" max="20" step="1"></label>
         <label>1ステージのラウンド数<input id="lastRound" type="number" min="1" max="99" step="1"></label>
         <label>進行の遅さ<input id="worldTicks" type="number" min="4" max="100" step="1"></label>
@@ -62,8 +62,8 @@
         <label>出生に必要な成木の生存ターン<input id="birthTreeTurns" type="number" min="1" max="30" step="1"></label>
         <label>味方ゴリラ上限<input id="maxApes" type="number" min="1" max="30" step="1"></label>
       </div>
-      <h3>地形生成</h3>
-      <div class="table-wrap"><table><tbody>
+      <h3 hidden>地形生成</h3>
+      <div class="table-wrap" hidden><table><tbody>
         <tr><td>高台の数</td><td><input id="hillCount" type="number" min="0" max="8" step="1"></td></tr>
         <tr><td>高台の最大半径</td><td><input id="hillRadiusMax" type="number" min="1" max="3" step="1"></td></tr>
         <tr><td>太い川マスの割合</td><td><input id="riverExtraWidthChance" type="number" min="0" max="0.9" step="0.05"></td></tr>
@@ -73,10 +73,10 @@
       <div class="table-wrap"><table><thead><tr><th>種類</th><th>HP</th><th>攻</th><th>速</th><th>移</th><th>跳</th><th>射</th><th>防</th><th>MP</th></tr></thead><tbody id="allyRows"></tbody></table></div>
       <h3>敵キャラクター</h3>
       <div class="table-wrap"><table><thead><tr><th>種類</th><th>HP</th><th>攻</th><th>速</th><th>移</th><th>跳</th><th>射</th><th>防</th></tr></thead><tbody id="enemyRows"></tbody></table></div>
-      <h3>初期メンバー</h3>
-      <div class="table-wrap"><table><tbody id="rosterRows"></tbody></table></div><div class="row-actions"><button class="mini" id="addRoster">＋ 味方を追加</button></div>
-      <h3>襲撃ウェーブ</h3>
-      <div class="table-wrap"><table><thead><tr><th>ラウンド</th><th>敵</th><th>数</th><th></th></tr></thead><tbody id="waveRows"></tbody></table></div><div class="row-actions"><button class="mini" id="addWave">＋ ウェーブを追加</button></div>
+      <h3 hidden>初期メンバー</h3>
+      <div class="table-wrap" hidden><table><tbody id="rosterRows"></tbody></table></div><div class="row-actions" hidden><button class="mini" id="addRoster">＋ 味方を追加</button></div>
+      <h3 hidden>襲撃ウェーブ</h3>
+      <div class="table-wrap" hidden><table><thead><tr><th>ラウンド</th><th>敵</th><th>数</th><th></th></tr></thead><tbody id="waveRows"></tbody></table></div><div class="row-actions" hidden><button class="mini" id="addWave">＋ ウェーブを追加</button></div>
     </section>
     <div class="actions">
       <button class="primary" id="apply">保存＆反映</button><button id="again">もう一度</button>

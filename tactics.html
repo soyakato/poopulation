@@ -94,7 +94,8 @@
   @media (max-width:760px){#forestPanel,#tileHint{width:170px}#turnHud{flex:0 0 170px}}
 </style>
 <script src="poop-config.js?v=6"></script>
-<script src="tactics-engine.js?v=1"></script>
+<script src="stage-loader.js?v=1"></script>
+<script src="tactics-engine.js?v=2"></script>
 </head>
 <body>
 
@@ -228,6 +229,13 @@
       </div>
       <p class="sub" hidden="hidden">—</p>
 
+      <div style="width:min(420px,88vw);display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:center;padding:9px 12px;border:1px solid #4a3823;background:#0b0805cc">
+        <label id="difficultyLabel" for="difficultySelect" style="font-size:12px;color:#e8b23c">難易度</label>
+        <select id="difficultySelect" style="min-height:34px;border:1px solid #7a5f38;background:#1b150f;color:#f2e6cf;padding:5px 8px;font:13px 'DotGothic16',sans-serif"></select>
+        <span id="campaignMeta" style="font:10px 'Silkscreen',monospace;color:#6d5a42">—</span>
+        <span id="difficultyBlurb" style="font-size:11px;line-height:1.5;color:#a49070">—</span>
+      </div>
+
       <div style="width:min(420px,88vw);display:flex;flex-direction:column;gap:8px">
         <button class="mbtn primary" id="btnContinue" data-act="continueRun" style="display:none">
           <span data-en="CONTINUE">つづける</span><i id="continueMeta">—</i>
@@ -237,6 +245,7 @@
           <button class="mbtn" data-act="openControls" style="justify-content:center"><span data-en="CONTROLS">操作</span></button>
           <button class="mbtn" data-act="openSettings" style="justify-content:center"><span data-en="SETTINGS">設定</span></button>
         </div>
+        <div style="display:flex;justify-content:center;gap:18px;font-size:11px"><a href="stages.html" style="color:#7fae2f">ステージエディタ</a><a href="characters.html" style="color:#7fae2f">キャラクターエディタ</a></div>
       </div>
 
       <div class="rules" id="ruleBox" style="display:flex;gap:8px;width:min(560px,92vw)"></div>
@@ -413,7 +422,7 @@ const ACTIONS=[
   {key:"cancel", ja:"やめる",   en:"Cancel",  def:"Escape",pad:"B"},
 ];
 const PAD_KEYS={0:"Enter",1:"Escape",2:"3",3:"4",4:"1",5:"2",12:"ArrowUp",13:"ArrowDown",14:"ArrowLeft",15:"ArrowRight"};
-const LS={binds:"poopulation-binds-v1",audio:"poopulation-audio-v1",tut:"poopulation-tutorial-v1",screen:"poopulation-screen-v1"};
+const LS={binds:"poopulation-binds-v1",audio:"poopulation-audio-v1",tut:"poopulation-tutorial-v1",screen:"poopulation-screen-v1",difficulty:"poopulation-difficulty-v1"};
 
 const App={
   props:PROPS,
@@ -425,7 +434,7 @@ const App={
     if(done) done();
   },
 
-  mount(){
+  async mount(){
     this.binds={}; ACTIONS.forEach(a=>this.binds[a.key]=a.def);
     this.audio={bgm:3,sfx:4};
     this.screen={pp:!!this.props.pixelPerfect,log:true};
@@ -449,6 +458,7 @@ const App={
       if(typeof fn==="function"){ e.preventDefault(); fn.call(this,e); }
     });
 
+    await this.loadCampaign();
     if(window.POOP_TACTICS_BOOT) window.POOP_TACTICS_BOOT();
     const T=window.POOPTACT;
     if(T){
@@ -465,6 +475,35 @@ const App={
     requestAnimationFrame(this.padLoop);
   },
 
+  async loadCampaign(){
+    const API=window.POOPULATION_STAGES;
+    const chars=await API.loadCharacters("characters.json");
+    window.POOPULATION_CHARACTERS=chars.report?.ok?chars.data:null;
+    if(!window.POOPULATION_CHARACTERS) console.error("characters.json could not be used",chars.error||chars.report?.errors);
+    const loaded=await API.load("stages.json",window.POOPULATION_CHARACTERS?{
+      allyKinds:window.POOPULATION_CHARACTERS.allies.map(c=>c.id),enemyKinds:window.POOPULATION_CHARACTERS.enemies.map(c=>c.id)
+    }:{});
+    let data=loaded.data;
+    if(!data||!loaded.report?.ok){
+      console.error("stages.json could not be used",loaded.error||loaded.report?.errors);
+      data=API.fallback(window.POOPULATION_CONFIG.tactics);
+    }else if(loaded.report.warnings.length) console.warn("stages.json",loaded.report.warnings);
+    let difficulty=data.defaultDifficulty;
+    try{ difficulty=localStorage.getItem(LS.difficulty)||difficulty; }catch(e){}
+    window.POOPULATION_CAMPAIGN=API.resolve(data,difficulty);
+  },
+
+  buildDifficulty(){
+    const c=window.POOPULATION_CAMPAIGN, select=document.getElementById("difficultySelect");
+    if(!c||!select) return;
+    const en=this.lang()==="en";
+    select.innerHTML=c.difficulties.map(d=>`<option value="${d.id}"${d.id===c.difficulty.id?" selected":""}>${d.name[en?"en":"ja"]}</option>`).join("");
+    document.getElementById("difficultyLabel").textContent=en?"DIFFICULTY":"難易度";
+    document.getElementById("difficultyBlurb").textContent=c.difficulty.blurb?.[en?"en":"ja"]||"";
+    document.getElementById("campaignMeta").textContent=`${c.stages.length} STAGES · ${c.targetPlayHours||"—"}H`;
+    select.onchange=()=>{ try{ localStorage.setItem(LS.difficulty,select.value); }catch(e){} location.reload(); };
+  },
+
   /* ---------- language ---------- */
   lang(){ return (window.POOPTACT&&window.POOPTACT.lang)||"ja"; },
   applyLang(){
@@ -473,7 +512,7 @@ const App={
       if(!el.dataset.ja) el.dataset.ja=el.textContent;
       el.textContent=en?el.dataset.en:el.dataset.ja;
     });
-    this.buildBinds(); this.refreshTitle(); this.applyUi();
+    this.buildBinds(); this.buildDifficulty(); this.refreshTitle(); this.applyUi();
     if(this.state.tut>=0) this.paintTut();
   },
 

@@ -2,14 +2,14 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import vm from "node:vm";
 
-for (const file of ["index.html", "realtime.html", "tactics.html", "studio.html"]) {
+for (const file of ["index.html", "realtime.html", "tactics.html", "studio.html", "stages.html", "characters.html"]) {
   const html = fs.readFileSync(new URL(file, import.meta.url), "utf8");
   assert.match(html, /^<!doctype html>/i, `${file}: standards mode`);
   for (const [, code] of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)) {
     if (code.trim()) new Function(code);
   }
 }
-for (const file of ["poop-config.js", "tactics-engine.js"]) {
+for (const file of ["poop-config.js", "tactics-engine.js", "stage-loader.js"]) {
   new Function(fs.readFileSync(new URL(file, import.meta.url), "utf8"));
 }
 
@@ -26,18 +26,18 @@ assert.match(tactics, /function nextStage\(\)/, "stage transition carries the li
 assert.match(tactics, /function openCamp\(\)/, "stage clear opens a reward camp");
 assert.match(tactics, /function chooseReward\(i\)/, "one reward advances to the next stage");
 assert.match(tactics, /function clearStageIfReady\(\)/, "round survival uses one shared stage-clear check");
-assert.match(tactics, /G\.round=Math\.min\(LAST_ROUND,G\.round\+1\)/, "round counter never displays beyond its configured limit");
+assert.match(tactics, /G\.round=Math\.min\(s\.rounds,G\.round\+1\)/, "round counter never displays beyond the current stage limit");
 assert.match(tactics, /if\(clearStageIfReady\(\)\) return;/, "defeating the final enemy clears without another world tick");
 assert.ok(!tactics.includes("G.round>LAST_ROUND"), "stage clear no longer waits for an extra round");
 assert.match(tactics, /locked\?\{kind:"GORILLA"/, "camp can unlock and recruit a gorilla type");
 assert.match(tactics, /kind:"ABILITY"/, "camp can unlock a herd ability");
 assert.match(tactics, /kind:"UPGRADE"/, "camp can grant a permanent stat upgrade");
 assert.match(tactics, /BORN\[c\]\.filter\(\(\[type\]\)=>G\.progress\.unlocked\.includes\(type\)\)/, "birth pool respects unlocked gorillas");
-assert.match(tactics, /if\(G\.stage<STAGE_COUNT\) openCamp\(\)/, "intermission happens before every non-final stage");
+assert.match(tactics, /G\.stage<STAGE_COUNT&&s\.camp/, "stage JSON decides whether an intermission opens");
 assert.match(tactics, /enemyStageStats/, "enemy stats scale by stage");
 assert.match(tactics, /progress:\{unlocked:/, "run inventory is initialized with the starting roster");
 assert.equal((tactics.match(/Math\.random/g)||[]).length,1,"randomness is cosmetic only");
-assert.match(tactics, /T==="normal"&&u\.belly\.length<poopNeed\(u\)/,"strong poop requires eaten fruit");
+assert.match(tactics, /T==="rocket"&&u\.belly\.length<poopNeed\(u\)/,"strong poop requires eaten fruit");
 assert.match(tactics, /function poopNeed\(\)\{ return 1; \}/,"one eaten fruit always enables normal poop");
 assert.match(tactics, /function poopKind\(u\)\{\s*if\(new Set\(u\.belly\)\.size>=3\) return "gold";\s*return "normal";/,"regular poop stays one-tile normal except for three-color gold");
 assert.match(tactics, /if\(kind==="gold"\)\{\s*for\(const color of COLORS\)\{\s*const i=u\.belly\.indexOf\(color\);\s*if\(i>=0\) u\.belly\.splice\(i,1\);/,"gold poop consumes one fruit of every color");
@@ -55,6 +55,8 @@ assert.match(tactics, /id="cv"[^>]*tabindex="0"[^>]*aria-keyshortcuts="ArrowLeft
 assert.match(tactics, /const confirmKey = e\.key===" "\|\|e\.code==="Space"/,"space confirms the keyboard tile cursor");
 assert.match(tactics, /if\(G\.phase==="move"&&!G\.mode&&confirmKey\)\{[\s\S]{0,240}?doMove\(u,path,/,"space moves the gorilla onto the selected tile");
 assert.match(tacticsShell, /<script src="tactics-engine\.js/, "battle shell loads the shared tactics engine");
+assert.match(tacticsShell, /<script src="stage-loader\.js/, "battle shell loads JSON stage support");
+assert.match(tacticsShell, /id="difficultySelect"/, "title screen exposes campaign difficulty");
 assert.ok(!tacticsShell.includes("POOP_TACTICS_BOOT = "), "engine lives in tactics-engine.js, not inline");
 assert.match(tactics, /function showTileHint\(x,y\)/,"hovered and keyboard-selected tiles share one detail panel");
 assert.match(tactics, /L\("高さ","HEIGHT"\)/,"tile detail exposes terrain height in both languages");
@@ -67,7 +69,7 @@ assert.ok(!/poopKind\(u\)[\s\S]{0,300}traits\.includes/.test(tactics),"traits do
 assert.match(tactics, /sk:\{n:"ロケットうんち", c:5, d:"射程3/,"normal gorilla has a distinct ranged poop skill");
 assert.match(tactics, /function dropPoop\(u,kind,c,tx=u\.tx,ty=u\.ty\)/,"poop can land on a selected tile");
 assert.match(tactics, /actionPoop\(u,"big",tx,ty\)/,"normal skill fires big poop at its target");
-assert.match(tactics, /if\(u\.type==="normal"\)\{\s*const range=tilesInRange\(u\.tx,u\.ty,3\)/,"normal skill previews its range-three target area");
+assert.match(tactics, /if\(st\.behavior==="rocket"\)\{\s*const range=tilesInRange\(u\.tx,u\.ty,3\)/,"normal skill previews its range-three target area");
 assert.match(tactics, /Math\.sin\(flight\*Math\.PI\)\*CFG\.arc\*1\.4/,"ranged poop follows a visible arc");
 assert.match(tactics, /if\(t\.v<3\)\{\s*t\.v\+\+/,"wizard rain advances vegetation immediately");
 assert.match(tactics, /if\(t\.fire>0\)\{ t\.fire=0; quenched\+\+;/,"wizard rain extinguishes without undoing its own growth");
@@ -100,14 +102,32 @@ const configSource=fs.readFileSync(new URL("poop-config.js", import.meta.url), "
 vm.runInNewContext(configSource, sandbox);
 const master=sandbox.window.POOPULATION_CONFIG.tactics;
 assert.ok(master.enemies.killer.atk < master.allies.normal.atk, "default killer is weaker than a normal gorilla");
-assert.ok(master.startRoster.length>0 && master.waves.length>0, "playable roster and waves");
-assert.ok(master.stageCount>=2, "multi-stage run enabled");
-assert.ok(master.stageCount>=4, "default campaign has several reward decisions");
-assert.ok(master.enemyHpGrowth>0 && master.enemyAtkGrowth>0, "later stages scale enemy stats");
+assert.ok(master.startRoster.length>0 && master.waves.length>0, "fallback roster and waves remain playable");
 assert.equal(master.allies.normal.rng,1,"normal gorilla attacks the four adjacent tiles");
 assert.ok(master.birthTreeTurns>=1,"tree survival turns are master data");
-assert.ok(master.waves.every(w=>w.r<=master.lastRound), "waves fit inside the configured run");
+assert.ok(master.waves.every(w=>w.r<=master.lastRound), "fallback waves fit inside the configured run");
 const oldSandbox={window:{},localStorage:{getItem:()=>JSON.stringify({version:4,tactics:{stageCount:2}})}};
 vm.runInNewContext(configSource,oldSandbox);
 assert.equal(oldSandbox.window.POOPULATION_CONFIG.tactics.stageCount,4,"old two-stage saves migrate to the campaign baseline once");
+
+const stageSandbox={globalThis:{}};
+vm.runInNewContext(fs.readFileSync(new URL("stage-loader.js",import.meta.url),"utf8"),stageSandbox);
+const stageApi=stageSandbox.globalThis.POOPULATION_STAGES;
+const stageData=JSON.parse(fs.readFileSync(new URL("stages.json",import.meta.url),"utf8"));
+const characterData=JSON.parse(fs.readFileSync(new URL("characters.json",import.meta.url),"utf8"));
+const characterReport=stageApi.validateCharacters(characterData);
+assert.equal(characterReport.errors.length,0,"character JSON passes schema validation");
+const stageReport=stageApi.validate(stageData,{allyKinds:characterData.allies.map(c=>c.id),enemyKinds:characterData.enemies.map(c=>c.id)});
+assert.equal(stageReport.errors.length,0,"stage JSON passes schema validation");
+const normalCampaign=stageApi.resolve(stageData,"normal"), easyCampaign=stageApi.resolve(stageData,"easy");
+assert.equal(normalCampaign.stages.length,24,"campaign contains 24 editable stages");
+assert.equal(normalCampaign.targetPlayHours,30,"campaign records the 30-hour target");
+assert.equal(normalCampaign.stages[0].rounds,4,"the first stage starts with only four rounds");
+assert.ok(normalCampaign.stages.some(s=>s.terrain===null),"stages can inherit the live map");
+assert.ok(normalCampaign.stages.some(s=>s.objective.type!=="survive"),"campaign uses multiple objective types");
+assert.ok(easyCampaign.stages[0].rounds<normalCampaign.stages[0].rounds,"difficulty can shorten stages");
+assert.ok(easyCampaign.stages.at(-1).enemyMul.hp<normalCampaign.stages.at(-1).enemyMul.hp,"difficulty scales enemy HP");
+assert.match(tactics,/const CHARACTER_SET=window\.POOPULATION_CHARACTERS/,"tactics loads data-driven characters");
+assert.match(tactics,/behavior:c\.skill\.behavior/,"new allies reuse skill behavior templates");
+assert.match(tactics,/ai:c\.ai/,"new enemies reuse AI templates");
 console.log("POOPULATION smoke test: OK");

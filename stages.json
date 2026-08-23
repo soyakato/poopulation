@@ -1,0 +1,219 @@
+{
+  "_readme": "ステージとむずかしさの元データ。編集方法は STAGES.md、書式チェックは stages.html を開いてください。",
+  "version": 1,
+  "defaultDifficulty": "normal",
+
+  "difficulties": [
+    {
+      "id": "easy",
+      "name": { "ja": "やさしい", "en": "Easy" },
+      "blurb": { "ja": "敵は弱く、数も少ない。森はほとんど燃えない。仕組みを覚えたい人へ。", "en": "Fewer, weaker foes and a forest that barely burns. For learning the loop." },
+      "enemyHp": 0.75,
+      "enemyAtk": 0.7,
+      "waveCount": 0.6,
+      "roundsScale": 0.85,
+      "stageScale": { "hp": 0.04, "atk": 0.02 },
+      "reinforceMax": 0,
+      "fireSpread": 0.6,
+      "birthTreeTurns": 4,
+      "maxApes": 12,
+      "allyBonus": { "atk": 0, "hp": 20, "mp": 2, "spd": 0 }
+    },
+    {
+      "id": "normal",
+      "name": { "ja": "ふつう", "en": "Normal" },
+      "blurb": { "ja": "設計どおりのバランス。森を育てながら襲撃をしのぐ。", "en": "The intended balance: grow the forest while holding off the raids." },
+      "enemyHp": 1,
+      "enemyAtk": 1,
+      "waveCount": 1,
+      "roundsScale": 1,
+      "stageScale": { "hp": 0.06, "atk": 0.035 },
+      "reinforceMax": 2,
+      "fireSpread": 1,
+      "birthTreeTurns": 5,
+      "maxApes": 10,
+      "allyBonus": { "atk": 0, "hp": 0, "mp": 0, "spd": 0 }
+    },
+    {
+      "id": "hard",
+      "name": { "ja": "むずかしい", "en": "Hard" },
+      "blurb": { "ja": "敵が増え、火がよく回る。森を捨てる判断が要る。", "en": "More raiders and faster fire. You will have to sacrifice ground." },
+      "enemyHp": 1.25,
+      "enemyAtk": 1.2,
+      "waveCount": 1.35,
+      "roundsScale": 1,
+      "stageScale": { "hp": 0.085, "atk": 0.05 },
+      "reinforceMax": 3,
+      "fireSpread": 1.3,
+      "birthTreeTurns": 6,
+      "maxApes": 9,
+      "allyBonus": { "atk": 0, "hp": 0, "mp": 0, "spd": 0 }
+    },
+    {
+      "id": "extreme",
+      "name": { "ja": "きわみ", "en": "Extreme" },
+      "blurb": { "ja": "全ステージを踏破した人のための難易度。仲間の上限も低い。", "en": "For players who already cleared the campaign. Even the ally cap is lower." },
+      "enemyHp": 1.5,
+      "enemyAtk": 1.4,
+      "waveCount": 1.6,
+      "roundsScale": 1,
+      "stageScale": { "hp": 0.11, "atk": 0.065 },
+      "reinforceMax": 4,
+      "fireSpread": 1.5,
+      "birthTreeTurns": 7,
+      "maxApes": 8,
+      "allyBonus": { "atk": 0, "hp": 0, "mp": 0, "spd": 0 }
+    }
+  ],
+
+  "campaign": {
+    "id": "forest-chronicle",
+    "name": { "ja": "森の年代記", "en": "Forest Chronicle" },
+    "targetPlayHours": 30,
+    "startRoster": ["normal", "normal", "monkey"],
+
+    "chapters": [
+      { "id": 1, "name": { "ja": "第一章　芽吹きの森", "en": "I — Forest Awakening" },
+        "blurb": { "ja": "うんちが土になり、土が森になる。まだ誰も森を狙っていない。", "en": "Poop becomes soil, soil becomes forest. Nobody is hunting it yet." } },
+      { "id": 2, "name": { "ja": "第二章　伐採前線", "en": "II — Logging Front" },
+        "blurb": { "ja": "斧を持った人族が来る。木を守れなければ、仲間は生まれない。", "en": "Axes arrive. No protected trees, no newborn allies." } },
+      { "id": 3, "name": { "ja": "第三章　火の尾根", "en": "III — Ridge of Fire" },
+        "blurb": { "ja": "火は坂を駆け上がる。湿地が唯一の防火帯になる。", "en": "Fire runs uphill. The wetland is your only firebreak." } },
+      { "id": 4, "name": { "ja": "第四章　支配の森", "en": "IV — Dominion Woods" },
+        "blurb": { "ja": "ゴリラジコンが現れる。倒された仲間は、敵として還ってくる。", "en": "The Gorilla Jikon appears. Fallen allies come back as enemies." } },
+      { "id": 5, "name": { "ja": "第五章　灰の湿原", "en": "V — Ash Marsh" },
+        "blurb": { "ja": "焼け跡に水が入り、森は作り直しになる。総力戦が続く。", "en": "Water floods the burn scar. The forest must be rebuilt under fire." } },
+      { "id": 6, "name": { "ja": "第六章　最後の楽園", "en": "VI — Last Sanctuary" },
+        "blurb": { "ja": "残った森がすべて。ここを守り抜けば、次の世代に渡る。", "en": "What is left is all there is. Hold it and the bloodline continues." } }
+    ],
+
+    "stages": [
+      { "id": "1-1", "chapter": 1, "name": { "ja": "苔の谷", "en": "Moss Hollow" },
+        "rounds": 4,
+        "terrain": { "seed": 101, "hills": 1, "hillRadius": 2, "river": "none", "groveTrees": 3 },
+        "waves": [ { "round": 2, "kind": "killer", "count": 1 } ],
+        "reinforce": { "perForest": 30, "max": 0 },
+        "intro": { "ja": "実を食べ、うんちをして、森を広げる。それだけでいい。", "en": "Eat fruit, poop, spread the forest. That is all for now." } },
+
+      { "id": "1-2", "chapter": 1, "name": { "ja": "陽だまりの縁", "en": "Sunlit Verge" },
+        "rounds": 5, "terrain": "inherit",
+        "waves": [ { "round": 2, "kind": "killer", "count": 1 }, { "round": 4, "kind": "killer", "count": 1 } ],
+        "reinforce": { "perForest": 30, "max": 0 } },
+
+      { "id": "1-3", "chapter": 1, "name": { "ja": "実りの窪地", "en": "Fruiting Basin" },
+        "rounds": 6, "terrain": "inherit",
+        "waves": [ { "round": 2, "kind": "killer", "count": 2 }, { "round": 5, "kind": "killer", "count": 1 } ],
+        "reinforce": { "perForest": 28, "max": 1 } },
+
+      { "id": "1-4", "chapter": 1, "name": { "ja": "はじめての産声", "en": "First Cry" },
+        "rounds": 8, "terrain": "inherit",
+        "waves": [ { "round": 2, "kind": "killer", "count": 2 }, { "round": 5, "kind": "killer", "count": 2 }, { "round": 7, "kind": "killer", "count": 2 } ],
+        "reinforce": { "perForest": 25, "max": 1 } },
+
+      { "id": "2-1", "chapter": 2, "name": { "ja": "斧の音", "en": "Sound of Axes" },
+        "rounds": 9,
+        "terrain": { "seed": 202, "hills": 2, "hillRadius": 2, "river": "narrow", "groveTrees": 3 },
+        "waves": [ { "round": 2, "kind": "bald", "count": 2 }, { "round": 5, "kind": "killer", "count": 2 }, { "round": 8, "kind": "bald", "count": 2 } ],
+        "intro": { "ja": "ハゲは成木を狙う。木を1本失うたび、出生の時計は0に戻る。", "en": "The bald ones fell mature trees. Every loss resets a birth timer." } },
+
+      { "id": "2-2", "chapter": 2, "name": { "ja": "切り株の列", "en": "Row of Stumps" },
+        "rounds": 10, "terrain": "inherit",
+        "waves": [ { "round": 2, "kind": "killer", "count": 2 }, { "round": 4, "kind": "bald", "count": 2 }, { "round": 7, "kind": "killer", "count": 2 }, { "round": 9, "kind": "bald", "count": 2 } ] },
+
+      { "id": "2-3", "chapter": 2, "name": { "ja": "追い落とし", "en": "Drive Them Out" },
+        "rounds": 11, "terrain": "inherit",
+        "objective": { "type": "wipe" },
+        "waves": [ { "round": 1, "kind": "bald", "count": 3 }, { "round": 4, "kind": "killer", "count": 3 } ],
+        "intro": { "ja": "この森からは、1人残らず追い出す。増援も含めて全滅させれば勝ち。", "en": "Clear every raider, including all reinforcements." } },
+
+      { "id": "2-4", "chapter": 2, "name": { "ja": "前線の夜", "en": "Night on the Front" },
+        "rounds": 12, "terrain": "inherit",
+        "waves": [ { "round": 2, "kind": "bald", "count": 2 }, { "round": 5, "kind": "killer", "count": 3 }, { "round": 8, "kind": "bald", "count": 3 }, { "round": 11, "kind": "killer", "count": 2 } ] },
+
+      { "id": "3-1", "chapter": 3, "name": { "ja": "焦げた稜線", "en": "Charred Ridge" },
+        "rounds": 12,
+        "terrain": { "seed": 303, "hills": 3, "hillRadius": 3, "river": "narrow", "groveTrees": 2 },
+        "fireSpread": 1.15,
+        "waves": [ { "round": 2, "kind": "fireman", "count": 2 }, { "round": 5, "kind": "killer", "count": 2 }, { "round": 9, "kind": "fireman", "count": 2 } ],
+        "intro": { "ja": "火は高いほうへ走る。湿地の青い木は燃えない。", "en": "Fire climbs. The blue wetland trees will not burn." } },
+
+      { "id": "3-2", "chapter": 3, "name": { "ja": "煙の谷", "en": "Valley of Smoke" },
+        "rounds": 13, "terrain": "inherit", "fireSpread": 1.15,
+        "waves": [ { "round": 2, "kind": "fireman", "count": 2 }, { "round": 4, "kind": "bald", "count": 2 }, { "round": 7, "kind": "fireman", "count": 2 }, { "round": 10, "kind": "killer", "count": 3 } ] },
+
+      { "id": "3-3", "chapter": 3, "name": { "ja": "緑を取り戻す", "en": "Take the Green Back" },
+        "rounds": 14, "terrain": "inherit",
+        "objective": { "type": "forest", "target": 40 },
+        "waves": [ { "round": 3, "kind": "fireman", "count": 2 }, { "round": 6, "kind": "fireman", "count": 2 }, { "round": 10, "kind": "bald", "count": 3 } ],
+        "intro": { "ja": "焼かれた分を植え直す。森の規模が目標に届けば勝ち。", "en": "Replant what burned. Reach the forest target to win." } },
+
+      { "id": "3-4", "chapter": 3, "name": { "ja": "火の尾根", "en": "Ridge of Fire" },
+        "rounds": 16, "terrain": "inherit", "fireSpread": 1.25,
+        "waves": [ { "round": 2, "kind": "fireman", "count": 3 }, { "round": 5, "kind": "killer", "count": 3 }, { "round": 9, "kind": "bald", "count": 3 }, { "round": 13, "kind": "fireman", "count": 3 } ] },
+
+      { "id": "4-1", "chapter": 4, "name": { "ja": "還ってきた仲間", "en": "The Returned" },
+        "rounds": 16,
+        "terrain": { "seed": 404, "hills": 2, "hillRadius": 2, "river": "wide", "groveTrees": 2 },
+        "waves": [ { "round": 3, "kind": "jikon", "count": 1 }, { "round": 6, "kind": "killer", "count": 3 }, { "round": 10, "kind": "bald", "count": 3 }, { "round": 14, "kind": "killer", "count": 3 } ],
+        "intro": { "ja": "ゴリラジコンは、倒した仲間を自分の側に立たせる。先に落とす。", "en": "The Jikon raises your fallen. Kill it first." } },
+
+      { "id": "4-2", "chapter": 4, "name": { "ja": "沈黙の広間", "en": "Silent Hall" },
+        "rounds": 17, "terrain": "inherit",
+        "waves": [ { "round": 2, "kind": "killer", "count": 3 }, { "round": 6, "kind": "jikon", "count": 1 }, { "round": 10, "kind": "fireman", "count": 3 }, { "round": 14, "kind": "bald", "count": 3 } ] },
+
+      { "id": "4-3", "chapter": 4, "name": { "ja": "三つの産声", "en": "Three New Cries" },
+        "rounds": 18, "terrain": "inherit",
+        "objective": { "type": "births", "target": 3 },
+        "waves": [ { "round": 3, "kind": "bald", "count": 3 }, { "round": 8, "kind": "killer", "count": 3 }, { "round": 13, "kind": "fireman", "count": 3 } ],
+        "intro": { "ja": "このステージで3匹産む。木を守り切れるかどうかの試験。", "en": "Bring three allies into the world. A test of holding trees." } },
+
+      { "id": "4-4", "chapter": 4, "name": { "ja": "支配の森", "en": "Dominion Woods" },
+        "rounds": 20, "terrain": "inherit",
+        "enemyScale": { "hp": 1.15, "atk": 1 },
+        "waves": [ { "round": 2, "kind": "killer", "count": 3 }, { "round": 6, "kind": "bald", "count": 3 }, { "round": 10, "kind": "fireman", "count": 3 }, { "round": 14, "kind": "jikon", "count": 2 }, { "round": 18, "kind": "killer", "count": 4 } ] },
+
+      { "id": "5-1", "chapter": 5, "name": { "ja": "灰と水", "en": "Ash and Water" },
+        "rounds": 20,
+        "terrain": { "seed": 505, "hills": 4, "hillRadius": 3, "river": "wide", "groveTrees": 2 },
+        "waves": [ { "round": 2, "kind": "fireman", "count": 3 }, { "round": 6, "kind": "bald", "count": 3 }, { "round": 11, "kind": "killer", "count": 4 }, { "round": 16, "kind": "jikon", "count": 1 } ],
+        "intro": { "ja": "広い川が森を二分する。渡るのに2歩かかることを忘れずに。", "en": "A wide river splits the forest. Crossing costs two steps." } },
+
+      { "id": "5-2", "chapter": 5, "name": { "ja": "掃討", "en": "Sweep" },
+        "rounds": 20, "terrain": "inherit",
+        "objective": { "type": "wipe" },
+        "waves": [ { "round": 1, "kind": "killer", "count": 4 }, { "round": 5, "kind": "bald", "count": 4 }, { "round": 10, "kind": "fireman", "count": 4 } ] },
+
+      { "id": "5-3", "chapter": 5, "name": { "ja": "長い燃焼", "en": "The Long Burn" },
+        "rounds": 22, "terrain": "inherit", "fireSpread": 1.2,
+        "waves": [ { "round": 3, "kind": "fireman", "count": 3 }, { "round": 7, "kind": "killer", "count": 4 }, { "round": 12, "kind": "bald", "count": 4 }, { "round": 17, "kind": "fireman", "count": 4 } ] },
+
+      { "id": "5-4", "chapter": 5, "name": { "ja": "湿原の主", "en": "Lord of the Marsh" },
+        "rounds": 22, "terrain": "inherit",
+        "enemyScale": { "hp": 1.2, "atk": 1.1 },
+        "waves": [ { "round": 2, "kind": "jikon", "count": 1 }, { "round": 7, "kind": "killer", "count": 4 }, { "round": 12, "kind": "bald", "count": 4 }, { "round": 17, "kind": "jikon", "count": 2 } ] },
+
+      { "id": "6-1", "chapter": 6, "name": { "ja": "楽園の門", "en": "Gate of the Sanctuary" },
+        "rounds": 24,
+        "terrain": { "seed": 606, "hills": 3, "hillRadius": 2, "river": "narrow", "groveTrees": 3 },
+        "waves": [ { "round": 2, "kind": "killer", "count": 4 }, { "round": 7, "kind": "bald", "count": 4 }, { "round": 12, "kind": "fireman", "count": 4 }, { "round": 18, "kind": "jikon", "count": 2 } ],
+        "intro": { "ja": "最後の森。ここから先はもう逃げ場がない。", "en": "The last forest. There is nowhere left to fall back to." } },
+
+      { "id": "6-2", "chapter": 6, "name": { "ja": "楽園を満たす", "en": "Fill the Sanctuary" },
+        "rounds": 24, "terrain": "inherit",
+        "objective": { "type": "forest", "target": 70 },
+        "waves": [ { "round": 3, "kind": "fireman", "count": 4 }, { "round": 9, "kind": "bald", "count": 4 }, { "round": 15, "kind": "killer", "count": 5 }, { "round": 21, "kind": "fireman", "count": 4 } ] },
+
+      { "id": "6-3", "chapter": 6, "name": { "ja": "人族の総力", "en": "All of Them" },
+        "rounds": 26, "terrain": "inherit",
+        "enemyScale": { "hp": 1.2, "atk": 1 },
+        "waves": [ { "round": 2, "kind": "killer", "count": 4 }, { "round": 7, "kind": "jikon", "count": 2 }, { "round": 13, "kind": "bald", "count": 5 }, { "round": 19, "kind": "fireman", "count": 5 }, { "round": 24, "kind": "killer", "count": 5 } ] },
+
+      { "id": "6-4", "chapter": 6, "name": { "ja": "最後の楽園", "en": "Last Sanctuary" },
+        "rounds": 30, "terrain": "inherit", "camp": false,
+        "enemyScale": { "hp": 1.35, "atk": 1.2 },
+        "reinforce": { "perForest": 18, "max": 3 },
+        "waves": [ { "round": 2, "kind": "killer", "count": 4 }, { "round": 6, "kind": "bald", "count": 4 }, { "round": 10, "kind": "fireman", "count": 4 }, { "round": 14, "kind": "jikon", "count": 2 }, { "round": 19, "kind": "killer", "count": 5 }, { "round": 23, "kind": "bald", "count": 5 }, { "round": 27, "kind": "jikon", "count": 3 } ],
+        "intro": { "ja": "30ラウンド。ここを越えれば、糞は次の世代の土になる。", "en": "Thirty rounds. Survive and the poop becomes soil for the next generation." } }
+    ]
+  }
+}

@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>POOPULATION STAGE EDITOR</title>
+<script src="stage-loader.js?v=1"></script>
+<style>
+  :root{--bg:#17120c;--panel:#221a11;--line:#4a3823;--ink:#f2e6cf;--dim:#a49070;--gold:#e8b23c;--green:#7fae2f;--red:#c9452e}
+  *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"Yu Gothic",sans-serif;font-size:14px}header{display:flex;align-items:center;gap:14px;padding:12px 18px;border-bottom:2px solid var(--line);background:#100c07}h1{font-size:17px;color:var(--gold);margin:0;letter-spacing:.08em}nav{margin-left:auto;display:flex;gap:8px}a{color:var(--gold)}main{display:grid;grid-template-columns:minmax(360px,480px) 1fr;min-height:calc(100vh - 55px)}aside,.json{padding:16px;overflow:auto}aside{border-right:2px solid var(--line);background:var(--panel)}h2{font-size:15px;color:var(--gold);margin:18px 0 8px}.lead,.note{color:var(--dim);line-height:1.7}.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}.wide{grid-column:1/-1}label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--dim)}input,select,textarea,button{font:inherit;color:var(--ink);background:#120d08;border:1px solid var(--line);padding:8px}input:focus,select:focus,textarea:focus{outline:2px solid var(--gold);outline-offset:1px}textarea{resize:vertical;line-height:1.5}button{cursor:pointer}button:hover{border-color:var(--gold)}button.primary{background:var(--gold);border-color:var(--gold);color:#22160a}.actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}.json{display:flex;flex-direction:column;gap:10px}.json textarea{width:100%;flex:1;min-height:520px;font:12px/1.55 Consolas,monospace}.report{white-space:pre-wrap;padding:10px;border:1px solid var(--line);background:#100c07;color:var(--dim);min-height:46px}.report.ok{border-color:var(--green);color:#b8d87d}.report.bad{border-color:var(--red);color:#ff9d8d}.summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px}.card{padding:9px;border:1px solid var(--line);background:#1b150f}.card b{display:block;color:var(--gold);margin-bottom:4px}.card span{font-size:12px;color:var(--dim)}@media(max-width:900px){main{grid-template-columns:1fr}aside{border-right:0;border-bottom:2px solid var(--line)}}
+</style>
+</head>
+<body>
+<header><h1>POOPULATION STAGE EDITOR</h1><nav><a href="tactics.html">ゲーム</a><a href="characters.html">キャラクター</a><a href="studio.html">演出</a><a href="STAGES.md">編集ガイド</a></nav></header>
+<main>
+  <aside>
+    <p class="lead">よく触る項目をフォームで変更し、「JSONへ反映」してから書き出します。元の <code>stages.json</code> は自動で上書きされません。</p>
+    <h2>ステージ</h2>
+    <label>編集するステージ<select id="stagePick"></select></label>
+    <div class="grid">
+      <label>日本語名<input id="stageJa"></label><label>英語名<input id="stageEn"></label>
+      <label>ラウンド数<input id="rounds" type="number" min="1" max="99"></label>
+      <label>クリア条件<select id="objective"><option value="survive">指定ラウンド生存</option><option value="wipe">敵を全滅</option><option value="forest">森の規模</option><option value="births">この面で誕生</option></select></label>
+      <label>目標値<input id="target" type="number" min="1"></label>
+      <label>地形<select id="terrainMode"><option value="inherit">前ステージを引き継ぐ</option><option value="custom">新しい地形</option></select></label>
+      <label>地形シード<input id="seed" type="number"></label><label>高台数<input id="hills" type="number" min="0" max="8"></label>
+      <label>高台半径<input id="hillRadius" type="number" min="1" max="3"></label><label>川<select id="river"><option value="none">なし</option><option value="narrow">細い</option><option value="wide">太い</option></select></label>
+      <label>各色の初期成木<input id="groveTrees" type="number" min="1" max="6"></label>
+      <label class="wide">襲撃（1行に ラウンド, 敵ID, 数）<textarea id="waves" rows="6" placeholder="2, killer, 1"></textarea></label>
+      <label class="wide">導入文（日本語）<textarea id="introJa" rows="2"></textarea></label>
+      <label class="wide">導入文（英語）<textarea id="introEn" rows="2"></textarea></label>
+    </div>
+    <div class="actions"><button class="primary" id="applyStage">ステージをJSONへ反映</button><button id="duplicate">複製</button></div>
+
+    <h2>全体難易度</h2>
+    <label>編集する難易度<select id="difficultyPick"></select></label>
+    <div class="grid">
+      <label>敵HP倍率<input id="enemyHp" type="number" min="0.1" step="0.05"></label><label>敵攻撃倍率<input id="enemyAtk" type="number" min="0.1" step="0.05"></label>
+      <label>敵出現数倍率<input id="waveCount" type="number" min="0.1" step="0.05"></label><label>ラウンド倍率<input id="roundsScale" type="number" min="0.1" step="0.05"></label>
+      <label>火の広がり倍率<input id="fireSpread" type="number" min="0" step="0.05"></label><label>追加敵上限<input id="reinforceMax" type="number" min="0" step="1"></label>
+      <label>出生に必要なターン<input id="birthTreeTurns" type="number" min="1"></label><label>味方上限<input id="maxApes" type="number" min="1"></label>
+    </div>
+    <div class="actions"><button class="primary" id="applyDifficulty">難易度をJSONへ反映</button></div>
+  </aside>
+
+  <section class="json">
+    <div class="actions"><button class="primary" id="validate">JSONを検証</button><button id="download">stages.jsonを書き出す</button><button id="importBtn">別のJSONを開く</button><input id="importFile" type="file" accept="application/json,.json" hidden></div>
+    <div id="summary" class="summary"></div>
+    <div id="report" class="report" role="status">読み込み中…</div>
+    <textarea id="source" spellcheck="false" aria-label="stages.json"></textarea>
+  </section>
+</main>
+<script>
+(() => {
+  "use strict";
+  const API=window.POOPULATION_STAGES, $=id=>document.getElementById(id);
+  let data, characterKinds={};
+  const num=id=>$(id).valueAsNumber;
+  const option=(value,text)=>{const o=document.createElement("option");o.value=value;o.textContent=text;return o;};
+
+  function syncSource(){ $("source").value=JSON.stringify(data,null,2)+"\n"; validate(false); }
+  function readSource(){ try{return JSON.parse($("source").value);}catch(e){show([`JSON構文: ${e.message}`],[]);return null;} }
+  function show(errors,warnings){
+    const el=$("report"), ok=!errors.length; el.className="report "+(ok?"ok":"bad");
+    el.textContent=ok?(warnings.length?`OK（注意 ${warnings.length}件）\n${warnings.join("\n")}`:"OK — 書式に問題はありません"):`エラー ${errors.length}件\n${errors.join("\n")}`;
+  }
+  function validate(refresh=true){
+    const parsed=readSource(); if(!parsed)return false;
+    const report=API.validate(parsed,characterKinds); show(report.errors,report.warnings);
+    if(report.ok&&refresh){data=parsed;paintSelectors();paintSummary();}
+    return report.ok;
+  }
+  function paintSelectors(){
+    const oldStage=$("stagePick").value, oldDiff=$("difficultyPick").value;
+    $("stagePick").innerHTML=""; data.campaign.stages.forEach((s,i)=>$("stagePick").append(option(String(i),`${s.id}　${s.name.ja}`)));
+    $("difficultyPick").innerHTML=""; data.difficulties.forEach((d,i)=>$("difficultyPick").append(option(String(i),d.name.ja)));
+    $("stagePick").value=oldStage&&data.campaign.stages[oldStage]?oldStage:"0";
+    const defaultDiff=Math.max(0,data.difficulties.findIndex(d=>d.id===data.defaultDifficulty));
+    $("difficultyPick").value=oldDiff&&data.difficulties[oldDiff]?oldDiff:String(defaultDiff);
+    paintStage();paintDifficulty();
+  }
+  function paintStage(){
+    const s=data.campaign.stages[Number($("stagePick").value)||0], o=s.objective||{type:"survive"}, t=s.terrain&&s.terrain!=="inherit"?s.terrain:null;
+    $("stageJa").value=s.name.ja;$("stageEn").value=s.name.en;$("rounds").value=s.rounds;$("objective").value=o.type;$("target").value=o.target||"";
+    $("terrainMode").value=t?"custom":"inherit";$("seed").value=t?.seed||1;$("hills").value=t?.hills??2;$("hillRadius").value=t?.hillRadius??2;$("river").value=t?.river||"narrow";$("groveTrees").value=t?.groveTrees??2;
+    $("waves").value=(s.waves||[]).map(w=>`${w.round}, ${w.kind}, ${w.count}`).join("\n");$("introJa").value=s.intro?.ja||"";$("introEn").value=s.intro?.en||"";
+  }
+  function paintDifficulty(){
+    const d=data.difficulties[Number($("difficultyPick").value)||0];
+    for(const id of ["enemyHp","enemyAtk","waveCount","roundsScale","fireSpread","reinforceMax","birthTreeTurns","maxApes"]) $(id).value=d[id];
+  }
+  function paintSummary(){
+    const c=API.resolve(data,data.difficulties[Number($("difficultyPick").value)||0].id), box=$("summary");box.innerHTML="";
+    [["章",c.chapters.length],["ステージ",c.stages.length],["合計ラウンド",c.totalRounds],["想定プレイ",`${c.targetPlayHours||"—"}時間`]].forEach(([k,v])=>{const d=document.createElement("div");d.className="card";d.innerHTML=`<b>${v}</b><span>${k}</span>`;box.append(d);});
+  }
+  function applyStage(){
+    const s=data.campaign.stages[Number($("stagePick").value)||0], type=$("objective").value;
+    s.name={ja:$("stageJa").value.trim(),en:$("stageEn").value.trim()};s.rounds=num("rounds");s.objective={type};if(type==="forest"||type==="births")s.objective.target=num("target");
+    s.terrain=$("terrainMode").value==="inherit"?"inherit":{seed:num("seed"),hills:num("hills"),hillRadius:num("hillRadius"),river:$("river").value,groveTrees:num("groveTrees")};
+    s.waves=$("waves").value.split(/\r?\n/).filter(x=>x.trim()).map(line=>{const [round,kind,count]=line.split(/\s*,\s*|\s+/);return{round:Number(round),kind,count:Number(count)};});
+    const ja=$("introJa").value.trim(),en=$("introEn").value.trim();if(ja||en)s.intro={ja,en};else delete s.intro;
+    syncSource();paintSelectors();paintSummary();
+  }
+  function applyDifficulty(){
+    const d=data.difficulties[Number($("difficultyPick").value)||0];
+    for(const id of ["enemyHp","enemyAtk","waveCount","roundsScale","fireSpread","reinforceMax","birthTreeTurns","maxApes"]) d[id]=num(id);
+    syncSource();paintSummary();
+  }
+  function duplicate(){
+    const i=Number($("stagePick").value)||0, copy=structuredClone(data.campaign.stages[i]);copy.id+="-copy";copy.name.ja+="（複製）";data.campaign.stages.splice(i+1,0,copy);syncSource();paintSelectors();$("stagePick").value=String(i+1);paintStage();
+  }
+  function download(){if(!validate())return;const blob=new Blob([$("source").value],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="stages.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);}
+
+  $("stagePick").onchange=paintStage;$("difficultyPick").onchange=()=>{paintDifficulty();paintSummary();};$("applyStage").onclick=applyStage;$("applyDifficulty").onclick=applyDifficulty;$("duplicate").onclick=duplicate;$("validate").onclick=()=>validate();$("download").onclick=download;$("importBtn").onclick=()=>$("importFile").click();
+  $("importFile").onchange=async e=>{const file=e.target.files[0];if(!file)return;$("source").value=await file.text();validate();};
+  Promise.all([fetch("stages.json",{cache:"no-cache"}).then(r=>r.json()),fetch("characters.json",{cache:"no-cache"}).then(r=>r.json())]).then(([d,c])=>{data=d;characterKinds={allyKinds:c.allies.map(x=>x.id),enemyKinds:c.enemies.map(x=>x.id)};syncSource();paintSelectors();paintSummary();}).catch(e=>show([`JSONを読めません: ${e.message}`],[]));
+})();
+</script>
+</body>
+</html>
