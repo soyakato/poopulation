@@ -1,352 +1,388 @@
-<!doctype html>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>POOPULATION TACTICS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Silkscreen:wght@400;700&display=swap">
-<script src="poop-config.js?v=6"></script>
-
 <style>
-  :root{
-    --soil:#14100b; --soil-2:#1f1811; --soil-3:#2b2117; --line:#4a3823;
-    --ink:#f2e6cf; --dim:#a49070; --gold:#e8b23c; --rot:#7fae2f; --blood:#c9452e;
-    --sky:#68d0e0;
-    --jp:"DotGothic16","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
-    --px:"Silkscreen","Courier New",monospace;
-  }
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%;min-height:100dvh}
-  body{
-    background:var(--soil);color:var(--ink);font-family:var(--jp);
-    display:flex;align-items:center;justify-content:center;overflow:hidden;
-    -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:none;
-  }
-  #cab{display:flex;flex-direction:column;width:100%;height:100dvh;max-height:100%;max-width:1180px;padding:6px;gap:5px}
+  html,body{height:100%;background:#0d0a06;overflow:hidden}
+  body{-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+  [hidden]{display:none!important}
+  a{color:#e8b23c;text-decoration:none}
+  a:hover{color:#ffe08a}
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  canvas{image-rendering:pixelated}
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-thumb{background:#4a3823}
 
-  /* rail */
-  #rail{display:flex;align-items:stretch;gap:6px;background:var(--soil-2);border:2px solid var(--line);padding:5px 7px;flex:0 0 auto;overflow-x:auto}
-  .stat{display:flex;flex-direction:column;gap:1px;min-width:56px}
-  .stat b{font-family:var(--px);font-size:14px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
-  .stat span{font-size:9px;color:var(--dim);letter-spacing:.08em}
-  #order{flex:1 1 auto;display:flex;align-items:center;gap:3px;overflow:hidden;min-width:0}
-  #order .olab{font-size:9px;color:var(--dim);flex:0 0 auto;margin-right:2px}
-  .oc{width:26px;height:26px;border:2px solid var(--line);background:#0f0b07;flex:0 0 auto;position:relative}
-  .oc canvas{width:100%;height:100%;image-rendering:pixelated;display:block}
-  .oc.now{border-color:var(--gold)}
-  .oc.foe{border-color:var(--blood)}
-  #objective{min-width:126px;border-left:1px solid var(--line);padding-left:7px}
-  #objective b{font-family:var(--jp);font-size:10px;color:var(--ink);white-space:nowrap}
-  #turnHud{display:grid;grid-template-columns:auto 116px;gap:3px 7px;align-items:center;min-width:212px;border:2px solid var(--gold);background:var(--soil-3);padding:3px 6px;flex:0 0 auto}
-  #turnHud.foe{border-color:var(--blood)}
-  #turnLabel{font-family:var(--px);font-size:8px;color:var(--gold);letter-spacing:.08em}
-  #turnHud.foe #turnLabel{color:var(--blood)}
-  #turnName{font-size:11px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .turn-bars{display:grid;grid-template-columns:18px 1fr auto;gap:2px 4px;align-items:center;grid-row:1/3;grid-column:2;font-family:var(--px);font-size:7px;color:var(--dim)}
-  .turn-bars .pb{height:5px}.turn-bars b{font-size:7px;font-weight:400;color:var(--ink);font-variant-numeric:tabular-nums}
-  .btn{font-family:var(--jp);font-size:11px;color:var(--ink);background:var(--soil-3);border:2px solid var(--line);padding:3px 8px;cursor:pointer}
-  .btn:hover{background:var(--line)}
-  .btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-  .mode-nav{display:flex;align-items:center;gap:3px;margin-left:auto}
-  .mode-nav a{font-family:var(--px);font-size:9px;color:var(--dim);text-decoration:none;padding:5px 6px;border:1px solid var(--line)}
-  .mode-nav a:hover,.mode-nav a:focus-visible{color:var(--gold);border-color:var(--gold)}
-  #bLang{font:9px var(--px);min-width:52px;color:var(--gold)}
-
-  /* stage */
-  #stage{flex:1 1 auto;position:relative;display:flex;align-items:center;justify-content:center;min-height:0}
-  #frame{position:relative;line-height:0}
-  canvas#cv{image-rendering:pixelated;border:2px solid var(--line);background:#241a11;display:block}
-
-  #log{position:absolute;left:6px;top:6px;display:flex;flex-direction:column;gap:2px;pointer-events:none;max-width:62%}
-  .lg{background:#0d0906e0;border:2px solid var(--line);padding:2px 6px;font-size:11px;line-height:1.5}
-  .lg i{display:inline-block;width:7px;height:7px;margin-right:4px}
-
-  /* unit card */
-  #card{position:absolute;left:calc(100% + 8px);top:0;width:158px;background:#100c07f2;border:2px solid var(--line);padding:6px 7px;display:flex;flex-direction:column;gap:5px;line-height:1.35;z-index:3}
-  #card[hidden]{display:none}
-  #cClose{position:absolute;right:2px;top:2px;border:0;background:none;color:var(--dim);font:14px var(--px);padding:3px 5px;cursor:pointer}
-  #cClose:hover{color:var(--ink)}
-  .c-head{display:flex;gap:6px;align-items:center}
-  .c-head canvas{width:30px;height:30px;image-rendering:pixelated;flex:0 0 auto}
-  .c-nm{font-size:12px}
-  .c-ty{font-size:9px;color:var(--dim)}
-  .c-bars{display:grid;grid-template-columns:auto 1fr auto;gap:2px 5px;align-items:center;font-size:9px}
-  .c-bars span{color:var(--dim)}
-  .c-bars b{font-family:var(--px);font-size:9px;font-weight:400;font-variant-numeric:tabular-nums}
-  .pb{height:6px;background:#0b0805;border:1px solid var(--line)}
-  .pb i{display:block;height:100%}
-  .c-ab{font-size:9px;border-left:3px solid var(--gold);padding-left:5px}
-  .c-ab b{color:var(--gold);font-weight:400}
-  .c-tr{font-size:9px;color:var(--dim);border-top:1px solid var(--line);padding-top:4px}
-  .c-tr em{font-style:normal;color:var(--ink)}
-
-  /* action bar */
-  #acts{flex:0 0 auto;display:flex;gap:4px;align-items:center;background:var(--soil-2);border:2px solid var(--line);padding:5px;min-height:44px;overflow-x:auto}
-  .act{
-    font-family:var(--jp);font-size:12px;color:var(--ink);background:var(--soil-3);
-    border:2px solid var(--line);padding:5px 12px;cursor:pointer;position:relative;flex:0 0 auto;white-space:nowrap;
-  }
-  .act:hover:not(:disabled){background:var(--line)}
-  .act:disabled{opacity:.32;cursor:default}
-  .act.on{background:var(--gold);color:#22160a;border-color:var(--gold)}
-  .act small{font-family:var(--px);font-size:9px;color:var(--sky);margin-left:5px}
-  .act.on small{color:#22160a}
-  .act:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
-  #birthHud{display:flex;gap:3px;align-items:center;margin-left:auto;font-family:var(--px);font-size:8px;color:var(--dim)}
-  #birthHud>b{font-weight:400;color:var(--ink);margin-right:1px}
-  .birth-chip{display:flex;align-items:center;gap:2px;padding:3px 4px;background:#0b080580;border:1px solid var(--line);white-space:nowrap}
-  .birth-chip i{display:block;width:5px;height:5px}
-  .birth-chip.ready{border-color:var(--gold);color:var(--ink)}
-  #hint{font-size:11px;color:var(--dim);padding-right:4px;text-align:right;line-height:1.4}
-
-  /* screens */
-  .screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#0b0805f5;text-align:center;padding:14px;z-index:6;overflow:auto;line-height:normal}
-  .screen[hidden]{display:none}
-  #scTitle{gap:8px;background:#14100bf2}
-  .chronicle{width:min(320px,100%);padding:5px 8px;text-align:center}
-  .chronicle:before,.chronicle:after{content:"";display:block;width:76%;height:2px;background:var(--gold);margin:0 auto 6px}
-  .chronicle:after{margin:6px auto 0}
-  .logo{font-family:var(--px);font-weight:700;font-size:clamp(20px,5vw,34px);letter-spacing:.05em;color:var(--gold);text-shadow:3px 3px 0 #6b3f14,6px 6px 0 #00000080;line-height:1.05;white-space:nowrap;text-align:center}
-  .tag{font-family:var(--px);font-size:11px;letter-spacing:.22em;color:var(--dim)}
-  .chapter{width:min(320px,100%);border:2px solid var(--line);background:var(--ink);color:var(--soil);padding:7px 10px;box-shadow:5px 5px 0 #000}
-  .chapter .tag{font-family:var(--jp);font-size:10px;color:var(--soil-3);letter-spacing:.1em}
-  .maxim{font-size:13px;line-height:1.5;margin-top:4px}
-  .sub{font-size:12px;line-height:1.8;max-width:44ch;text-wrap:balance}
-  .sub em{font-style:normal;color:var(--gold)}
-  .rules{display:flex;gap:8px;flex-wrap:nowrap;justify-content:center;width:min(336px,100%)}
-  .rule{width:104px;min-width:0;flex:1;border:2px solid var(--line);background:var(--soil-2);padding:7px 5px;font-size:9px;line-height:1.55}
-  .rule canvas{width:34px;height:34px;margin:0 auto 3px;display:block;image-rendering:pixelated}
-  .rule b{display:block;font-size:11px;color:var(--gold);font-weight:400;margin-bottom:2px}
-  .start{font-family:var(--px);font-size:15px;font-weight:700;letter-spacing:.08em;background:var(--gold);color:#22160a;border:0;padding:9px 24px;cursor:pointer;box-shadow:4px 4px 0 #6b3f14}
-  .start:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #6b3f14}
-  .start.secondary{font-family:var(--jp);font-size:11px;font-weight:400;background:var(--soil-2);color:var(--ink);border:2px solid var(--line);box-shadow:none;padding:6px 18px}
-  .title-hint{width:min(320px,100%);font-size:10px;line-height:1.65;color:var(--dim);text-align:center;text-wrap:balance}
-  .title-actions{display:flex;flex-direction:column;gap:7px;width:min(320px,100%)}
-  .music-note{font-size:8px;line-height:1.5;color:var(--dim)}
-  .big{font-family:var(--px);font-size:clamp(18px,4.5vw,30px);font-weight:700;letter-spacing:.04em}
-  .win{color:var(--rot)}.lose{color:var(--blood)}
-  .tally{display:grid;grid-template-columns:auto auto;gap:2px 16px;font-size:11px;border:2px solid var(--line);padding:8px 12px;background:var(--soil-2)}
-  .tally b{font-family:var(--px);font-weight:400;text-align:right;font-variant-numeric:tabular-nums}
-  .tally span{color:var(--dim)}
-  .obit{font-size:10px;color:var(--dim);max-width:40ch;line-height:1.7}
-  .camp-head{display:flex;align-items:end;justify-content:space-between;width:min(600px,100%);gap:12px;text-align:left}
-  .camp-head .big{color:var(--gold)}
-  .camp-summary{font:10px/1.6 var(--px);color:var(--dim);text-align:right}
-  .rewards{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;width:min(600px,100%)}
-  .reward{min-height:128px;border:2px solid var(--line);background:var(--soil-2);color:var(--ink);padding:9px;text-align:left;cursor:pointer;font-family:var(--jp)}
-  .reward:hover,.reward:focus-visible{border-color:var(--gold);background:var(--soil-3);outline:0}
-  .reward i{display:block;font:9px var(--px);color:var(--gold);font-style:normal;letter-spacing:.12em}
-  .reward b{display:block;margin:7px 0 5px;font-size:13px;font-weight:400}
-  .reward span{display:block;font-size:10px;line-height:1.6;color:var(--dim)}
-  .inventory{width:min(600px,100%);border:2px solid var(--line);background:#0b080580;padding:7px;text-align:left}
-  .inventory>span{display:block;font:9px var(--px);color:var(--dim);margin-bottom:5px}
-  .inv-row{display:flex;gap:4px;flex-wrap:wrap}
-  .inv-chip{font-size:9px;border:1px solid var(--line);padding:3px 5px;color:var(--dim)}
-  .inv-chip.on{color:var(--ink);border-color:var(--rot)}
-
-  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
-  @media (max-width:1000px){#hint{display:none}}
-  @media (max-width:920px){.mode-nav{display:none}}
-  @media (max-width:560px){
-    .stat{min-width:44px}.stat b{font-size:12px}
-    #objective{display:none}#turnHud{min-width:160px;grid-template-columns:auto 78px;padding-inline:4px}
-    #bReset{font-size:0;padding:3px 6px}#bReset:after{content:"↻";font:16px var(--px)}
-    .act{padding:5px 9px;font-size:11px}
-    #hint{display:none}
-    .rewards{grid-template-columns:1fr}.reward{min-height:0}.camp-head{align-items:start}.camp-summary{font-size:8px}
-  }
-  @media (max-width:720px){
-    #rail{overflow-x:hidden}.population,#objective,#order{display:none}
-    #scTitle{justify-content:flex-start;padding-top:10px}.rules{display:none}
-    #card{left:4px;right:4px;top:auto;bottom:4px;width:auto;max-height:42%;overflow:auto}
-  }
-
-  /* Superdesign v6 shell */
-  #cab{padding:5px;gap:5px;max-width:1280px}
-  #rail{height:64px;padding:5px 7px;background:#1b150f}
-  #rail .stat{justify-content:center;border-right:1px solid var(--line);padding-right:8px}
-  #rail .stat b{color:var(--gold)}
-  #objective{display:flex;min-width:180px;border-left:0;padding-left:0}
-  #objective b{font-size:12px}
-  #rail .stat span{font-size:10px}
-  #turnHud{min-width:208px;height:49px;align-self:center}
-  #order{flex:0 1 190px}
-  .mode-nav{margin-left:auto}
-  #stage{align-items:stretch;justify-content:stretch;gap:5px}
-  #battlePanel{position:relative;min-width:0;flex:1 1 auto;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#1e1710;border:2px solid var(--line)}
-  #frame{flex:0 0 auto}
-  canvas#cv{border:0}
-  #tacticsPanel{width:270px;flex:0 0 270px;display:flex;flex-direction:column;gap:5px;min-height:0;overflow:hidden}
-  .t-panel{border:2px solid var(--line);background:#18120d;padding:8px;line-height:1.4;min-height:0}
-  .t-panel>header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:5px;margin-bottom:6px;font:9px var(--px);letter-spacing:.12em;color:var(--gold)}
-  .t-panel>header small{font:8px var(--px);color:var(--dim);letter-spacing:.12em}
-  #activePanel{border-color:var(--gold);flex:0 0 auto}
-  #card{position:relative;left:auto;top:auto;width:auto;padding:0;border:0;background:none;display:flex;z-index:auto}
-  #card[hidden]{display:none}
-  #cClose{display:none}
-  .c-head canvas{width:26px;height:28px}
-  .c-nm{font-size:14px}.c-ty{font-size:10px}
-  .c-bars{font-size:10px;grid-template-columns:46px 1fr auto}.c-bars b{font-size:9px}
-  .c-ab{font-size:10px}.c-tr{display:none}
-  #growthPanel{flex:0 0 auto}
-  #birthHud{display:flex;flex-direction:column;align-items:stretch;margin:0;gap:3px}
+  /* engine-generated nodes */
+  .lg{font-size:12px;line-height:1.55;color:#d5c4a3;text-shadow:0 1px 0 #000,0 0 8px #000c}
+  .lg i{display:inline-block;width:7px;height:7px;margin-right:6px}
+  .oc{width:30px;height:32px;border:2px solid #4a3823;background:#0f0b07cc;flex:0 0 auto;cursor:pointer}
+  .oc canvas{width:100%;height:100%;display:block}
+  .oc.now{border-color:#e8b23c}
+  .oc.foe{border-color:#c9452e}
+  .birth-chip{display:flex;align-items:center;gap:6px;padding:5px 7px;background:#0f0b0799;border:1px solid #3a2c1c;font-size:12px;color:#a49070;white-space:nowrap;line-height:1.2}
+  .birth-chip i{width:7px;height:7px;flex:0 0 auto}
+  .birth-chip.ready{border-color:#e8b23c;color:#f2e6cf;background:#2b2117cc}
   #birthHud>b{display:none}
-  .birth-chip{display:grid;grid-template-columns:7px 1fr;gap:4px;padding:4px 5px;font-family:var(--jp);font-size:10px}
-  #logPanel{flex:1 1 auto;overflow:hidden}
-  #log{position:static;max-width:none;display:flex;gap:2px;overflow:hidden}
-  .lg{background:transparent;border:0;padding:0;font-size:10px;line-height:1.55;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  #campPanel{flex:0 0 auto;color:var(--dim);font-size:10px}
-  #campPanel b{color:var(--ink);font-weight:400}
-  .map-tag{position:absolute;z-index:3;top:6px;border:2px solid var(--line);background:#100c07e8;padding:4px 6px;line-height:1.25;pointer-events:none;min-width:90px}
-  .map-tag.left{left:6px;border-color:var(--gold)}.map-tag.right{right:6px;text-align:right}
-  .map-tag small{display:block;font:8px var(--px);letter-spacing:.1em;color:var(--dim)}
-  .map-tag b{font-size:12px;font-weight:400;color:var(--ink)}
-  .map-tag em{font-style:normal;font-size:10px;color:var(--rot)}
-  #tileHint{position:static;width:auto;flex:0 0 auto;border:2px solid var(--line);background:#0b0805ed;padding:6px 8px;line-height:1.35;pointer-events:none}
-  #tileHint[hidden]{display:none}
-  #tileHint header{display:flex;justify-content:space-between;gap:7px;font:9px var(--px);color:var(--gold);margin-bottom:4px}
-  #tileHint header small{color:var(--dim);font-size:8px}
-  #tileHintBody{display:grid;grid-template-columns:1fr 1fr;gap:2px 8px;font-size:10px;color:var(--dim)}
-  #tileHintBody b{font-weight:400;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  #acts{min-height:62px;padding:5px;background:#1b150f}
-  .command-label{width:98px;flex:0 0 98px;border-right:1px solid var(--line);line-height:1.25}
-  .command-label small{display:block;font:8px var(--px);letter-spacing:.12em;color:var(--gold)}
-  .command-label b{font-size:11px;font-weight:400}
-  .act{min-height:46px;padding:5px 12px;text-align:left;font-size:12px}
-  .act small{display:block;margin:2px 0 0;font-size:8px}
-  #hint{margin-left:auto;max-width:250px;font-size:10px}
-  #bReset{align-self:stretch}
-  .screen{line-height:normal}
-  #scTitle{position:fixed;inset:0;width:100vw;height:100dvh;z-index:20;gap:10px;background:#0b0805f4;padding:18px;justify-content:center}
-  #scTitle>.scan-line,#scTitle>.drift-a,#scTitle>.drift-b{position:absolute;top:0;pointer-events:none}
-  #scTitle>.scan-line{left:0;width:100%;height:1px;background:var(--gold);opacity:.3;animation:scan 8s linear infinite}
-  #scTitle>.drift-a{right:16%;width:3px;height:3px;background:var(--gold);opacity:.6;animation:drift 9s linear infinite}
-  #scTitle>.drift-b{right:33%;width:2px;height:4px;background:var(--rot);opacity:.6;animation:drift 12s linear 3s infinite}
-  body:has(#scTitle:not([hidden])) #cv{animation:map-pan 10s ease-in-out infinite alternate}
-  @keyframes map-pan{from{transform:scale(1.035) translate(-3px,-2px)}to{transform:scale(1.055) translate(4px,3px)}}
+  #order .olab{display:none}
+  .pb{display:block;height:7px;background:#0b0805;border:1px solid #3a2c1c}
+  .pb i{display:block;height:100%}
+  #cBars{display:grid;grid-template-columns:76px 1fr auto;gap:5px 10px;align-items:center;font-size:12px;color:#a49070}
+  #cBars b{font-family:"Silkscreen",monospace;font-size:12px;font-weight:400;color:#f2e6cf;font-variant-numeric:tabular-nums}
+  #cAb b{color:#e8b23c;font-weight:400}
+  #cTr em{font-style:normal;color:#f2e6cf}
+  #tileHintBody{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:12px;color:#a49070}
+  #tileHintBody b{font-weight:400;color:#f2e6cf;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #endTally{display:grid;grid-template-columns:auto auto;gap:4px 22px;font-size:13px;border:2px solid #4a3823;background:#1b150f;padding:12px 16px}
+  #endTally span{color:#a49070}
+  #endTally b{font-family:"Silkscreen",monospace;font-weight:400;text-align:right;font-variant-numeric:tabular-nums}
+  #endSub em{font-style:normal;color:#e8b23c}
+  #campSummary{font:12px/1.7 "Silkscreen",monospace;color:#a49070;text-align:right}
+  .reward{display:block;width:100%;min-height:150px;border:2px solid #4a3823;background:#1b150f;color:#f2e6cf;padding:14px;text-align:left;font-family:"DotGothic16",sans-serif}
+  .reward:hover,.reward:focus-visible{border-color:#e8b23c;background:#2b2117;outline:0}
+  .reward i{display:block;font:11px "Silkscreen",monospace;color:#e8b23c;font-style:normal;letter-spacing:.14em}
+  .reward b{display:block;margin:10px 0 7px;font-size:16px;font-weight:400}
+  .reward span{display:block;font-size:13px;line-height:1.7;color:#a49070}
+  .inv-chip{font-size:12px;border:1px solid #3a2c1c;padding:4px 7px;color:#6d5a42}
+  .inv-chip.on{color:#f2e6cf;border-color:#7fae2f}
+  .rule{flex:1;border:2px solid #4a3823;background:#1b150fcc;padding:10px 8px;font-size:12px;line-height:1.6;color:#a49070;text-align:center}
+  .rule canvas{width:38px;height:40px;margin:0 auto 6px;display:block}
+  .rule b{display:block;font-size:13px;color:#e8b23c;font-weight:400;margin-bottom:4px}
+  .act{font-family:"DotGothic16",sans-serif;font-size:15px;color:#f2e6cf;background:#241c13;border:2px solid #4a3823;
+       padding:8px 16px;min-height:54px;min-width:104px;text-align:left;flex:0 0 auto;white-space:nowrap;line-height:1.3}
+  .act:hover:not(:disabled){background:#3a2c1c;border-color:#7a5f38}
+  .act:disabled{opacity:.3;cursor:default}
+  .act.on{background:#e8b23c;color:#22160a;border-color:#ffe08a}
+  .act small{display:block;font-family:"Silkscreen",monospace;font-size:10px;color:#68d0e0;margin-top:3px}
+  .act.on small{color:#4a3208}
+  .act:focus-visible{outline:2px solid #e8b23c;outline-offset:2px}
+  #turnHud.foe #turnLabel{color:#c9452e}
+  #turnHud.foe{border-color:#c9452e}
+  .mbtn{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:12px 16px;
+        border:2px solid #4a3823;background:#1b150f;font-size:15px;color:#f2e6cf;min-height:50px}
+  .mbtn:hover,.mbtn:focus-visible{border-color:#e8b23c;background:#2b2117;outline:0}
+  .mbtn i{font-style:normal;font-family:"Silkscreen",monospace;font-size:11px;color:#a49070;letter-spacing:.1em}
+  .mbtn.primary{border-color:#e8b23c;background:#e8b23c;color:#22160a}
+  .mbtn.primary i{color:#4a3208}
+  .mbtn.primary:hover{background:#ffe08a}
+  .sbtn{border:2px solid #4a3823;background:#241c13;min-width:34px;min-height:34px;font-size:14px;line-height:1}
+  .sbtn:hover{border-color:#e8b23c}
+  .sbtn.on{background:#e8b23c;color:#22160a;border-color:#ffe08a}
+
+  @keyframes map-pan{from{transform:scale(1.03) translate(-3px,-2px)}to{transform:scale(1.05) translate(4px,3px)}}
   @keyframes scan{from{transform:translateY(-12px)}to{transform:translateY(calc(100dvh + 12px))}}
-  @keyframes drift{from{transform:translate(0,-10px)}to{transform:translate(-42px,calc(100dvh + 10px))}}
-  #scTitle .rules,#scTitle .sub{display:none}
-  .chronicle{width:min(360px,86vw)}
-  .chronicle:before,.chronicle:after{width:76%;background:var(--gold)}
-  .logo{font-size:clamp(24px,5vw,38px);letter-spacing:.08em}
-  .chapter{width:min(360px,86vw);padding:9px 12px}
-  .chapter .tag{font-size:11px}.maxim{font-size:13px}
-  .title-hint{width:100%;font-size:9px;line-height:1.45;border-top:2px solid var(--soil-3);padding-top:7px;color:#6d5a42;white-space:normal}
-  .title-actions{width:min(320px,78vw);gap:6px}
-  .start{width:100%;font-family:var(--jp);font-size:12px;padding:10px 18px;box-shadow:none}
-  .start.secondary{padding:7px 18px}
-  .music-note{font-size:7px}
-  @media (max-width:820px){
-    #tacticsPanel{display:none}#objective{min-width:140px}#turnHud{min-width:185px}#order{flex:1 1 auto}
-  }
-  @media (max-width:720px){
-    #rail{height:54px}.population,#objective,#order{display:none}
-    #stage{min-height:0}#battlePanel{width:100%}
-    #scTitle{justify-content:center;padding-top:18px}.rules{display:none}
-    #acts{min-height:54px}.command-label{display:none}.act{padding:4px 8px;min-height:40px;font-size:10px}#hint{display:none}
-  }
-  @media (max-width:480px){
-    #turnHud{min-width:150px;grid-template-columns:auto 70px}.turn-bars{grid-template-columns:14px 1fr auto}
-    #rail .stat{padding-right:4px}.act{padding-inline:6px}.act small{display:none}
-  }
+  @keyframes bannerIn{0%{opacity:0;transform:translateY(-10px)}12%{opacity:1;transform:none}80%{opacity:1}100%{opacity:0}}
+  @keyframes flashOut{from{opacity:1}to{opacity:0}}
+  body:has(#scTitle:not([hidden])) #cv{animation:map-pan 10s ease-in-out infinite alternate}
+  body:has(#scTitle:not([hidden])) #hudTop,body:has(#scTitle:not([hidden])) #hudBottom,
+  body:has(#scTitle:not([hidden])) #forestPanel,body:has(#scTitle:not([hidden])) #logWrap,
+  body:has(#scTitle:not([hidden])) #tileHint,
+  body:has(#scCamp:not([hidden])) #hudTop,body:has(#scCamp:not([hidden])) #hudBottom,
+  body:has(#scCamp:not([hidden])) #forestPanel,body:has(#scCamp:not([hidden])) #logWrap,
+  body:has(#scCamp:not([hidden])) #tileHint,
+  body:has(#scEnd:not([hidden])) #hudTop,body:has(#scEnd:not([hidden])) #hudBottom,
+  body:has(#scEnd:not([hidden])) #forestPanel,body:has(#scEnd:not([hidden])) #logWrap,
+  body:has(#scEnd:not([hidden])) #tileHint{display:none!important}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+  @media (max-height:620px){#ruleBox{display:none!important}}
+  @media (max-width:760px){#forestPanel,#tileHint{width:170px}#turnHud{flex:0 0 170px}}
 </style>
+<script src="poop-config.js?v=6"></script>
+<script src="tactics-engine.js?v=1"></script>
+</head>
+<body>
 
-<div id="cab">
-  <div id="rail">
-    <div class="stat"><b id="tStage">1/1</b><span id="lStage">ステージ</span></div>
-    <div class="stat"><b id="tRound">1</b><span id="lRound">ラウンド</span></div>
-    <div class="stat population"><b id="tApes">3</b><span id="lApes">ゴリラ</span></div>
-    <div class="stat population"><b id="tFoes">0</b><span id="lFoes">人族</span></div>
-    <div class="stat" id="objective"><b id="tObjective">5ラウンド生存</b><span id="lObjective">クリア条件</span></div>
-    <div id="turnHud" aria-live="polite">
-      <span id="turnLabel">CURRENT TURN</span><b id="turnName">準備中</b>
-      <div class="turn-bars">
-        <span>HP</span><span class="pb"><i id="turnHpBar"></i></span><b id="turnHp">—</b>
-        <span>MP</span><span class="pb"><i id="turnMpBar"></i></span><b id="turnMp">—</b>
-      </div>
-    </div>
-    <div id="order"><span class="olab">行動順</span></div>
-    <nav class="mode-nav" aria-label="モード"><a href="realtime.html">REALTIME</a><a href="tactics.html">TACTICS</a><a href="studio.html">STUDIO</a></nav>
-    <button class="btn" id="bLang" aria-label="Switch language">JP / EN</button>
-    <button class="btn" id="bSound">♪ ON</button>
-  </div>
+<div id="app" style="position:fixed;inset:0;background:#0d0a06;color:#f2e6cf;font-family:'DotGothic16','Hiragino Kaku Gothic ProN','Yu Gothic',sans-serif;overflow:hidden;--hud-a:0.9">
+  <div id="stage" style="position:absolute;inset:0">
 
-  <div id="stage">
-    <section id="battlePanel" aria-label="戦場">
-      <div class="map-tag left"><small>ACTIVE</small><b id="mapActiveName">準備中</b><br><em id="mapActiveMeta">—</em></div>
-      <div class="map-tag right"><small>NEXT EVENT</small><b id="nextEventName">森の時間</b><br><em id="nextEventMeta">—</em></div>
-      <div id="frame">
-        <canvas id="cv" width="336" height="292" tabindex="0" aria-label="戦場" aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown Enter"></canvas>
-
-        <div class="screen" id="scTitle">
-          <span class="scan-line" aria-hidden="true"></span>
-          <span class="drift-a" aria-hidden="true"></span>
-          <span class="drift-b" aria-hidden="true"></span>
-          <div class="chronicle">
-            <div class="tag" style="font-size:8px">FOREST CHRONICLE</div>
-            <div class="logo">POOPULATION</div>
-            <div class="tag">T A C T I C S</div>
-          </div>
-          <div class="chapter"><div class="tag">第一章　うんちの産声</div><div class="maxim">糞は土となり、森は兵を生む。</div><p class="title-hint">ヒント：実とうんちで森を育て、成木を5ターン守れば仲間が生まれる。</p></div>
-          <p class="sub">神であるあなたは、ゴリラに<em>命令できない</em>。<br>実とうんちで森を育て、襲撃を生き延びろ。</p>
-          <div class="rules" id="ruleBox"></div>
-          <div class="title-actions">
-            <button class="start" id="bStart">音楽とともにはじめる</button>
-            <button class="start secondary" id="bStartSilent">音なしではじめる</button>
-          </div>
-        </div>
-
-        <div class="screen" id="scEnd" hidden>
-          <div class="big" id="endTitle">—</div>
-          <p class="sub" id="endSub">—</p>
-          <div class="tally" id="endTally"></div>
-          <p class="obit" id="endObit"></p>
-          <button class="start" id="bAgain">もういちど</button>
-        </div>
-
-        <div class="screen" id="scCamp" hidden>
-          <div class="camp-head">
-            <div><div class="tag">STAGE CLEAR</div><div class="big" id="campTitle">森のキャンプ</div></div>
-            <div class="camp-summary" id="campSummary"></div>
-          </div>
-          <p class="sub">戦果をひとつ選んで、群れを次のステージへ。</p>
-          <div class="rewards" id="rewardBox"></div>
-          <div class="inventory"><span>RUN INVENTORY</span><div class="inv-row" id="inventory"></div></div>
+    <section id="battlePanel" aria-label="戦場" style="position:absolute;inset:0;display:flex;padding:56px 16px 96px">
+      <div id="frameArea" style="flex:1 1 auto;min-width:0;display:flex;align-items:center;justify-content:center">
+        <div id="frame" style="position:relative;line-height:0">
+          <canvas id="cv" width="336" height="292" tabindex="0" aria-label="戦場" aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown Space Enter" style="display:block;background:#241a11;box-shadow:0 0 0 2px #3a2c1c,0 24px 60px #000000b0"></canvas>
         </div>
       </div>
     </section>
 
-    <aside id="tacticsPanel" aria-label="戦況パネル">
-      <section class="t-panel" id="activePanel"><header><span>ACTIVE UNIT</span><small id="activeKind">CURRENT</small></header>
-        <div id="card" hidden>
-          <button id="cClose" aria-label="詳細を閉じる">×</button>
-          <div class="c-head">
-            <canvas id="cPic" width="24" height="26"></canvas>
-            <div><div class="c-nm" id="cName">—</div><div class="c-ty" id="cType">—</div></div>
+    <div id="flash" style="position:absolute;inset:0;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,#00000000 42%,#c9452e66 100%)"></div>
+
+    <header id="hudTop" style="position:absolute;top:0;left:0;right:0;height:52px;display:flex;align-items:stretch;gap:14px;padding:0 12px;background:linear-gradient(#0b0805f2,#0b0805cc);border-bottom:2px solid #3a2c1c;backdrop-filter:blur(2px)">
+      <button id="btnMenu" data-act="openPause" title="Esc" style="display:flex;flex-direction:column;justify-content:center;gap:2px;padding:0 12px;border-right:1px solid #3a2c1c;color:#e8b23c">
+        <span style="font-family:'Silkscreen',monospace;font-size:15px;letter-spacing:.16em">MENU</span>
+        <span data-en="ESC" style="font-size:11px;color:#6d5a42">Esc</span>
+      </button>
+
+      <div style="display:flex;align-items:center;gap:16px">
+        <div style="display:flex;flex-direction:column;justify-content:center">
+          <b id="tStage" style="font-family:'Silkscreen',monospace;font-size:17px;font-weight:400;color:#e8b23c;line-height:1.1;font-variant-numeric:tabular-nums">1/1</b>
+          <span id="lStage" style="font-size:11px;color:#6d5a42;letter-spacing:.06em">ステージ</span>
+        </div>
+        <div style="display:flex;flex-direction:column;justify-content:center">
+          <b id="tRound" style="font-family:'Silkscreen',monospace;font-size:17px;font-weight:400;color:#f2e6cf;line-height:1.1;font-variant-numeric:tabular-nums">1</b>
+          <span id="lRound" style="font-size:11px;color:#6d5a42;letter-spacing:.06em">ラウンド</span>
+        </div>
+        <div style="width:1px;align-self:center;height:26px;background:#3a2c1c"></div>
+        <div style="display:flex;flex-direction:column;justify-content:center">
+          <b id="tObjective" style="font-size:13px;font-weight:400;color:#f2e6cf;line-height:1.2;white-space:nowrap">—</b>
+          <span id="lObjective" style="font-size:11px;color:#6d5a42;letter-spacing:.06em">クリア条件</span>
+        </div>
+      </div>
+
+      <div style="flex:1 1 auto"></div>
+
+      <div style="display:flex;align-items:center;gap:14px">
+        <div style="display:flex;align-items:center;gap:6px">
+          <i style="width:8px;height:8px;background:#7fae2f;display:block"></i>
+          <b id="tApes" style="font-family:'Silkscreen',monospace;font-size:15px;font-weight:400;font-variant-numeric:tabular-nums">0</b>
+          <span id="lApes" style="font-size:11px;color:#6d5a42">ゴリラ</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <i style="width:8px;height:8px;background:#c9452e;display:block"></i>
+          <b id="tFoes" style="font-family:'Silkscreen',monospace;font-size:15px;font-weight:400;font-variant-numeric:tabular-nums">0</b>
+          <span id="lFoes" style="font-size:11px;color:#6d5a42">人族</span>
+        </div>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:8px;border-left:1px solid #3a2c1c;padding-left:14px;min-width:0">
+        <span data-en="ORDER" style="font-family:'Silkscreen',monospace;font-size:10px;color:#6d5a42;letter-spacing:.12em">行動順</span>
+        <div id="order" style="display:flex;align-items:center;gap:4px;overflow:hidden"></div>
+      </div>
+    </header>
+
+    <aside id="forestPanel" style="position:absolute;top:66px;right:16px;width:206px;display:flex;flex-direction:column;gap:6px;padding:9px 10px;background:rgba(11,8,5,var(--hud-a));border:2px solid #3a2c1c">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px">
+        <b id="nextEventName" style="font-size:13px;font-weight:400;color:#e8b23c">森の成長</b>
+        <em id="nextEventMeta" style="font-style:normal;font-size:11px;color:#a49070;text-align:right">—</em>
+      </div>
+      <div id="birthHud" aria-label="出生予報" style="display:flex;flex-direction:column;gap:4px"></div>
+    </aside>
+
+    <div id="logWrap" style="position:absolute;left:16px;bottom:104px;max-width:44%;display:flex;flex-direction:column;gap:3px;pointer-events:none">
+      <div id="log" style="display:flex;flex-direction:column;gap:3px"></div>
+    </div>
+
+    <section id="tileHint" hidden="hidden" style="position:absolute;right:16px;bottom:104px;width:206px;padding:8px 10px;background:rgba(11,8,5,var(--hud-a));border:2px solid #3a2c1c;pointer-events:none">
+      <header style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:5px">
+        <span id="tileHintTitle" style="font-family:'Silkscreen',monospace;font-size:10px;letter-spacing:.12em;color:#e8b23c">TILE</span>
+        <small id="tileHintCoord" style="font-family:'Silkscreen',monospace;font-size:10px;color:#6d5a42">—</small>
+      </header>
+      <div id="tileHintBody"></div>
+    </section>
+
+    <footer id="hudBottom" style="position:absolute;left:0;right:0;bottom:0;min-height:90px;display:flex;align-items:stretch;gap:12px;padding:8px 12px;background:linear-gradient(#0b0805cc,#0b0805f2);border-top:2px solid #3a2c1c;backdrop-filter:blur(2px)">
+      <div id="turnHud" aria-live="polite" style="flex:0 0 214px;display:flex;flex-direction:column;justify-content:center;gap:4px;padding:8px 12px;border:2px solid #e8b23c;background:#1b150f">
+        <div style="display:flex;align-items:baseline;gap:8px">
+          <span id="turnLabel" style="font-family:'Silkscreen',monospace;font-size:10px;letter-spacing:.1em;color:#e8b23c">TURN</span>
+          <b id="turnName" style="font-size:15px;font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">準備中</b>
+        </div>
+        <div style="display:grid;grid-template-columns:22px 1fr 52px;gap:3px 6px;align-items:center;font-family:'Silkscreen',monospace;font-size:10px;color:#6d5a42">
+          <span>HP</span><span class="pb"><i id="turnHpBar"></i></span><b id="turnHp" style="font-weight:400;color:#f2e6cf;font-size:11px;text-align:right;font-variant-numeric:tabular-nums">—</b>
+          <span>MP</span><span class="pb"><i id="turnMpBar"></i></span><b id="turnMp" style="font-weight:400;color:#f2e6cf;font-size:11px;text-align:right;font-variant-numeric:tabular-nums">—</b>
+        </div>
+      </div>
+
+      <div style="flex:1 1 auto;display:flex;flex-direction:column;gap:5px;min-width:0">
+        <div style="display:flex;gap:6px;align-items:stretch;overflow-x:auto">
+          <button class="act" id="aAttack" aria-keyshortcuts="1">[1] こうげき</button>
+          <button class="act" id="aSkill" aria-keyshortcuts="2">[2] とくぎ<small></small></button>
+          <button class="act" id="aEat" aria-keyshortcuts="3">[3] たべる</button>
+          <button class="act" id="aPoop" aria-keyshortcuts="4">[4] うんち</button>
+          <button class="act" id="aWait" aria-keyshortcuts="5">[5] まつ</button>
+          <button class="act" id="aCancel" hidden>やめる</button>
+          <div style="flex:1 1 auto"></div>
+          <button class="act" id="btnDetails" data-act="openDetails" style="min-width:0;padding:8px 12px;text-align:center">
+            <span data-en="INFO" style="font-size:14px">詳細</span>
+            <small>TAB</small>
+          </button>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;min-width:0">
+          <b id="commandUnit" style="font-size:12px;font-weight:400;color:#a49070;white-space:nowrap">—</b>
+          <div id="hint" style="font-size:12px;color:#6d5a42;line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">—</div>
+        </div>
+      </div>
+    </footer>
+
+    <div id="banner" style="position:absolute;top:96px;left:0;right:0;display:none;justify-content:center;pointer-events:none">
+      <div id="bannerBox" style="padding:10px 26px;background:#0b0805e8;border:2px solid #e8b23c;font-family:'Silkscreen',monospace;font-size:20px;letter-spacing:.1em;color:#e8b23c;text-align:center"></div>
+    </div>
+
+    <div class="screen" id="scTitle" style="position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(8px,1.8vh,18px);padding:20px;background:#0b0805f0;overflow:auto">
+      <span class="scan-line" aria-hidden="true" style="position:absolute;left:0;top:0;width:100%;height:1px;background:#e8b23c;opacity:.28;animation:scan 8s linear infinite;pointer-events:none"></span>
+      <div style="text-align:center">
+        <div style="font-family:'Silkscreen',monospace;font-size:11px;letter-spacing:.34em;color:#6d5a42;margin-bottom:8px">FOREST CHRONICLE</div>
+        <div style="width:100%;height:2px;background:#e8b23c;margin-bottom:10px"></div>
+        <div style="font-family:'Silkscreen',monospace;font-weight:700;font-size:clamp(28px,5.4vw,46px);letter-spacing:.07em;color:#e8b23c;text-shadow:3px 3px 0 #6b3f14,6px 6px 0 #00000090;line-height:1.05;white-space:nowrap">POOPULATION</div>
+        <div style="font-family:'Silkscreen',monospace;font-size:13px;letter-spacing:.44em;color:#a49070;margin-top:8px">TACTICS</div>
+        <div style="width:100%;height:2px;background:#e8b23c;margin-top:10px"></div>
+      </div>
+
+      <div class="chapter" style="width:min(420px,88vw);border:2px solid #4a3823;background:#f2e6cf;color:#22160a;padding:12px 16px;box-shadow:6px 6px 0 #0009;text-align:center">
+        <div class="tag" style="font-size:12px;letter-spacing:.1em;color:#5a4526">第一章　うんちの産声</div>
+        <div class="maxim" style="font-size:15px;line-height:1.6;margin-top:5px">糞は土となり、森は兵を生む。</div>
+        <p class="title-hint" style="font-size:11px;line-height:1.6;color:#6b5a3e;border-top:1px solid #c7b795;margin-top:8px;padding-top:7px">ヒント：実とうんちで森を育て、成木を5ターン守れば仲間が生まれる。</p>
+      </div>
+      <p class="sub" hidden="hidden">—</p>
+
+      <div style="width:min(420px,88vw);display:flex;flex-direction:column;gap:8px">
+        <button class="mbtn primary" id="btnContinue" data-act="continueRun" style="display:none">
+          <span data-en="CONTINUE">つづける</span><i id="continueMeta">—</i>
+        </button>
+        <button class="mbtn" id="bStart" style="justify-content:center;border-color:#e8b23c;color:#e8b23c">あたらしくはじめる</button>
+        <div style="display:flex;gap:8px">
+          <button class="mbtn" data-act="openControls" style="justify-content:center"><span data-en="CONTROLS">操作</span></button>
+          <button class="mbtn" data-act="openSettings" style="justify-content:center"><span data-en="SETTINGS">設定</span></button>
+        </div>
+      </div>
+
+      <div class="rules" id="ruleBox" style="display:flex;gap:8px;width:min(560px,92vw)"></div>
+      <div data-en="Keyboard / Gamepad / Mouse — arrows or drag to move, Space to confirm" style="font-size:11px;color:#5c4b34;text-align:center">キーボード／ゲームパッド／マウス対応　—　矢印またはドラッグで移動、スペースで決定</div>
+    </div>
+
+    <div class="screen" id="scEnd" hidden="hidden" style="position:absolute;inset:0;z-index:21;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;background:#0b0805f5;overflow:auto">
+      <div class="big" id="endTitle" style="font-family:'Silkscreen',monospace;font-size:clamp(26px,5vw,40px);font-weight:700;letter-spacing:.06em;color:#e8b23c">—</div>
+      <p class="sub" id="endSub" style="font-size:14px;line-height:1.9;max-width:46ch;text-align:center;color:#d5c4a3">—</p>
+      <div class="tally" id="endTally"></div>
+      <p class="obit" id="endObit" style="font-size:12px;color:#6d5a42;max-width:44ch;line-height:1.8;text-align:center"></p>
+      <div style="display:flex;gap:8px;width:min(420px,88vw)">
+        <button class="mbtn primary" id="bAgain" style="justify-content:center">もういちど</button>
+        <button class="mbtn" data-act="toTitle" style="justify-content:center"><span data-en="TITLE">タイトルへ</span></button>
+      </div>
+    </div>
+
+    <div class="screen" id="scCamp" hidden="hidden" style="position:absolute;inset:0;z-index:21;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;background:#0b0805f5;overflow:auto">
+      <div class="camp-head" style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;width:min(720px,94vw)">
+        <div>
+          <div class="tag" style="font-family:'Silkscreen',monospace;font-size:11px;letter-spacing:.16em;color:#7fae2f">STAGE CLEAR</div>
+          <div class="big" id="campTitle" style="font-size:clamp(20px,3.4vw,28px);color:#e8b23c;margin-top:4px">森のキャンプ</div>
+        </div>
+        <div class="camp-summary" id="campSummary"></div>
+      </div>
+      <p class="sub" style="font-size:14px;color:#d5c4a3;width:min(720px,94vw)">戦果をひとつ選んで、群れを次のステージへ。</p>
+      <div class="rewards" id="rewardBox" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:min(720px,94vw)"></div>
+      <div class="inventory" style="width:min(720px,94vw);border:2px solid #3a2c1c;background:#0b080580;padding:10px">
+        <span data-en="RUN INVENTORY" style="display:block;font-family:'Silkscreen',monospace;font-size:10px;letter-spacing:.12em;color:#6d5a42;margin-bottom:7px">RUN INVENTORY</span>
+        <div class="inv-row" id="inventory" style="display:flex;gap:5px;flex-wrap:wrap"></div>
+      </div>
+    </div>
+
+    <div id="detailsOverlay" style="position:absolute;inset:0;z-index:24;display:none;align-items:center;justify-content:center;padding:24px;background:#0b0805e8">
+      <div style="width:min(520px,94vw);max-height:86%;overflow:auto;border:2px solid #4a3823;background:#151009;padding:16px">
+        <header style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #3a2c1c;padding-bottom:9px;margin-bottom:12px">
+          <span data-en="UNIT DETAIL" style="font-family:'Silkscreen',monospace;font-size:11px;letter-spacing:.14em;color:#e8b23c">ユニット詳細</span>
+          <small id="activeKind" style="font-family:'Silkscreen',monospace;font-size:10px;color:#6d5a42">CURRENT</small>
+        </header>
+        <div id="card" style="display:flex;flex-direction:column;gap:12px;line-height:1.5">
+          <button id="cClose" data-act="closeUi" style="position:absolute;right:20px;top:16px;display:none">×</button>
+          <div class="c-head" style="display:flex;gap:12px;align-items:center">
+            <canvas id="cPic" width="24" height="26" style="width:48px;height:52px;flex:0 0 auto"></canvas>
+            <div>
+              <div class="c-nm" id="cName" style="font-size:18px">—</div>
+              <div class="c-ty" id="cType" style="font-size:12px;color:#a49070">—</div>
+            </div>
           </div>
           <div class="c-bars" id="cBars"></div>
-          <div class="c-ab" id="cAb"></div>
-          <div class="c-tr" id="cTr"></div>
+          <div class="c-ab" id="cAb" style="font-size:13px;border-left:3px solid #e8b23c;padding-left:9px;color:#d5c4a3"></div>
+          <div class="c-tr" id="cTr" style="font-size:12px;color:#a49070;border-top:1px solid #3a2c1c;padding-top:9px;line-height:1.8"></div>
         </div>
-      </section>
-      <section class="t-panel" id="growthPanel"><header><span id="lGrowth">成長・誕生予報</span><small>FOREST</small></header><div id="birthHud" aria-label="出生予報"></div></section>
-      <section id="tileHint" hidden><header><span id="tileHintTitle">TILE</span><small id="tileHintCoord">—</small></header><div id="tileHintBody"></div></section>
-      <section class="t-panel" id="logPanel"><header><span id="lLog">戦況記録</span><small>LOG</small></header><div id="log"></div></section>
-      <section class="t-panel" id="campPanel"><header><span id="lCamp">戦線野営</span><small>CAMP</small></header><span id="campCopy"><b>達成後：</b>実の強化／次代の編成／森の記録</span></section>
-    </aside>
-  </div>
+        <button class="mbtn" data-act="closeUi" style="justify-content:center;margin-top:14px"><span data-en="CLOSE">とじる</span><i>TAB</i></button>
+      </div>
+    </div>
 
-  <div id="acts">
-    <div class="command-label"><small>COMMAND</small><b id="commandUnit">ゴリラの行動</b></div>
-    <button class="act" id="aAttack" aria-keyshortcuts="1">[1] こうげき</button>
-    <button class="act" id="aSkill" aria-keyshortcuts="2">[2] とくぎ<small></small></button>
-    <button class="act" id="aEat" aria-keyshortcuts="3">[3] たべる</button>
-    <button class="act" id="aPoop" aria-keyshortcuts="4">[4] うんち</button>
-    <button class="act" id="aWait" aria-keyshortcuts="5">[5] まつ</button>
-    <button class="act" id="aCancel" hidden>やめる</button>
-    <div id="hint">—</div>
-    <button class="btn" id="bReset">やり直す</button>
+    <div id="pauseOverlay" style="position:absolute;inset:0;z-index:25;display:none;align-items:center;justify-content:center;background:#0b0805ee">
+      <div style="width:min(400px,90vw);display:flex;flex-direction:column;gap:8px">
+        <div style="text-align:center;margin-bottom:6px">
+          <div style="font-family:'Silkscreen',monospace;font-size:22px;letter-spacing:.2em;color:#e8b23c">PAUSED</div>
+          <div id="pauseMeta" style="font-size:12px;color:#6d5a42;margin-top:5px">—</div>
+        </div>
+        <button class="mbtn primary" data-act="closeUi"><span data-en="RESUME">もどる</span><i>ESC</i></button>
+        <button class="mbtn" data-act="openControls"><span data-en="CONTROLS">操作</span><i>KEYS</i></button>
+        <button class="mbtn" data-act="openSettings"><span data-en="SETTINGS">設定</span><i>OPT</i></button>
+        <button class="mbtn" id="bReset" style="justify-content:center">ステージ再開</button>
+        <button class="mbtn" data-act="toTitle" style="justify-content:center;color:#a49070"><span data-en="SAVE &amp; QUIT TO TITLE">保存してタイトルへ</span></button>
+      </div>
+    </div>
+
+    <div id="settingsOverlay" style="position:absolute;inset:0;z-index:26;display:none;align-items:center;justify-content:center;padding:24px;background:#0b0805f2">
+      <div style="width:min(460px,94vw);max-height:88%;overflow:auto;border:2px solid #4a3823;background:#151009;padding:18px">
+        <div style="font-family:'Silkscreen',monospace;font-size:14px;letter-spacing:.16em;color:#e8b23c;margin-bottom:16px">SETTINGS</div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px">
+          <span data-en="Music" style="font-size:14px">音楽 BGM</span>
+          <div style="display:flex;gap:5px;align-items:center">
+            <button class="sbtn" data-act="bgmDown">−</button>
+            <span id="bgmMeter" style="font-family:'Silkscreen',monospace;font-size:14px;color:#e8b23c;min-width:74px;text-align:center">▮▮▮▯▯</span>
+            <button class="sbtn" data-act="bgmUp">＋</button>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px">
+          <span data-en="Sound" style="font-size:14px">効果音 SE</span>
+          <div style="display:flex;gap:5px;align-items:center">
+            <button class="sbtn" data-act="sfxDown">−</button>
+            <span id="sfxMeter" style="font-family:'Silkscreen',monospace;font-size:14px;color:#e8b23c;min-width:74px;text-align:center">▮▮▮▮▯</span>
+            <button class="sbtn" data-act="sfxUp">＋</button>
+          </div>
+        </div>
+
+        <div style="height:1px;background:#3a2c1c;margin:14px 0"></div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px">
+          <span data-en="Language" style="font-size:14px">言語 Language</span>
+          <button class="sbtn" id="bLang" style="padding:0 14px;font-family:'Silkscreen',monospace;font-size:12px;color:#e8b23c">JP / EN</button>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px">
+          <span data-en="Fullscreen" style="font-size:14px">フルスクリーン</span>
+          <button class="sbtn" data-act="toggleFullscreen" style="padding:0 14px;font-size:13px"><span data-en="TOGGLE">切替</span></button>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px">
+          <span data-en="Pixel-perfect scaling" style="font-size:14px">ピクセル等倍スケール</span>
+          <button class="sbtn" id="btnPP" data-act="togglePixelPerfect" style="padding:0 14px;font-size:13px">OFF</button>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px">
+          <span data-en="Battle log" style="font-size:14px">戦況ログ</span>
+          <button class="sbtn" id="btnLog" data-act="toggleLog" style="padding:0 14px;font-size:13px">ON</button>
+        </div>
+
+        <div style="height:1px;background:#3a2c1c;margin:14px 0"></div>
+
+        <div style="display:flex;gap:8px">
+          <button class="mbtn" data-act="replayTutorial" style="justify-content:center;font-size:13px"><span data-en="Replay tutorial">チュートリアル再表示</span></button>
+          <button class="mbtn" data-act="wipeSave" style="justify-content:center;font-size:13px;color:#c9452e"><span data-en="Delete save">セーブ削除</span></button>
+        </div>
+        <button class="mbtn primary" data-act="backFromSub" style="justify-content:center;margin-top:12px"><span data-en="BACK">もどる</span></button>
+      </div>
+    </div>
+
+    <div id="controlsOverlay" style="position:absolute;inset:0;z-index:26;display:none;align-items:center;justify-content:center;padding:24px;background:#0b0805f2">
+      <div style="width:min(560px,94vw);max-height:88%;overflow:auto;border:2px solid #4a3823;background:#151009;padding:18px">
+        <div style="font-family:'Silkscreen',monospace;font-size:14px;letter-spacing:.16em;color:#e8b23c;margin-bottom:6px">CONTROLS</div>
+        <div data-en="Click a key to rebind. Gamepad is mapped automatically." style="font-size:12px;color:#6d5a42;margin-bottom:14px">キーをクリックすると変更できます。ゲームパッドは自動対応。</div>
+        <div id="bindRows" style="display:flex;flex-direction:column;gap:6px"></div>
+        <div data-en="Move: pick a tile with the arrows, then press Space to step onto it (Enter works too), or drag the gorilla. Camera-free grid — everything is on one screen." style="font-size:12px;color:#6d5a42;line-height:1.8;margin-top:14px;border-top:1px solid #3a2c1c;padding-top:12px">移動：矢印キーでマスを選び、スペースキーでそのマスへ移動（Enterでも可）。ゴリラをドラッグしても動かせます。盤面は1画面に収まります。</div>
+        <button class="mbtn primary" data-act="backFromSub" style="justify-content:center;margin-top:14px"><span data-en="BACK">もどる</span></button>
+      </div>
+    </div>
+
+    <div id="tutorial" style="position:absolute;left:50%;bottom:110px;transform:translateX(-50%);z-index:18;display:none;width:min(460px,92vw);padding:14px 16px;background:#151009f5;border:2px solid #e8b23c;box-shadow:0 12px 40px #000a">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:6px">
+        <span id="tutStep" style="font-family:'Silkscreen',monospace;font-size:10px;letter-spacing:.14em;color:#e8b23c">STEP 1 / 3</span>
+        <button data-act="skipTutorial" style="font-size:11px;color:#6d5a42"><span data-en="Skip">スキップ</span></button>
+      </div>
+      <div id="tutBody" style="font-size:14px;line-height:1.7;color:#f2e6cf">—</div>
+      <button class="mbtn primary" data-act="nextTutorial" style="justify-content:center;margin-top:10px;min-height:42px"><span data-en="NEXT">つぎへ</span></button>
+    </div>
+
+    <div id="stubs" aria-hidden="true" style="display:none">
+      <b id="mapActiveName">—</b><em id="mapActiveMeta">—</em>
+      <span id="lGrowth">成長・誕生予報</span><span id="lLog">戦況記録</span><span id="lCamp">戦線野営</span><span id="campCopy">—</span>
+      <button id="bSound">♪ ON</button>
+      <button id="bStartSilent">start silent</button>
+    </div>
+
   </div>
 </div>
 
@@ -354,1776 +390,353 @@
 (() => {
 "use strict";
 
-/* ══════════ 盤面 ══════════ */
-const TS=24, COLS=14, ROWS=10, HSTEP=7, YOFF=30;
-const CW=COLS*TS, CH=ROWS*TS+YOFF+22;
-const CFG=window.POOPULATION_CONFIG.animation;
-const MASTER=window.POOPULATION_CONFIG.tactics;
-let LANG="ja";
-try{ LANG=localStorage.getItem("poopulation-lang")==="en"?"en":"ja"; }catch{}
-const EN_REPLACE=[
-  ["森を育てて、人族の襲撃をしのげ","Grow the forest and survive the human raids"],
-  ["ドラッグで移動、そのあと行動をえらぶ","Drag to move, then choose an action"],
-  ["実のある成木の上で使う","Stand on a fruiting tree"],
-  ["前後左右 4マス","4 orthogonal tiles"],
-  ["射程内の敵をえらぶ","Choose an enemy in range"],
-  ["金色の敵をえらぶ","Choose a highlighted enemy"],
-  ["行動をえらぶ","Choose an action"],
-  ["その場にうんちをする","Poop on the current tile"],
-  ["おなかに実が","Fruit needed:"],
-  ["個ひつよう",""],
-  ["ラウンド生存"," rounds to survive"],
-  ["普通のゴリラ","Gorilla"],["モンキー","Monkey"],["ガーディアンゴリラ","Guardian Gorilla"],
-  ["シルバーバック","Silverback"],["ウィザードゴリラ","Wizard Gorilla"],["チンパンジー","Chimpanzee"],
-  ["ゴリラを殺すハゲ","Bald Hunter"],["ゴリラを殺す人","Hunter"],["ファイアーメン","Fireman"],["ゴリラジコン","Gorilla Drone"],
-  ["草原生まれ","Grassland-born"],["硬木林生まれ","Hardwood-born"],["湿地生まれ","Wetland-born"],
-  ["草原","Grassland"],["硬木林","Hardwood"],["湿地","Wetland"],["最大MP","Max MP"],["上限","Cap"],
-  ["こうげき","Attack"],["すばやさ","Speed"],["いどう","Move"],["ジャンプ","Jump"],["いま の 高さ","Height"],
-  ["ロケットうんち","Rocket Poop"],["かけぬけ","Dash"],["ふみけし","Stamp Out"],["じだんだ","Tantrum"],["めぐみの雨","Blessed Rain"],["いしつぶて","Stone Throw"],
-  ["もう一度 移動できる","Move again"],
-  ["射程3の指定マスへ、十字5マスを育てる でかうんち を飛ばす","Launch big poop up to range 3; grow a 5-tile cross"],
-  ["まわり3x3の火を消す。自分は焼けない","Extinguish a 3x3 area; immune to fire"],
-  ["隣接する敵ぜんぶに大ダメージ＋ノックバック","Heavy damage and knockback to adjacent enemies"],
-  ["指定3x3すべてに雨。消火し、草木は1段成長、成木は実+1","Rain on a 3x3 area: extinguish, grow plants, add fruit"],
-  ["射程4に強い一撃。高さの不利を無視する","Heavy range-4 hit; ignores height disadvantage"],
-  ["おおぐらい","Glutton"],["こわがり","Timid"],["けんかっぱやい","Rash"],["ものまね","Mimic"],["べんぴ","Constipated"],["おやおもい","Devoted"],
-  ["攻撃範囲","Attack range"],["実の強化","Fruit boosts"],["おなか","Belly"],["からっぽ","Empty"],
-  ["3枠","3 slots"],["空き","Empty"],
-  ["敵の行動中","Enemy turn"],["準備中","Stand by"],["森の成長","Forest growth"],["森の誕生","Forest birth"],["敵の増援","Enemy wave"],
-  ["成木を","Protect a mature tree for "],["手守る"," turns"],["最短あと","Ready in "],
-  ["黄","Y"],["赤","R"],["青","B"],["本"," trees"],["未解放","Locked"],
+/* デザインキャンバス側の props をそのまま既定値として持ちこむ */
+const PROPS={hudOpacity:0.9, showForestPanel:true, pixelPerfect:false};
+
+const STEPS_JA=[
+  "手番のゴリラを矢印キーで動かし、スペースキーで選んだマスへ移動。ドラッグでも動かせる。移動のあとに行動をえらぶ。",
+  "実のある成木の上で「たべる」。赤は攻撃、青は最大MP、黄は素早さが上がる。",
+  "「うんち」で土が肥え、森が育つ。成木を5ターン守ると、同じ色の仲間が生まれる。",
 ];
-function L(ja,en){ return LANG==="en"?en:ja; }
-function localize(value){
-  let out=String(value??"");
-  if(LANG!=="en") return out;
-  for(const [ja,en] of EN_REPLACE) out=out.split(ja).join(en);
-  return out.replace(/\s{2,}/g," ").trim();
-}
-
-const rnd=(a=1,b=0)=>b+Math.random()*(a-b); // 見た目の粒子・揺れだけ。ゲーム結果には使わない
-const clamp=(v,a,b)=>v<a?a:v>b?b:v;
-function hash(x,y){let h=x*374761393+y*668265263;h=(h^(h>>13))*1274126177;return((h^(h>>16))>>>0)/4294967296;}
-function sprite(w,h,rects){const c=document.createElement("canvas");c.width=w;c.height=h;const g=c.getContext("2d");for(const r of rects){g.fillStyle=r[4];g.fillRect(r[0],r[1],r[2],r[3]);}return c;}
-
-/* ══════════ データ ══════════ */
-const BIOME={
-  y:{jp:"草原",  rate:2.0, cap:3, flam:0.95, ground:"#5a4a20", wall:"#3d3214",
-     grass:["#8f9a2c","#aab63a","#6f7a22"], trunk:"#6b5322", leaf:["#93a02e","#b0bd42"], berry:"#e8c33a"},
-  r:{jp:"硬木林",rate:1.4, cap:2, flam:0.28, ground:"#43301f", wall:"#2c1f14",
-     grass:["#4a6b2c","#5c7f36","#3a5522"], trunk:"#5a3421", leaf:["#2f5b31","#3f7340"], berry:"#d94436"},
-  b:{jp:"湿地",  rate:0.9, cap:2, flam:0.00, ground:"#2c4247", wall:"#1d2c30",
-     grass:["#3f7d7a","#57a0a2","#2f6165"], trunk:"#3d5a52", leaf:["#3e7f83","#59a8a4"], berry:"#68d0e0"},
-};
-const COLORS=["y","r","b"];
-const GROW_GRASS=2, GROW_SAP=5, GROW_TREE=9;
-const FRUIT_BUFF={
-  r:{jp:"こうげき",gain:2},
-  b:{jp:"最大MP",gain:2},
-  y:{jp:"すばやさ",gain:2},
-};
-const FRUIT_STAT_MAX=99;
-const BELLY_MAX=3;
-
-const TRAITS={
-  glut  :{jp:"おおぐらい",  d:"たべると 満腹2つぶん"},
-  timid :{jp:"こわがり",    d:"火のマスから真っ先に逃げる。こうげき −25%"},
-  rash  :{jp:"けんかっぱやい",d:"敵が射程にいると、勝手にこうげきしてしまう"},
-  mimic :{jp:"ものまね",    d:"隣の仲間の特性をコピーする"},
-  consti:{jp:"べんぴ",      d:"うんちの力み時間が長い"},
-  filial:{jp:"おやおもい",  d:"仲間が死ぬと激怒。こうげき +50%"},
-};
-const TKEY=Object.keys(TRAITS);
-const NAMES=["ゴロ","バナ","ドン","キバ","モモ","タロ","ウホ","ボン","ガル","ズン","ペコ","ノコ","ムク","ゲン","ラム","ポポ","デカ","チビ","ヌシ","マメ"];
-
-// move=移動力 / jump=登れる段差 / rng=射程 / def=被ダメ倍率
-const APE={
-  normal  :{jp:"普通のゴリラ",     from:"草原",  ...MASTER.allies.normal,
-            sk:{n:"ロケットうんち", c:5, d:"射程3の指定マスへ、十字5マスを育てる でかうんち を飛ばす"}, ab:"はこぶ"},
-  monkey  :{jp:"モンキー",         from:"草原",  ...MASTER.allies.monkey,
-            sk:{n:"かけぬけ",     c:3, d:"もう一度 移動できる"}, ab:"すばしっこい"},
-  guardian:{jp:"ガーディアンゴリラ",from:"硬木林",...MASTER.allies.guardian,
-            sk:{n:"ふみけし",     c:4, d:"まわり3x3の火を消す。自分は焼けない"}, ab:"ひをけす"},
-  silver  :{jp:"シルバーバック",   from:"硬木林",...MASTER.allies.silver,
-            sk:{n:"じだんだ",     c:6, d:"隣接する敵ぜんぶに大ダメージ＋ノックバック"}, ab:"びくともしない"},
-  wizard  :{jp:"ウィザードゴリラ", from:"湿地",  ...MASTER.allies.wizard,
-            sk:{n:"めぐみの雨",   c:8, d:"指定3x3すべてに雨。消火し、草木は1段成長、成木は実+1"}, ab:"めぐみの雨"},
-  chimp   :{jp:"チンパンジー",     from:"湿地",  ...MASTER.allies.chimp,
-            sk:{n:"いしつぶて",   c:4, d:"射程4に強い一撃。高さの不利を無視する"}, ab:"石を投げる"},
-};
-const FOE={
-  killer :{jp:"ゴリラを殺す人",  ...MASTER.enemies.killer,  act:"ゴリラを狙う"},
-  bald   :{jp:"ゴリラを殺すハゲ",...MASTER.enemies.bald,    act:"木を伐り倒す"},
-  fireman:{jp:"ファイアーメン",  ...MASTER.enemies.fireman, act:"森を焼き払う"},
-  jikon  :{jp:"ゴリラジコン",    ...MASTER.enemies.jikon,   act:"殺したゴリラを仲間にする"},
-};
-const BORN={y:[["normal",7],["monkey",3]], r:[["guardian",9],["silver",1]], b:[["wizard",7],["chimp",3]]};
-const UNLOCK_ORDER=["guardian","wizard","silver","chimp","monkey","normal"];
-const ABILITY_ORDER=[
-  {key:"digestion",jp:"強い胃袋",d:"実を食べた時の回復が HP24・MP4 になる"},
-  {key:"flow",jp:"森の呼吸",d:"自分のターン開始時、地形から得るMPがさらに+1"},
-  {key:"focus",jp:"奥義集中",d:"すべてのゴリラの、とくぎ消費MPが1減る"},
+const STEPS_EN=[
+  "Steer the active gorilla with the arrows and press Space to step onto the tile — or just drag it. Choose an action after moving.",
+  "Stand on a fruiting tree and EAT. Red raises attack, blue max MP, yellow speed.",
+  "POOP fertilises the soil. Protect a mature tree for 5 turns and a same-colour ally is born.",
 ];
-const STAGE_NAMES=["芽吹きの森","伐採前線","火の尾根","支配の森","最後の楽園"];
-const STAGE_NAMES_EN=["Forest Awakening","Logging Front","Ridge of Fire","Dominion Woods","Last Sanctuary"];
-
-const WAVES=MASTER.waves
-  .filter(w=>FOE[w.kind]&&Number.isFinite(w.r)&&Number.isFinite(w.n))
-  .map(w=>({r:clamp(Math.round(w.r),1,99),kind:w.kind,n:clamp(Math.round(w.n),1,20)}))
-  .sort((a,b)=>a.r-b.r);
-const LAST_ROUND=clamp(Math.round(MASTER.lastRound),1,99);
-const STAGE_COUNT=clamp(Math.round(MASTER.stageCount||1),1,20);
-const WORLD_TICKS=clamp(Math.round(MASTER.worldTicks),4,100); // 大きいほどゆっくり進む
-const ENEMY_HP_GROWTH=clamp(Number(MASTER.enemyHpGrowth??15),0,100)/100;
-const ENEMY_ATK_GROWTH=clamp(Number(MASTER.enemyAtkGrowth??8),0,100)/100;
-const BIRTH_TREE_TURNS=clamp(Math.round(MASTER.birthTreeTurns||5),1,30);
-const MAX_APES=clamp(Math.round(MASTER.maxApes||10),1,30);
-
-const POOP={
-  normal:{jp:"ふつうのうんち",fert:3, size:1.0, splash:0, shake:0},
-  pellet:{jp:"ころころうんち",fert:2, size:0.8, splash:0, shake:0},
-  big   :{jp:"でかうんち",    fert:6, size:1.7, splash:6, shake:5},
-  gold  :{jp:"きんのうんち",  fert:9, size:1.2, splash:1, shake:3, boost:5},
-};
-const PCOL={
-  y:{d:"#6e6420",m:"#8a7d2c",l:"#b3a63f"}, r:{d:"#5e2c1f",m:"#7a3d2b",l:"#a3583c"},
-  b:{d:"#264c55",m:"#33616b",l:"#4a8792"}, gold:{d:"#9a6c14",m:"#e8b23c",l:"#ffe08a"},
-};
-
-/* ══════════ スプライト（提供SVGの忠実変換） ══════════ */
-const GW=24, GH=26;
-const ape=rects=>sprite(GW,GH,rects.map(r=>[r[0],r[1]+2,r[2],r[3],r[4]]));
-const ARMOR=[[2,20,5,2],[10,10,4,4],[13,11,3,3],[10,16,3,3],[1,20,2,1],[14,20,2,1],[21,19,2,1],[10,21,6,2],[1,21,5,2],[17,20,6,2]];
-function gorilla(p){
-  const r=[[2,7,5,5,p.P],[17,9,6,13,p.A],[2,9,6,13,p.A],[12,1,9,8,p.KH||p.K],[4,8,18,11,p.K],
-           [1,11,5,12,p.G],[15,6,5,3,p.F],[14,3,6,3,p.F],[11,5,3,4,p.F]];
-  if(p.BIGEYE) r.push([19,4,1,2,p.E],[17,5,1,1,p.E],[17,6,3,1,p.M],[16,4,2,2,p.E]);
-  else         r.push([19,5,1,1,p.E],[17,6,3,1,p.M],[16,5,1,1,p.E]);
-  r.push([10,10,6,13,p.G],[1,8,5,5,p.P]);
-  if(p.ARM) for(const a of ARMOR) r.push([a[0],a[1],a[2],a[3],p.ARM]);
-  if(p.GEM) r.push([15,2,2,1,p.GEM],[16,1,1,1,p.GEM]);
-  if(p.ANT) r.push([16,1,1,3,"#000"],[16,-1,1,2,"#000"],[16,-2,1,1,"#f52f2f"]);
-  return r;
-}
-const GPAL={
-  normal  :{K:"#000000",A:"#343434",G:"#494949",F:"#d9d9d9",E:"#000000",M:"#000000",P:"#fae1e1"},
-  guardian:{K:"#49a013",A:"#27752f",G:"#72b24d",F:"#d9d9d9",E:"#ff3434",M:"#49a013",P:"#fae1e1",ARM:"#d9d9d9"},
-  wizard  :{K:"#3f47a8",A:"#2c3178",G:"#6f80e0",F:"#d9d9d9",E:"#68d0e0",M:"#3f47a8",P:"#fae1e1",GEM:"#68d0e0"},
-  silver  :{KH:"#adadad",K:"#b4b4b4",A:"#343434",G:"#494949",F:"#d9d9d9",E:"#000000",M:"#000000",P:"#fae1e1"},
-  jikon   :{K:"#000000",A:"#343434",G:"#494949",F:"#d9d9d9",E:"#000000",M:"#000000",P:"#fae1e1",ANT:true,BIGEYE:true},
-};
-const CHIMP=(()=>{const K="#000",A="#343434",G="#494949",F="#d9d9d9",P="#fae1e1";
-  return [[2,11,4,4,P],[17,9,2,14,A],[12,1,7,7,K],[3,10,4,4,K],[6,8,4,4,K],[9,7,4,4,K],[12,5,4,4,K],[14,4,5,4,K],
-          [9,12,3,11,K],[6,13,3,10,K],[13,5,6,3,F],[13,3,5,2,F],[10,4,2,3,F],
-          [17,3,1,1,K],[15,3,1,1,K],[16,6,3,1,K],[11,9,3,14,G],[1,11,4,4,P]];})();
-const MONKEY=(()=>{const B="#c8881a",D="#86590a",L="#e0a43c",F="#ffe7d2",P="#fae1e1",E="#000";
-  return [[8,13,2,2,P],[16,17,2,6,D],[9,17,2,6,D],[13,10,5,5,B],[7,14,10,6,B],
-          [1,20,2,2,B],[2,18,2,2,B],[3,17,2,2,B],[4,16,2,2,B],[5,15,2,2,B],[6,14,2,1,B],
-          [15,13,4,3,F],[15,11,3,1,F],[12,12,1,1,F],[17,12,1,1,E],[16,13,2,1,E],[14,12,1,1,E],
-          [13,17,3,6,L],[7,17,3,6,L],[7,14,2,2,P]];})();
-
-const SKIN="#f4cc6e", TIE="#ff0000";
-function human(suit,head,eye,extra){
-  const r=[[6,4,6,4,suit],[5,4,1,7,suit],[11,4,1,7,suit],[7,8,4,1,suit],[7,8,2,8,suit],[10,8,2,8,suit],
-           [7,0,4,4,SKIN],...head,[7,2,3,1,eye],[7,4,4,4,"#fff"],[8,4,2,1,TIE],[8,5,1,3,TIE]];
-  return extra? r.concat(extra) : r;
-}
-const SPR={};
-for(const k in GPAL) SPR["u_"+k]=ape(gorilla(GPAL[k]));
-SPR.u_chimp=ape(CHIMP); SPR.u_monkey=ape(MONKEY);
-SPR.u_killer =sprite(16,16, human("#343434",[[7,0,4,1,"#000"]],"#000"));
-SPR.u_bald   =sprite(16,16, human("#343434",[[7,0,1,1,"#000"],[10,0,1,1,"#000"]],"#000",
-                     [[4,7,1,6,"#7a5a33"],[2,6,3,2,"#b9c0c6"],[2,6,1,2,"#8b939a"]]));
-SPR.u_fireman=sprite(16,16, human("#ff1616",[[7,0,4,1,"#ff1616"]],"#ff1616",
-                     [[0,8,6,1,"#343434"],[2,8,3,3,"#343434"],[5,9,1,2,"#343434"],[0,8,1,1,"#f2802b"]]));
-
-/* ══════════ 音 ══════════ */
-let AC=null, snd=true, musicTimer=null, musicStep=0;
-const THEME_LEAD=[
-  330,0,392,440,392,330, 294,0,330,392,330,294,
-  262,0,330,392,440,392, 330,294,262,0,247,0,
-  330,0,392,440,494,440, 392,0,330,294,330,392,
-  440,0,392,330,294,262, 247,262,294,0,262,0,
-  392,0,440,523,494,440, 392,330,294,0,330,0,
-  349,0,440,494,440,392, 330,294,262,0,247,0,
-  330,392,440,0,392,330, 294,330,392,0,440,0,
-  494,440,392,330,294,262, 247,262,294,0,330,0,
+const ACTIONS=[
+  {key:"attack", ja:"こうげき", en:"Attack",  def:"1", pad:"LB"},
+  {key:"skill",  ja:"とくぎ",   en:"Skill",   def:"2", pad:"RB"},
+  {key:"eat",    ja:"たべる",   en:"Eat",     def:"3", pad:"X"},
+  {key:"poop",   ja:"うんち",   en:"Poop",    def:"4", pad:"Y"},
+  {key:"wait",   ja:"まつ",     en:"Wait",    def:"5", pad:"RT"},
+  {key:"confirm",ja:"決定",     en:"Confirm", def:"Enter", pad:"A"},
+  {key:"cancel", ja:"やめる",   en:"Cancel",  def:"Escape",pad:"B"},
 ];
-const THEME_BASS=[110,98,87,82,110,98,87,73];
-function toneAt(f,when,dur,type="square",vol=.025){
-  const o=AC.createOscillator(),g=AC.createGain();
-  o.type=type;o.frequency.setValueAtTime(f,when);
-  g.gain.setValueAtTime(vol,when);g.gain.exponentialRampToValueAtTime(.0001,when+dur);
-  o.connect(g);g.connect(AC.destination);o.start(when);o.stop(when+dur);
-}
-function beep(f,dur,type="square",vol=.06,slide=0){
-  if(!snd) return;
-  try{
-    AC=AC||new (window.AudioContext||window.webkitAudioContext)();
-    const o=AC.createOscillator(),g=AC.createGain();
-    o.type=type;o.frequency.setValueAtTime(f,AC.currentTime);
-    if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(40,f+slide),AC.currentTime+dur);
-    g.gain.setValueAtTime(vol,AC.currentTime);
-    g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+dur);
-    o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+dur);
-  }catch(e){}
-}
-function musicTick(){
-  if(!snd||!AC) return;
-  const i=musicStep++%THEME_LEAD.length, when=AC.currentTime+.02, lead=THEME_LEAD[i];
-  if(i%6===0) toneAt(THEME_BASS[(i/6)%THEME_BASS.length],when,.66,"triangle",.022);
-  if(i%3===0) toneAt(165,when,.18,"sine",.008);
-  if(lead) toneAt(lead,when,.18,"square",.014);
-}
-function startMusic(){
-  snd=true;
-  try{
-    AC=AC||new (window.AudioContext||window.webkitAudioContext)(); AC.resume?.();
-    clearInterval(musicTimer); musicStep=0; musicTick();
-    musicTimer=setInterval(musicTick,Math.round(60000/82/3));
-  }catch(e){}
-}
-function stopMusic(){ clearInterval(musicTimer); musicTimer=null; }
-const SFX={
-  step:()=>beep(300,.04,"square",.03), hit:()=>beep(130,.09,"square",.07,-50),
-  crit:()=>{beep(200,.07,"square",.08);setTimeout(()=>beep(320,.12,"square",.08),70);},
-  eat :()=>beep(520,.07,"square",.05,120), strain:()=>beep(180,.5,"sawtooth",.035,140),
-  plop:()=>beep(260,.16,"triangle",.08,-190), fire:()=>beep(170,.22,"sawtooth",.05,-70),
-  grow:()=>beep(680,.1,"sine",.05,300), rain:()=>beep(900,.25,"sine",.05,-380),
-  die :()=>beep(150,.45,"sawtooth",.09,-100),
-  born:()=>{beep(500,.09,"square",.06);setTimeout(()=>beep(660,.09,"square",.06),90);setTimeout(()=>beep(880,.15,"square",.06),180);},
-  wave:()=>{beep(220,.16,"square",.07);setTimeout(()=>beep(180,.28,"square",.07),170);},
-  gold:()=>{[660,880,1100,1320].forEach((f,i)=>setTimeout(()=>beep(f,.12,"square",.06),i*70));},
-};
+const PAD_KEYS={0:"Enter",1:"Escape",2:"3",3:"4",4:"1",5:"2",12:"ArrowUp",13:"ArrowDown",14:"ArrowLeft",15:"ArrowRight"};
+const LS={binds:"poopulation-binds-v1",audio:"poopulation-audio-v1",tut:"poopulation-tutorial-v1",screen:"poopulation-screen-v1"};
 
-/* ══════════ 状態 ══════════ */
-const cv=document.getElementById("cv"), ctx=cv.getContext("2d");
-ctx.imageSmoothingEnabled=false;
-let G, vt=0;
+const App={
+  props:PROPS,
+  state:{ui:null,tut:-1},
 
-const idx=(x,y)=>y*COLS+x;
-const at=(x,y)=>(x<0||y<0||x>=COLS||y>=ROWS)?null:G.map[idx(x,y)];
-const unitAt=(x,y)=>G.units.find(u=>u.alive&&u.tx===x&&u.ty===y);
-const hasAbility=key=>!!G?.progress?.abilities.includes(key);
-const skillCost=u=>Math.max(1,APE[u.type].sk.c-(hasAbility("focus")?1:0));
-function enemyStageStats(st){
-  const n=Math.max(0,(G?.stage||1)-1);
-  return {...st,hp:Math.round(st.hp*(1+n*ENEMY_HP_GROWTH)),atk:Math.round(st.atk*(1+n*ENEMY_ATK_GROWTH))};
-}
-const S=u=>{
-  const st=u.side==="ape"?APE[u.type]:FOE[u.type];
-  if(u.side!=="ape"||!u.buffs) return enemyStageStats(st);
-  const b=G.progress?.bonus||{atk:0,spd:0};
-  return {...st,atk:Math.min(FRUIT_STAT_MAX,st.atk+u.buffs.r+b.atk),spd:Math.min(FRUIT_STAT_MAX,st.spd+u.buffs.y+b.spd)};
-};
-function fruitStat(u,c){ return c==="r"?S(u).atk:c==="y"?S(u).spd:u.maxmp; }
-
-function newMap(){
-  const m=[];
-  for(let i=0;i<COLS*ROWS;i++) m.push({h:0,water:false,c:null,v:0,grow:0,fruit:0,fert:0,fire:0,ash:0,treeAge:0});
-  // 固定シード相当の座標ハッシュで、毎回同じ地形を作る
-  for(let k=0;k<clamp(Math.round(MASTER.terrain.hillCount),0,8);k++){
-    const cx=2+Math.floor(hash(k+31,7)*(COLS-4));
-    const cy=2+Math.floor(hash(k+71,13)*(ROWS-4));
-    const rad=1+Math.floor(hash(k+101,19)*clamp(Math.round(MASTER.terrain.hillRadiusMax),1,3));
-    for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
-      const d=Math.max(Math.abs(x-cx),Math.abs(y-cy));
-      if(d<=rad) m[idx(x,y)].h=Math.max(m[idx(x,y)].h, d===rad?1:2);
-      else if(d===rad+1 && hash(x+k*17,y+k*23)<.5) m[idx(x,y)].h=Math.max(m[idx(x,y)].h,1);
-    }
-  }
-  // 川（湿地）＝ 天然の防火帯
-  let rx=1+Math.floor(hash(47,89)*(COLS-2));
-  for(let y=0;y<ROWS;y++){
-    for(let w=0;w<1+(hash(y,131)<clamp(MASTER.terrain.riverExtraWidthChance,0,.9)?1:0);w++){
-      const t=rx+w<COLS?m[idx(rx+w,y)]:null; if(t){ t.water=true; t.h=0; t.c="b"; t.v=1; t.grow=GROW_GRASS; }
-    }
-    rx=clamp(rx+Math.floor(hash(y,197)*3)-1,1,COLS-2);
-  }
-  return m;
-}
-function plantGroves(){
-  const used=[];
-  for(const [ci,c] of COLORS.entries()){
-    const candidates=[];
-    for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++) if(!at(x,y).water) candidates.push([x,y]);
-    candidates.sort((a,b)=>hash(a[0]+ci*41,a[1]+ci*67)-hash(b[0]+ci*41,b[1]+ci*67));
-    const [x,y]=candidates.find(([x,y])=>used.every(s=>Math.abs(s.x-x)+Math.abs(s.y-y)>4))||candidates[0];
-    used.push({x,y});
-    const cells=[[0,0],[1,0],[0,1],[-1,0],[0,-1],[1,1]];
-    cells.forEach(([dx,dy],i)=>{
-      const t=at(x+dx,y+dy); if(!t||t.water) return;
-      t.c=c;
-      if(i<clamp(Math.round(MASTER.terrain.groveTrees),1,cells.length)){ t.v=3; t.grow=GROW_TREE; t.fruit=BIOME[c].cap; }
-      else { t.v=1; t.grow=GROW_GRASS; }
-    });
-  }
-}
-
-let nextId=1;
-function makeUnit(side,type,tx,ty){
-  const stats=side==="ape"?APE[type]:FOE[type];
-  const st=side==="ape"?stats:enemyStageStats(stats);
-  const bonus=G.progress?.bonus||{hp:0,mp:0};
-  const maxhp=st.hp+(side==="ape"?bonus.hp:0), maxmp=(st.mp||0)+(side==="ape"?bonus.mp:0);
-  const used=new Set(G.units.map(u=>u.name));
-  const serial=nextId++;
-  const base=NAMES[(serial-1)%NAMES.length];
-  const nm=side==="ape"?(used.has(base)?base+(1+Math.floor((serial-1)/NAMES.length)):base):st.jp;
-  const tr=side==="ape"?[TKEY[(serial*2-2)%TKEY.length],TKEY[(serial*2-1)%TKEY.length]]:[];
-  const u={
-    id:serial, side, type, name:nm, tx, ty, hp:maxhp, maxhp,
-    mp:side==="ape"?Math.round(maxmp*.4):0, maxmp,
-    ct:(serial*13)%45, dir:side==="ape"?1:-1, traits:tr,
-    belly:[], buffs:{y:0,r:0,b:0}, alive:true, squat:0, squatMax:1, relief:0, anim:0, rage:0, extraMove:false,
-    px:tx*TS+TS/2, py:0,
-  };
-  u.py=unitY(u);
-  G.units.push(u);
-  return u;
-}
-function unitY(u){ const t=at(u.tx,u.ty); return u.ty*TS+YOFF-(t?t.h:0)*HSTEP+TS; }
-function unitX(u){ return u.tx*TS+TS/2; }
-
-const STAGE_SNAPSHOT_KEYS=["map","units","stage","round","acts","waveIx","born","dead","kills","obits","log","seenPoop","pooCount","goldCount","bornByColor","finalRound","progress"];
-function captureStageStart(){
-  const snap={};
-  for(const key of STAGE_SNAPSHOT_KEYS) snap[key]=structuredClone(G[key]);
-  G.stageStart=snap;
-}
-function restartStage(){
-  if(!G.stageStart) return;
-  const snap=structuredClone(G.stageStart);
-  for(const key of STAGE_SNAPSHOT_KEYS) G[key]=snap[key];
-  Object.assign(G,{active:null,phase:"idle",mode:null,moveSet:null,rangeSet:null,targetSet:null,kbPos:null,over:null,anim:null,queue:[],fx:[],poops:[],floats:[],shake:4,sel:null,intermission:false,rewardOptions:[]});
-  nextId=Math.max(0,...G.units.map(u=>u.id))+1;
-  $("scTitle").hidden=true; $("scEnd").hidden=true; $("scCamp").hidden=true;
-  syncOrder(); syncActs(); fit();
-  logMsg("#e8b23c",L(`ステージ ${G.stage} を最初から再開した`,`Restarted stage ${G.stage}`));
-  setTimeout(nextTurn,180);
-}
-
-function newGame(run=true){
-  const roster=MASTER.startRoster.filter(type=>APE[type]).slice(0,8);
-  const starters=roster.length?roster:["normal"];
-  G={ map:[], units:[], stage:1, round:1, acts:0, active:null, phase:"idle", mode:null,
-      moveSet:null, rangeSet:null, targetSet:null, over:null, anim:null, queue:[], fx:[], poops:[], floats:[],
-      shake:0, sel:null, waveIx:0, born:0, dead:0, kills:0, obits:[], log:[], startPos:null,
-      seenPoop:false, pooCount:0, goldCount:0,
-      bornByColor:{y:0,r:0,b:0}, intermission:false, finalRound:false, rewardOptions:[],
-      progress:{unlocked:[...new Set(starters)],abilities:[],bonus:{atk:0,hp:0,mp:0,spd:0},picks:[]} };
-  nextId=1;
-  G.map=newMap();
-  plantGroves();
-  // 最初の3匹
-  const spots=[];
-  for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){ const t=at(x,y); if(t&&!t.water) spots.push([x,y]); }
-  for(const type of starters){
-    const available=spots.filter(([x,y])=>!unitAt(x,y));
-    available.sort((a,b)=>(Math.abs(a[0]-COLS/2)+Math.abs(a[1]-ROWS/2))-(Math.abs(b[0]-COLS/2)+Math.abs(b[1]-ROWS/2)) || idx(a[0],a[1])-idx(b[0],b[1]));
-    const s=available[0];
-    makeUnit("ape",type,s[0],s[1]);
-  }
-  syncOrder(); logMsg("#e8b23c","森を育てて、人族の襲撃をしのげ"); captureStageStart();
-  if(run) nextTurn();
-}
-
-/* ══════════ 経路・射程 ══════════ */
-function passable(t,u){ return t && !(t.fire>0 && u.side==="ape" && u.type!=="guardian"); }
-function moveCost(t){ return t.water?2:1; }
-function reachable(u){
-  const st=S(u), maxc=st.move, set=new Map();
-  const start=idx(u.tx,u.ty);
-  set.set(start,{c:0,from:null});
-  const q=[[u.tx,u.ty,0]];
-  while(q.length){
-    const [x,y,c]=q.shift();
-    const here=at(x,y);
-    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
-      const nx=x+dx, ny=y+dy, t=at(nx,ny);
-      if(!t) continue;
-      if(Math.abs(t.h-here.h)>st.jump) continue;
-      if(t.fire>0 && !(u.side==="ape"&&u.type==="guardian")) continue;
-      const occ=unitAt(nx,ny);
-      if(occ && occ!==u) continue;
-      const nc=c+moveCost(t);
-      if(nc>maxc) continue;
-      const k=idx(nx,ny);
-      if(!set.has(k) || set.get(k).c>nc){ set.set(k,{c:nc,from:idx(x,y)}); q.push([nx,ny,nc]); }
-    }
-  }
-  set.delete(start);
-  return set;
-}
-function pathTo(u,set,tx,ty){
-  const out=[]; let k=idx(tx,ty);
-  while(k!=null && k!==idx(u.tx,u.ty)){ out.unshift([k%COLS,(k/COLS)|0]); k=set.get(k)?.from; if(k==null) break; }
-  return out;
-}
-function inRange(ax,ay,bx,by,r){ return Math.abs(ax-bx)+Math.abs(ay-by)<=r; }
-function tilesInRange(x,y,r){
-  const out=[];
-  for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
-    if(Math.abs(dx)+Math.abs(dy)>r || (!dx&&!dy)) continue;
-    const t=at(x+dx,y+dy); if(t) out.push([x+dx,y+dy]);
-  }
-  return out;
-}
-function attackRangeText(r){
-  return r===1 ? "前後左右 4マス" : `ひし形 ${2*r*(r+1)}マス（距離${r}）`;
-}
-
-/* ══════════ 戦闘 ══════════ */
-function damage(a,d){
-  const sa=S(a), sd=S(d);
-  const ha=at(a.tx,a.ty).h, hd=at(d.tx,d.ty).h;
-  let m=1;
-  if(!(a.side==="ape"&&a.type==="chimp"&&a.usingSkill))
-    m *= clamp(1+0.25*(ha-hd), 0.5, 1.5);                 // 高さの有利／不利
-  const back = (d.dir>0 && a.tx>d.tx) || (d.dir<0 && a.tx<d.tx);
-  const side = a.ty!==d.ty && a.tx===d.tx;
-  const fm = back?1.5 : side?1.2 : 1.0;                   // 背面／側面
-  m *= fm;
-  if(a.traits?.includes("timid")) m*=0.75;
-  if(a.rage>0) m*=1.5;
-  const dmg = Math.round(sa.atk * m * (sd.def??1));
-  return {dmg, back, high:ha>hd, low:ha<hd};
-}
-function hitUnit(a,d,mult=1,label){
-  const r=damage(a,d);
-  const dmg=Math.max(1,Math.round(r.dmg*mult));
-  d.hp-=dmg;
-  const col = r.back?"#e8b23c" : r.high?"#fff2c9" : "#ffffff";
-  float(unitX(d), unitY(d)-30, (label?label+" ":"")+dmg, col, 1.3);
-  if(r.back) float(unitX(d), unitY(d)-42, "背面！", "#e8b23c", 1.4);
-  else if(r.high) float(unitX(d), unitY(d)-42, "高所！", "#9fd8e0", 1.2);
-  puff(unitX(d),unitY(d)-12,"#ffd34d",5);
-  G.shake=Math.max(G.shake,r.back?4:2);
-  r.back?SFX.crit():SFX.hit();
-  if(d.hp<=0) killUnit(d,a);
-  return dmg;
-}
-function killUnit(d,killer){
-  d.alive=false; d.hp=0;
-  puff(unitX(d),unitY(d)-12,"#c9452e",14);
-  SFX.die();
-  if(d.side==="ape"){
-    G.dead++;
-    G.obits.push({name:d.name,type:d.type,traits:d.traits.slice(),
-      cause:killer?`${killer.side==="ape"?"":""}${S(killer).jp}にやられた`:"力尽きた"});
-    logMsg("#c9452e",`${d.name} が死んだ`);
-    for(const u of G.units) if(u.alive&&u.side==="ape"&&u.traits.includes("filial")) u.rage=3;
-    // ゴリラジコンに殺されると、寄生されて敵になる
-    if(killer && killer.type==="jikon" && G.units.filter(u=>u.alive&&u.type==="jikon").length<6){
-      const nu=makeUnit("human","jikon",d.tx,d.ty);
-      nu.name=d.name+"（ジコン）";
-      nu.ct=0;
-      G.shake=8; beep(70,.55,"sawtooth",.09,190);
-      float(unitX(nu),unitY(nu)-34,"ゴリラジコン化","#f52f2f",2.4);
-      logMsg("#f52f2f",`${d.name} が ゴリラジコン にされた`);
-    }
-  } else {
-    G.kills++;
-    logMsg("#7fae2f",`${S(d).jp} を倒した`);
-  }
-  syncOrder();
-}
-
-/* ══════════ うんち ══════════ */
-function poopKind(u){
-  if(new Set(u.belly).size>=3) return "gold";
-  return "normal";
-}
-function dropPoop(u,kind,c,tx=u.tx,ty=u.ty){
-  const K=POOP[kind];
-  const thrown=tx!==u.tx||ty!==u.ty;
-  G.poops.push({x:thrown?tx*TS+12:unitX(u)-u.dir*10,y:thrown?tileTop(tx,ty)+TS-6:unitY(u)-6,
-    fromX:unitX(u)-u.dir*10,fromY:unitY(u)-6,thrown,dir:u.dir,tx,ty,c,kind,t:0,land:thrown?.62:.34,life:5});
-  G.shake=Math.max(G.shake,1.5*CFG.impactShake);
-  puff(unitX(u)-u.dir*8,unitY(u)-8,PCOL[kind==="gold"?"gold":c].l,8);
-  SFX.plop();
-  float(unitX(u), unitY(u)-34, K.jp, PCOL[kind==="gold"?"gold":c].l, 1.8);
-  G.pooCount++;
-  if(kind==="gold"){ G.goldCount++; SFX.gold(); logMsg(PCOL.gold.m,"きんのうんち！ 土が一気に育つ"); }
-  if(!G.seenPoop){ G.seenPoop=true; logMsg(PCOL[c].m,"うんちの色が、生える森の色になる"); }
-  // 土に効かせる
-  soak(tx,ty,c,K.fert,K);
-  if(K.splash>0) for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]) soak(tx+dx,ty+dy,c,K.splash,K);
-}
-function soak(x,y,c,amt,K){
-  const t=at(x,y); if(!t||t.fire>0) return;
-  if(t.v===0||t.c===c) t.c=c;
-  else if(t.v===1){ t.c=c; t.grow=GROW_GRASS; }
-  else if(t.v>=2) return;
-  t.fert=Math.min(12,t.fert+amt);
-  if(t.ash>0) t.ash=0;
-  if(K&&K.boost){ t.grow+=K.boost; for(let i=0;i<8;i++) G.fx.push({x:x*TS+12+rnd(8,-8),y:tileTop(x,y)+12,vx:rnd(20,-20),vy:rnd(-24,-52),col:PCOL.gold.l,life:rnd(1,.5)}); }
-}
-
-/* ══════════ 行動 ══════════ */
-function tileTop(x,y){ const t=at(x,y); return y*TS+YOFF-(t?t.h:0)*HSTEP; }
-
-function beginAct(u){
-  // ターン開始：マナ、状態、火
-  const t=at(u.tx,u.ty);
-  if(u.side==="ape"){
-    let gain=0;
-    if(t.fert>0) gain=3;                                  // 肥えた土 ＝ うんちの上
-    else if(t.v>=2) gain=2;
-    else if(t.v>=1) gain=1;
-    if(hasAbility("flow")) gain++;
-    if(gain){ u.mp=Math.min(u.maxmp,u.mp+gain); float(unitX(u),unitY(u)-34,"MP+"+gain,"#68d0e0",1.1); }
-    if(u.rage>0) u.rage--;
-    if(u.traits.includes("mimic")){
-      const nb=G.units.find(o=>o.alive&&o!==u&&o.side==="ape"&&Math.abs(o.tx-u.tx)+Math.abs(o.ty-u.ty)<=1);
-      if(nb){ const cand=nb.traits.find(k=>!u.traits.includes(k)); if(cand){ u.traits[1]=cand; } }
-    }
-  }
-  if(t.fire>0 && !(u.side==="ape"&&u.type==="guardian")){
-    const dmg=Math.round(22*(S(u).def??1));
-    u.hp-=dmg; float(unitX(u),unitY(u)-30,dmg+"","#f2802b",1.2);
-    if(u.hp<=0){ killUnit(u,null); return false; }
-  }
-  return true;
-}
-
-function doMove(u,path,after){
-  if(!path.length){ after&&after(); return; }
-  G.anim={kind:"walk",u,path,i:0,t:0,dur:.13,after};
-}
-function finishMove(u){
-  u.tx=u.pathEndX ?? u.tx; u.ty=u.pathEndY ?? u.ty;
-}
-
-function actionAttack(u,tx,ty){
-  const d=unitAt(tx,ty); if(!d) return;
-  u.dir = tx>u.tx?1:tx<u.tx?-1:u.dir;
-  G.anim={kind:"strike",u,d,t:0,dur:.42,after:()=>{
-    hitUnit(u,d);
-    endAct(u);
-  }};
-}
-function actionEat(u){
-  const t=at(u.tx,u.ty);
-  if(!(t&&t.v===3&&t.fruit>=1)) return;
-  const slots=BELLY_MAX-u.belly.length;
-  if(slots<=0){ hint(L("おなかが満杯。うんちをして空きを作ろう","Belly full. Poop to free a slot")); return; }
-  const glut=u.traits.includes("glut");
-  let eaten=1, boost=0;
-  t.fruit-=1;
-  if(glut&&slots>=2&&t.fruit>=1){ t.fruit-=1; eaten++; }
-  u.belly=[...u.belly,...Array(eaten).fill(t.c)];
-  u.buffs={...u.buffs};
-  for(let i=0;i<eaten;i++){
-    const add=Math.min(FRUIT_BUFF[t.c].gain,Math.max(0,FRUIT_STAT_MAX-fruitStat(u,t.c)));
-    u.buffs[t.c]+=add; boost+=add;
-    if(t.c==="b") u.maxmp+=add;
-  }
-  u.hp=Math.min(u.maxhp,u.hp+(hasAbility("digestion")?24:12));
-  u.mp=Math.min(u.maxmp,u.mp+(hasAbility("digestion")?4:2));
-  SFX.eat(); puff(unitX(u),unitY(u)-20,BIOME[t.c].berry,6);
-  const F=FRUIT_BUFF[t.c];
-  float(unitX(u),unitY(u)-34,`${F.jp} ${boost?"+"+boost:"上限"}`,BIOME[t.c].berry,1.6);
-  logMsg(BIOME[t.c].berry,`${u.name}が${BIOME[t.c].jp}の実を食べた — ${F.jp} ${boost?"+"+boost:"は上限"}`);
-  endAct(u);
-}
-function poopNeed(){ return 1; }
-function actionPoop(u,forced,tx=u.tx,ty=u.ty){
-  const consti=u.traits.includes("consti");
-  const kind = forced || poopKind(u);
-  const c = u.belly.length?u.belly[0]:(at(u.tx,u.ty).c||"y");
-  const dur=consti||kind==="big"?CFG.tacticsBigStrain:CFG.tacticsStrain;
-  u.squatMax=dur;
-  G.anim={kind:"squat",u,t:0,dur,fired:false,pk:kind,pc:c,tx,ty,after:()=>{
-    if(kind==="gold"){
-      for(const color of COLORS){
-        const i=u.belly.indexOf(color);
-        if(i>=0) u.belly.splice(i,1);
-      }
-    } else if(u.belly.length) u.belly.shift();
-    endAct(u);
-  }};
-  SFX.strain();
-}
-function actionSkill(u,tx,ty){
-  const sk=APE[u.type].sk;
-  const cost=skillCost(u);
-  const T=u.type;
-  if(u.mp<cost) return false;
-  if(T==="normal"&&u.belly.length<poopNeed(u)){
-    hint(`${sk.n}には実が ${poopNeed(u)} 個ひつよう`);
-    return false;
-  }
-  u.mp-=cost;
-  if(T==="normal"){
-    u.dir=tx>u.tx?1:tx<u.tx?-1:u.dir;
-    actionPoop(u,"big",tx,ty);
-    return;
-  }
-  if(T==="monkey"){
-    float(unitX(u),unitY(u)-34,"かけぬけ！","#e8b23c",1.4);
-    u.extraMove=true; beep(880,.1,"square",.05,220);
-    startMovePhase(u); return;
-  }
-  if(T==="guardian"){
-    let n=0;
-    for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
-      const t=at(u.tx+dx,u.ty+dy);
-      if(t&&t.fire>0){ t.fire=0; t.v=Math.max(1,t.v-1); n++; puff((u.tx+dx)*TS+12,tileTop(u.tx+dx,u.ty+dy)+12,"#9fb0bd",6); }
-    }
-    float(unitX(u),unitY(u)-34,n?`火を ${n} 消した`:"ふみけし","#9fd8e0",1.6);
-    SFX.grow(); endAct(u); return;
-  }
-  if(T==="silver"){
-    G.anim={kind:"stomp",u,t:0,dur:.5,after:()=>{
-      G.shake=9;
-      for(const d of G.units.filter(o=>o.alive&&o.side!=="ape"&&Math.abs(o.tx-u.tx)+Math.abs(o.ty-u.ty)<=1)){
-        hitUnit(u,d,1.25,"");
-        if(d.alive){ // ノックバック
-          const dx=Math.sign(d.tx-u.tx), dy=Math.sign(d.ty-u.ty);
-          const nt=at(d.tx+dx,d.ty+dy);
-          if(nt && !unitAt(d.tx+dx,d.ty+dy) && Math.abs(nt.h-at(d.tx,d.ty).h)<=2){ d.tx+=dx; d.ty+=dy; d.px=unitX(d); d.py=unitY(d); }
-        }
-      }
-      endAct(u);
-    }};
-    return;
-  }
-  if(T==="wizard"){
-    G.anim={kind:"rain",u,tx,ty,t:0,dur:1.4,after:()=>{
-      let grown=0, fruited=0, quenched=0, full=0;
-      for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
-        const t=at(tx+dx,ty+dy); if(!t) continue;
-        const px=(tx+dx)*TS+12, py=tileTop(tx+dx,ty+dy)+8;
-        puff(px,py,"#68d0e0",3);
-        if(t.fire>0){ t.fire=0; quenched++; puff(px,py,"#d8f5f7",6); }
-        if(t.ash>0) t.ash=0;
-        if(!t.c) continue;
-        t.fert=Math.max(t.fert,1);
-        if(t.v<3){
-          t.v++;
-          t.grow=Math.max(t.grow,[0,GROW_GRASS,GROW_SAP,GROW_TREE][t.v]);
-          grown++; puff((tx+dx)*TS+12,tileTop(tx+dx,ty+dy)+8,BIOME[t.c].berry,7);
-        }else if(t.fruit<BIOME[t.c].cap){ t.fruit++; fruited++; puff((tx+dx)*TS+12,tileTop(tx+dx,ty+dy)+4,BIOME[t.c].berry,5); }
-        else full++;
-      }
-      float(tx*TS+12,tileTop(tx,ty)-8,`成長${grown} 実+${fruited} 消火${quenched}`,"#9fd8e0",2);
-      logMsg("#68d0e0",`${u.name}の雨 — 草木${grown}マス成長、成木${fruited}本に実、${quenched}マス消火${full?`、満杯${full}`:""}`);
-      SFX.rain(); endAct(u);
-    }};
-    return;
-  }
-  if(T==="chimp"){
-    const d=unitAt(tx,ty);
-    u.dir=tx>u.tx?1:-1;
-    u.usingSkill=true;
-    G.anim={kind:"throw",u,tx,ty,t:0,dur:.5,after:()=>{
-      if(d&&d.alive) hitUnit(u,d,1.4,"");
-      u.usingSkill=false; endAct(u);
-    }};
-    return;
-  }
-  endAct(u);
-}
-
-function endAct(u){
-  G.mode=null; G.moveSet=null; G.rangeSet=null; G.targetSet=null;
-  u.acted=true;
-  G.phase="idle";
-  setTimeout(()=>{ if(!G.over&&!G.intermission) nextTurn(); }, 120);
-}
-
-/* ══════════ ターン ══════════ */
-function tickCT(){
-  // 誰かが 100 に達するまで時計を進める
-  let guard=0;
-  while(guard++<4000){
-    const ready=G.units.filter(u=>u.alive&&u.ct>=100);
-    if(ready.length) return ready.sort((a,b)=>b.ct-a.ct)[0];
-    for(const u of G.units) if(u.alive) u.ct += S(u).spd/4;
-    G.clockTicks=(G.clockTicks||0)+1;
-    if(G.clockTicks%WORLD_TICKS===0) advanceWorld();
-    if(G.over||G.intermission) return null;
-  }
-  return null;
-}
-function nextTurn(){
-  if(G.over||G.intermission) return;
-  if(!G.units.some(u=>u.alive&&u.side==="ape")) return finish(false,"ゴリラ全滅","神は、群れを絶やした。");
-  if(clearStageIfReady()) return;
-  const u=tickCT();
-  if(!u||G.over) return;
-  u.ct-=100;
-  G.active=u; G.sel=u.id;
-  if(!beginAct(u)){ G.active=null; setTimeout(nextTurn,150); return; }
-  syncOrder(); showCard(u,matchMedia("(min-width:821px)").matches);
-  if(u.side==="ape"){ startMovePhase(u); }
-  else { G.phase="foe"; setTimeout(()=>foeTurn(u),380); }
-}
-function startMovePhase(u){
-  G.phase="move"; G.mode=null; G.rangeSet=null; G.targetSet=null;
-  G.moveSet=reachable(u);
-  G.kbPos=[u.tx,u.ty];
-  G.startPos={x:u.tx,y:u.ty};
-  showTileHint(u.tx,u.ty);
-  syncActs(); hint(`${u.name} — ドラッグで移動、そのあと行動をえらぶ`);
-}
-
-function stageName(n){ return LANG==="en"?(STAGE_NAMES_EN[n-1]||`Forest Sector ${n}`):(STAGE_NAMES[n-1]||`第${n}森域`); }
-function freeApeSpot(){
-  const spots=[];
-  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
-    const t=at(x,y); if(t&&!t.water&&t.fire<=0&&!unitAt(x,y)) spots.push([x,y]);
-  }
-  spots.sort((a,b)=>(Math.abs(a[0]-COLS/2)+Math.abs(a[1]-ROWS/2))-(Math.abs(b[0]-COLS/2)+Math.abs(b[1]-ROWS/2))||idx(a[0],a[1])-idx(b[0],b[1]));
-  return spots[0];
-}
-function addRunBonus(key,amount){
-  G.progress.bonus[key]+=amount;
-  if(key==="hp") for(const u of G.units.filter(u=>u.alive&&u.side==="ape")){ u.maxhp+=amount; u.hp+=amount; }
-  if(key==="mp") for(const u of G.units.filter(u=>u.alive&&u.side==="ape")){ u.maxmp+=amount; u.mp=Math.min(u.maxmp,u.mp+amount); }
-}
-function stageRewards(){
-  const locked=UNLOCK_ORDER.find(type=>!G.progress.unlocked.includes(type));
-  const ability=ABILITY_ORDER.find(a=>!G.progress.abilities.includes(a.key));
-  const upgrades=[
-    {key:"atk",amount:4,title:"群れの腕力",desc:"全員と、これから生まれる仲間の攻撃+4"},
-    {key:"hp",amount:18,title:"群れの生命",desc:"全員と、これから生まれる仲間の最大HP+18。現在HPも+18"},
-    {key:"mp",amount:3,title:"群れの魔力",desc:"全員と、これから生まれる仲間の最大MP+3"},
-    {key:"spd",amount:3,title:"群れの俊敏",desc:"全員と、これから生まれる仲間の素早さ+3"},
-  ];
-  const up=upgrades[(G.stage-1)%upgrades.length];
-  return [
-    locked?{kind:"GORILLA",title:`${APE[locked].jp} 解放`,desc:`出生候補に追加。空きがあれば今すぐ1匹加入`,apply:()=>{
-      G.progress.unlocked.push(locked);
-      const s=G.units.filter(u=>u.alive&&u.side==="ape").length<MAX_APES&&freeApeSpot();
-      if(s) makeUnit("ape",locked,s[0],s[1]);
-    }}:{kind:"GORILLA",title:"群れの生命",desc:"全員と未来の仲間の最大HP+12",apply:()=>addRunBonus("hp",12)},
-    ability?{kind:"ABILITY",title:`${ability.jp} 解放`,desc:ability.d,apply:()=>G.progress.abilities.push(ability.key)}
-      :{kind:"ABILITY",title:"奥義鍛錬",desc:"全員と未来の仲間の最大MP+2",apply:()=>addRunBonus("mp",2)},
-    {kind:"UPGRADE",title:up.title,desc:up.desc,apply:()=>addRunBonus(up.key,up.amount)},
-  ];
-}
-function renderInventory(){
-  const p=G.progress, chips=[];
-  for(const type of Object.keys(APE)) chips.push(`<span class="inv-chip${p.unlocked.includes(type)?" on":""}">${APE[type].jp}</span>`);
-  for(const a of ABILITY_ORDER.filter(a=>p.abilities.includes(a.key))) chips.push(`<span class="inv-chip on">${a.jp}</span>`);
-  const b=p.bonus;
-  if(b.atk||b.hp||b.mp||b.spd) chips.push(`<span class="inv-chip on">攻+${b.atk} HP+${b.hp} MP+${b.mp} 速+${b.spd}</span>`);
-  $("inventory").innerHTML=chips.join("");
-}
-function openCamp(){
-  G.intermission=true; G.active=null; G.phase="camp"; G.mode=null; G.moveSet=null; G.rangeSet=null; G.targetSet=null;
-  G.rewardOptions=stageRewards();
-  $("campTitle").textContent=`${stageName(G.stage)} 制圧`;
-  $("campSummary").innerHTML=`STAGE ${G.stage}/${STAGE_COUNT}<br>生存 ${G.units.filter(u=>u.alive&&u.side==="ape").length}匹　森 ${Math.round(forestValue())}<br>次の敵 HP+${Math.round(G.stage*ENEMY_HP_GROWTH*100)}% / 攻撃+${Math.round(G.stage*ENEMY_ATK_GROWTH*100)}%`;
-  const box=$("rewardBox"); box.innerHTML="";
-  G.rewardOptions.forEach((r,i)=>{
-    const b=document.createElement("button"); b.className="reward";
-    b.innerHTML=`<i>${r.kind}</i><b>${r.title}</b><span>${r.desc}</span>`;
-    b.onclick=()=>chooseReward(i); box.appendChild(b);
-  });
-  renderInventory(); $("scCamp").hidden=false; syncActs(); fit(); SFX.born();
-}
-function chooseReward(i){
-  if(!G.intermission) return;
-  const r=G.rewardOptions[i]; r.apply(); G.progress.picks.push(r.title);
-  G.intermission=false; $("scCamp").hidden=true;
-  nextStage(); captureStageStart(); syncOrder(); fit(); setTimeout(nextTurn,250);
-}
-function clearStageIfReady(){
-  if(!G.finalRound||G.over||G.intermission||G.units.some(u=>u.alive&&u.side!=="ape")) return false;
-  if(G.stage<STAGE_COUNT) openCamp();
-  else finish(true,"森は残った",`${STAGE_COUNT}ステージの襲撃をしのぎ、森は次の世代へ渡った。`);
-  return true;
-}
-function nextStage(){
-  G.stage++; G.round=1; G.waveIx=0; G.clockTicks=0; G.finalRound=false;
-  G.units=G.units.filter(u=>u.alive);
-  G.active=null; G.mode=null; G.moveSet=null; G.rangeSet=null; G.targetSet=null;
-  G.shake=7; SFX.born();
-  logMsg("#e8b23c",`ステージ ${G.stage}「${stageName(G.stage)}」— 森・仲間・強化を引き継いだ`);
-  float(CW/2,CH/2-18,`STAGE ${G.stage} ${stageName(G.stage)}`,"#ffe08a",2.5);
-}
-
-function advanceWorld(){
-  G.round=Math.min(LAST_ROUND,G.round+1);
-  if(G.round>=LAST_ROUND) G.finalRound=true;
-  // 火
-  const lit=[];
-  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){ const t=at(x,y); if(t.fire>0) lit.push([x,y]); }
-  for(const [x,y] of lit){
-    const t=at(x,y);
-    t.fire--;
-    if(t.fire<=0){ t.v=0; t.grow=0; t.fruit=0; t.fert=0; t.treeAge=0; t.ash=3; puff(x*TS+12,tileTop(x,y)+12,"#463c31",5); }
-  }
-  for(const [x,y] of lit){
-    const here=at(x,y);
-    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
-      const n=at(x+dx,y+dy);
-      if(!n||n.water||n.v<1||n.fire>0||!n.c) continue;
-      const up = n.h>here.h, down = n.h<here.h;
-      const p = BIOME[n.c].flam * (up?1.7:down?0.35:1);    // 火は坂を駆け上がる
-      if(hash(x+dx+G.round*17,y+dy+G.stage*101)<p){ n.fire=2; n.treeAge=0; puff((x+dx)*TS+12,tileTop(x+dx,y+dy)+12,"#f2802b",4); }
-    }
-  }
-  // 成長
-  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
-    const t=at(x,y);
-    if(t.fire>0) continue;
-    if(t.ash>0){ t.ash--; if(t.ash<=0&&t.c) t.fert=Math.max(t.fert,1); continue; }
-    if(!t.c) continue;
-    const B=BIOME[t.c];
-    if(t.v<3){
-      if(t.fert>0){
-        t.grow += B.rate;
-        t.fert = Math.max(0,t.fert-1);
-        const was=t.v;
-        t.v = t.grow>=GROW_TREE?3 : t.grow>=GROW_SAP?2 : t.grow>=GROW_GRASS?1 : 0;
-        if(t.v>was){ SFX.grow(); if(t.v===3) puff(x*TS+12,tileTop(x,y)+8,B.berry,6); }
-      }
-    } else {
-      if(t.fruit<B.cap && (t.fert>0 || G.round%2===0)){ t.fruit++; if(t.fert>0) t.fert=Math.max(0,t.fert-1); }
-    }
-  }
-  // 成木として無事に残ったターン数が、そのまま出生条件になる
-  for(const t of G.map){
-    if(t.v===3&&t.fire<=0) t.treeAge++;
-    else t.treeAge=0;
-  }
-  tryBirth();
-  // 襲撃
-  while(G.waveIx<WAVES.length && WAVES[G.waveIx].r<=G.round){
-    const w=WAVES[G.waveIx++];
-    const step=Math.max(1,MASTER.forestPerExtraEnemy||20);
-    const extra=Math.min(clamp(Math.round(MASTER.maxExtraEnemies),0,10),Math.floor(forestValue()/step));
-    const n=w.n+(w.kind==="jikon"?0:extra);
-    for(let i=0;i<n;i++) spawnFoe(w.kind);
-    SFX.wave();
-    logMsg("#c9452e",`第${G.waveIx}波 ${FOE[w.kind].jp} ×${n} — ${FOE[w.kind].act}`);
-  }
-  if(clearStageIfReady()){ syncRail(); return; }
-  const veg=forestValue();
-  if(G.round>4 && veg<1) finish(false,"森が焼き尽くされた","うんちの記憶まで灰になった。");
-  syncRail();
-}
-function forestValue(){
-  let v=0;
-  for(const t of G.map){ if(t.fire>0) continue; v += t.v===3?3 : t.v===2?1.2 : t.v===1?0.3 : 0; }
-  return v;
-}
-function matureTrees(c){ return G.map.filter(t=>t.v===3&&t.c===c&&t.fire<=0); }
-function nextBirthType(c){
-  const table=BORN[c].filter(([type])=>G.progress.unlocked.includes(type));
-  if(!table.length) return null;
-  const total=table.reduce((sum,row)=>sum+row[1],0);
-  let cursor=G.bornByColor[c]%total;
-  for(const [type,count] of table){
-    if(cursor<count) return type;
-    cursor-=count;
-  }
-  return table[0][0];
-}
-function tryBirth(){
-  const apes=G.units.filter(u=>u.alive&&u.side==="ape").length;
-  if(apes>=MAX_APES) return;
-  const ready=[];
-  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
-    const t=at(x,y);
-    if(t.v===3&&t.c&&t.fire<=0&&t.treeAge>=BIRTH_TREE_TURNS) ready.push({x,y,t});
-  }
-  ready.sort((a,b)=>b.t.treeAge-a.t.treeAge||idx(a.x,a.y)-idx(b.x,b.y));
-  const parent=ready.find(({x,y,t:tree})=>nextBirthType(tree.c)&&[[0,0],[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>{
-    const t=at(x+dx,y+dy); return t&&!t.water&&t.fire<=0&&!unitAt(x+dx,y+dy);
-  }));
-  if(!parent) return;
-  const c=parent.t.c, spots=[];
-  for(const [dx,dy] of [[0,0],[1,0],[-1,0],[0,1],[0,-1]]){
-    const t=at(parent.x+dx,parent.y+dy);
-    if(t&&!t.water&&t.fire<=0&&!unitAt(parent.x+dx,parent.y+dy)) spots.push([parent.x+dx,parent.y+dy]);
-  }
-  const type=nextBirthType(c);
-  spots.sort((a,b)=>idx(a[0],a[1])-idx(b[0],b[1]));
-  const s=spots[G.bornByColor[c]%spots.length];
-  const u=makeUnit("ape",type,s[0],s[1]);
-  parent.t.treeAge=0;
-  G.bornByColor[c]++;
-  G.born++; SFX.born();
-  float(unitX(u),unitY(u)-34,APE[type].jp,BIOME[c].berry,2.4);
-  logMsg(BIOME[c].berry,`${BIOME[c].jp}から ${u.name}（${APE[type].jp}）が生まれた`);
-  for(let i=0;i<12;i++) G.fx.push({x:unitX(u)+rnd(9,-9),y:unitY(u),vx:rnd(22,-22),vy:rnd(-20,-52),col:BIOME[c].berry,life:rnd(1,.5)});
-  syncOrder();
-}
-function spawnFoe(kind){
-  const cands=[];
-  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
-    if(x>1&&x<COLS-2&&y>1&&y<ROWS-2) continue;
-    const t=at(x,y);
-    if(t&&!t.water&&t.fire<=0&&!unitAt(x,y)) cands.push([x,y]);
-  }
-  if(!cands.length) return;
-  const s=cands[(G.stage*31+G.waveIx*7+nextId)%cands.length];
-  makeUnit("human",kind,s[0],s[1]);
-  syncOrder();
-}
-
-/* ══════════ 敵AI ══════════ */
-function foeTurn(u){
-  const st=S(u);
-  const set=reachable(u);
-  const apes=G.units.filter(o=>o.alive&&o.side==="ape");
-  let goal=null, want="attack";
-
-  if(u.type==="bald" && apes.length){
-    // 隣にゴリラがいなければ木を伐る
-    const near=apes.find(o=>inRange(u.tx,u.ty,o.tx,o.ty,1));
-    if(!near){
-      let best=null,bd=99;
-      for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
-        const t=at(x,y); if(t.v<2) continue;
-        const d=Math.abs(x-u.tx)+Math.abs(y-u.ty);
-        if(d<bd){bd=d;best=[x,y];}
-      }
-      if(best){ goal=best; want="chop"; }
-    }
-  }
-  if(u.type==="fireman"){
-    let best=null,bd=99;
-    for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
-      const t=at(x,y); if(t.v<1||t.water||!t.c||BIOME[t.c].flam<=0||t.fire>0) continue;
-      let v=0;
-      for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){ const n=at(x+dx,y+dy); if(n) v+=n.v; }
-      const d=Math.abs(x-u.tx)+Math.abs(y-u.ty) - v;
-      if(d<bd){bd=d;best=[x,y];}
-    }
-    if(best){ goal=best; want="burn"; }
-  }
-  if(!goal && apes.length){
-    let best=null,bd=1e9;
-    for(const o of apes){ const d=Math.abs(o.tx-u.tx)+Math.abs(o.ty-u.ty); if(d<bd){bd=d;best=o;} }
-    goal=[best.tx,best.ty]; want="attack";
-  }
-  if(!goal){ endAct(u); return; }
-
-  // 目標に一番近づける到達マスへ
-  let bestK=null, bestScore=1e9;
-  const consider=(k,c)=>{
-    const x=k%COLS, y=(k/COLS)|0;
-    const d=Math.abs(x-goal[0])+Math.abs(y-goal[1]);
-    const h=at(x,y).h;
-    const score=d*10 - h*2 + c*0.4;                  // 高いところを好む
-    if(score<bestScore){ bestScore=score; bestK=k; }
-  };
-  consider(idx(u.tx,u.ty),0);
-  for(const [k,v] of set) consider(k,v.c);
-  const path = bestK===idx(u.tx,u.ty) ? [] : pathTo(u,set,bestK%COLS,(bestK/COLS)|0);
-
-  doMove(u,path,()=>{
-    const target = want==="attack" ? G.units.find(o=>o.alive&&o.side==="ape"&&inRange(u.tx,u.ty,o.tx,o.ty,st.rng)) : null;
-    if(target){ actionAttack(u,target.tx,target.ty); return; }
-    if(want==="chop"){
-      const t=at(goal[0],goal[1]);
-      if(inRange(u.tx,u.ty,goal[0],goal[1],1)&&t&&t.v>=2){
-        G.anim={kind:"strike",u,d:null,t:0,dur:.4,after:()=>{
-          t.v=0;t.grow=0;t.fruit=0;t.treeAge=0;t.fert=Math.max(0,t.fert-2);
-          puff(goal[0]*TS+12,tileTop(goal[0],goal[1])+12,"#6b5322",8);
-          float(goal[0]*TS+12,tileTop(goal[0],goal[1]),"木が倒された","#c9452e",1.5);
-          beep(90,.12,"square",.05,-30); endAct(u);
-        }};
-        return;
-      }
-    }
-    if(want==="burn"){
-      const cand=[[goal[0],goal[1]],...tilesInRange(u.tx,u.ty,st.rng)];
-      const spot=cand.find(([x,y])=>{ const t=at(x,y); return t&&t.v>=1&&t.c&&BIOME[t.c].flam>0&&t.fire<=0&&inRange(u.tx,u.ty,x,y,st.rng); });
-      if(spot){
-        u.dir=spot[0]>u.tx?1:-1;
-        G.anim={kind:"flame",u,tx:spot[0],ty:spot[1],t:0,dur:.6,after:()=>{
-          const t=at(spot[0],spot[1]);
-          if(t&&t.v>=1&&BIOME[t.c].flam>0){ t.fire=2; t.treeAge=0; SFX.fire(); float(spot[0]*TS+12,tileTop(spot[0],spot[1]),"着火","#f2802b",1.4); }
-          endAct(u);
-        }};
-        return;
-      }
-    }
-    endAct(u);
-  });
-}
-
-/* ══════════ 演出 ══════════ */
-function puff(x,y,col,n){ for(let i=0;i<n;i++) G.fx.push({x,y,vx:rnd(26,-26),vy:rnd(-8,-36),col,life:rnd(.7,.3)}); }
-function float(x,y,text,col,life){ G.floats.push({x,y,text,col,life,max:life}); }
-function logMsg(col,msg){
-  G.log.push({col,msg,life:5});
-  if(G.log.length>4) G.log.shift();
-  renderLog();
-}
-
-/* ══════════ 描画 ══════════ */
-function drawTile(x,y){
-  const t=at(x,y), sx=x*TS, top=tileTop(x,y), h=hash(x,y);
-  const B=t.c?BIOME[t.c]:null;
-  // 側面
-  const wallH=t.h*HSTEP+6;
-  if(wallH>0){
-    ctx.fillStyle = t.water?"#20343a" : (B?B.wall:"#33261a");
-    ctx.fillRect(sx,top+TS,TS,wallH);
-    ctx.fillStyle="#00000040";
-    ctx.fillRect(sx,top+TS+wallH-2,TS,2);
-    for(let i=0;i<3;i++){ if(hash(x*3+i,y*5)>.6){ ctx.fillStyle="#ffffff10"; ctx.fillRect(sx+2+i*7,top+TS+2,2,Math.max(1,wallH-4)); } }
-  }
-  // 上面
-  let g = t.water?"#3c6b70" : (B&&(t.v>0||t.fert>0)?B.ground:"#4a3623");
-  if(t.ash>0) g="#2f2820";
-  ctx.fillStyle=g; ctx.fillRect(sx,top,TS,TS);
-  // 高さの陰影
-  ctx.fillStyle = t.h>=2?"#ffffff12" : t.h===1?"#ffffff08" : "#00000010";
-  ctx.fillRect(sx,top,TS,TS);
-  ctx.fillStyle="#00000022"; ctx.fillRect(sx,top,TS,1); ctx.fillRect(sx,top,1,TS);
-  // ディザ
-  if(h<.35){ ctx.fillStyle="#00000022"; ctx.fillRect(sx+((h*29)|0)%18,top+((h*13)|0)%18,3,2); }
-  if(h>.75){ ctx.fillStyle="#ffffff10"; ctx.fillRect(sx+((h*17)|0)%18,top+((h*7)|0)%18,2,2); }
-  if(t.water){
-    ctx.fillStyle="#68d0e033";
-    const w=Math.sin(vt*2+x*.8+y*.5)>0?1:0;
-    ctx.fillRect(sx+2+w,top+6,8,1); ctx.fillRect(sx+12-w,top+14,8,1);
-  }
-  if(t.ash>0){ ctx.fillStyle="#1c1712"; ctx.fillRect(sx+4,top+6,4,3); ctx.fillRect(sx+13,top+13,3,3); }
-  if(t.fert>0&&t.v===0&&t.ash<=0&&t.c){
-    ctx.fillStyle=PCOL[t.c].m;
-    ctx.fillRect(sx+7,top+9,3,3); ctx.fillRect(sx+13,top+13,2,2);
-  }
-  // 植生
-  if(t.v>0&&B) drawVeg(x,y,t,B,sx,top);
-}
-function drawVeg(x,y,t,B,sx,top){
-  const h=hash(x,y), sway=Math.sin(vt*1.4+x*.7+y*.4)>0?1:0;
-  if(t.v===1){
-    ctx.fillStyle=B.grass[0];
-    ctx.fillRect(sx+4+((h*7)|0)%3,top+13,3,6); ctx.fillRect(sx+11,top+16,3,4);
-    ctx.fillStyle=B.grass[1]; ctx.fillRect(sx+16,top+12+((h*5)|0)%2,3,7);
-  } else if(t.v===2){
-    ctx.fillStyle=B.trunk; ctx.fillRect(sx+11,top+12,3,8);
-    ctx.fillStyle=B.leaf[0]; ctx.fillRect(sx+6+sway,top+7,12,6);
-    ctx.fillStyle=B.leaf[1]; ctx.fillRect(sx+9,top+4,6,4);
-  } else {
-    ctx.fillStyle="#00000038"; ctx.fillRect(sx+4,top+18,16,3);
-    ctx.fillStyle=B.trunk; ctx.fillRect(sx+10,top+11,4,10);
-    ctx.fillStyle=B.leaf[0]; ctx.fillRect(sx+2+sway,top+1,20,11);
-    ctx.fillStyle=B.leaf[1]; ctx.fillRect(sx+6+sway,top-2,12,6);
-    ctx.fillStyle="#00000030"; ctx.fillRect(sx+2+sway,top+10,20,2);
-    for(let i=0;i<(t.fruit|0);i++){
-      ctx.fillStyle=B.berry;
-      ctx.fillRect(sx+5+sway+i*6,top+4+((i*5+((h*9)|0))%4),3,3);
-      ctx.fillStyle="#ffffff70"; ctx.fillRect(sx+5+sway+i*6,top+4+((i*5+((h*9)|0))%4),1,1);
-    }
-  }
-}
-function drawFire(x,y){
-  const t=at(x,y); if(t.fire<=0) return;
-  const sx=x*TS, top=tileTop(x,y), k=Math.floor(vt*12);
-  for(let i=0;i<8;i++){
-    const h2=hash(x*7+i+k,y*3+k);
-    ctx.fillStyle=h2>.66?"#ffd34d":h2>.3?"#f2802b":"#c33a1e";
-    ctx.fillRect(sx+2+((h2*18)|0),top+2+((h2*17)|0),3,4);
-  }
-  ctx.fillStyle="#ffd34d30"; ctx.fillRect(sx+2,top+2,20,20);
-}
-function drawUnit(u){
-  const st=S(u);
-  const s=SPR["u_"+u.type];
-  const squat=u.squat>0;
-  const strain=squat?clamp(1-u.squat/Math.max(.01,u.squatMax),0,1):0;
-  const A=G.anim;
-  let ox=0, oy=0;
-  if(A&&A.u===u){
-    if(A.kind==="strike"){ const k=Math.sin(Math.min(1,A.t/A.dur)*Math.PI); ox=u.dir*k*9; }
-    if(A.kind==="stomp"){ oy=-Math.sin(Math.min(1,A.t/A.dur)*Math.PI)*7; }
-  }
-  const shake = squat?Math.round(Math.sin(vt*(28+strain*24))*(.5+strain*1.5)):0;
-  const drop  = squat?Math.round(Math.sin(strain*Math.PI)*4):0;
-  oy += u.relief>0 ? -Math.round(Math.sin((u.relief/.5)*Math.PI)*7) : 0;
-  const x=Math.round(u.px-s.width/2+ox+shake), y=Math.round(u.py-s.height+1+oy+drop);
-  // 影
-  ctx.fillStyle="#00000048";
-  ctx.fillRect(Math.round(u.px-6),Math.round(u.py-2),12,3);
-  // 選択・行動中リング
-  if(G.active===u&&u.alive){
-    const col=u.side==="ape"?"#ffe08a":"#ff6047";
-    ctx.fillStyle=col;
-    const bob=Math.sin(vt*5)>0?0:1;
-    ctx.fillRect(Math.round(u.px)-3,Math.round(u.py-s.height-6-bob),6,2);
-    ctx.fillRect(Math.round(u.px)-1,Math.round(u.py-s.height-4-bob),2,2);
-  }
-  if(u.rage>0&&Math.sin(vt*13)>0){ ctx.fillStyle="#c9452e55"; ctx.fillRect(x,y,s.width,s.height); }
-  ctx.save();
-  if(u.dir<0){ ctx.translate(x+s.width,y); ctx.scale(-1,1); ctx.drawImage(s,0,0); }
-  else ctx.drawImage(s,x,y);
-  ctx.restore();
-  // 力み
-  if(squat){
-    const k=Math.sin(vt*26)>0?1:0;
-    ctx.fillStyle="#ffffffcc"; ctx.fillRect(x+s.width-3+k,y-4,2,2);
-    ctx.fillStyle="#e8b23c"; ctx.fillRect(x+2-k,y-3,3,1); ctx.fillRect(x+s.width-8+k,y-6,3,1);
-    if(strain>.72){ // 出かかっている
-      const gsz=Math.max(1,Math.round((strain-.72)*12));
-      ctx.fillStyle=PCOL[G.anim?.pk==="gold"?"gold":(u.belly[0]||"y")].m;
-      ctx.fillRect(Math.round(u.px-u.dir*10-gsz/2), Math.round(u.py-6-gsz/2), gsz, Math.max(1,Math.round(gsz*.7)));
-    }
-  }
-  // HP / MP
-  const bw=s.width-4;
-  {
-    ctx.fillStyle="#0b0805"; ctx.fillRect(x+2,y-3,bw,2);
-    ctx.fillStyle=u.side==="ape"?(u.hp>u.maxhp*.4?"#7fae2f":"#c9452e"):"#c9452e";
-    ctx.fillRect(x+2,y-3,Math.max(1,Math.round(bw*u.hp/u.maxhp)),2);
-  }
-  if(u.side==="ape"&&u.maxmp){
-    ctx.fillStyle="#0b0805"; ctx.fillRect(x+2,y-6,bw,2);
-    ctx.fillStyle="#68d0e0"; ctx.fillRect(x+2,y-6,Math.max(0,Math.round(bw*u.mp/u.maxmp)),2);
-  }
-  // お腹の中の実：3枠を盤面上に常時表示（左から、次に出る順）
-  if(u.side==="ape") for(let i=0;i<3;i++){
-    const sx=x+2+i*5, sy=y-11;
-    ctx.fillStyle="#0b0805"; ctx.fillRect(sx,sy,4,4);
-    ctx.fillStyle="#4a3823"; ctx.fillRect(sx,sy,4,1); ctx.fillRect(sx,sy,1,4);
-    const c=u.belly[i]; if(!c) continue;
-    ctx.fillStyle=BIOME[c].berry; ctx.fillRect(sx+1,sy+1,3,3);
-    ctx.fillStyle="#ffffff90"; ctx.fillRect(sx+1,sy+1,1,1);
-  }
-}
-function drawPoop(p){
-  const K=POOP[p.kind], C=PCOL[p.kind==="gold"?"gold":p.c];
-  const air=clamp(1-p.t/p.land,0,1), fall=air*CFG.arc, s=K.size;
-  let sq=1; const since=p.t-p.land;
-  if(since>=0&&since<.22) sq=1-CFG.squash*Math.sin((1-since/.22)*Math.PI*.5);
-  const flight=1-air;
-  const x=(p.thrown?p.fromX+(p.x-p.fromX)*flight:p.x+p.dir*air*7)|0;
-  const y=(p.thrown?p.fromY+(p.y-p.fromY)*flight-Math.sin(flight*Math.PI)*CFG.arc*1.4:p.y-fall)|0;
-  const R=(w,h,col,ox,oy)=>{ctx.fillStyle=col;ctx.fillRect((x+ox*s)|0,(y+oy*s*sq)|0,Math.max(1,Math.round(w*s)),Math.max(1,Math.round(h*sq*s)));};
-  if(p.kind==="pellet"){ R(2,2,C.m,-3,-2);R(2,2,C.d,0,-3);R(2,2,C.m,1,-1);R(1,1,C.l,-3,-2); }
-  else if(p.kind==="big"){ R(8,2,C.d,-4,-1);R(6,2,C.m,-3,-3);R(4,2,C.m,-2,-5);R(2,1,C.l,-1,-6);R(3,1,C.l,-3,-3); }
-  else if(p.kind==="gold"){
-    R(6,2,C.d,-3,-1);R(4,2,C.m,-2,-3);R(2,1,C.l,-1,-4);
-    if(Math.sin(vt*9)>0){ R(1,1,"#fff9d6",-4,-5); R(1,1,"#fff9d6",3,-3); }
-  } else { R(6,2,C.d,-3,-1);R(4,2,C.m,-2,-3);R(2,1,C.l,-1,-4); }
-  if(since>=0&&since<.45){
-    const q=since/.45, rad=Math.round(5+q*(12+K.size*5)), rh=Math.max(2,Math.round(rad*.45));
-    ctx.globalAlpha=(1-q)*.9; ctx.fillStyle=C.l;
-    ctx.fillRect(x-rad,y-rh,rad*2,2); ctx.fillRect(x-rad,y+rh-2,rad*2,2);
-    ctx.fillRect(x-rad,y-rh,2,rh*2); ctx.fillRect(x+rad-2,y-rh,2,rh*2);
-    ctx.globalAlpha=1;
-  }
-  if(since>0&&since<CFG.steam){
-    ctx.fillStyle="#ffffff33";
-    const k=since*7;
-    ctx.fillRect((x-2+Math.sin(k)*2)|0,(y-6-since*5)|0,1,2);
-    ctx.fillRect((x+2+Math.sin(k+2)*2)|0,(y-8-since*4)|0,1,2);
-  }
-}
-
-function draw(){
-  ctx.clearRect(0,0,CW,CH);
-  ctx.save();
-  if(G.shake>.2) ctx.translate(Math.round(rnd(G.shake,-G.shake)),Math.round(rnd(G.shake,-G.shake)));
-
-  // 移動範囲 / 射程のハイライト（地面の上）
-  for(let y=0;y<ROWS;y++){
-    for(let x=0;x<COLS;x++) drawTile(x,y);
-    // ハイライト
-    for(let x=0;x<COLS;x++){
-      const k=idx(x,y), top=tileTop(x,y);
-      if(G.phase==="move"&&!G.mode&&G.moveSet&&G.moveSet.has(k)){
-        ctx.fillStyle="#68d0e030"; ctx.fillRect(x*TS,top,TS,TS);
-        ctx.fillStyle="#68d0e090";
-        ctx.fillRect(x*TS,top,TS,1); ctx.fillRect(x*TS,top+TS-1,TS,1);
-        ctx.fillRect(x*TS,top,1,TS); ctx.fillRect(x*TS+TS-1,top,1,TS);
-      }
-      if(G.rangeSet&&G.rangeSet.has(k)){
-        ctx.fillStyle="#c9452e2d"; ctx.fillRect(x*TS,top,TS,TS);
-        ctx.fillStyle="#c9452eaa";
-        ctx.fillRect(x*TS,top,TS,1); ctx.fillRect(x*TS,top+TS-1,TS,1);
-        ctx.fillRect(x*TS,top,1,TS); ctx.fillRect(x*TS+TS-1,top,1,TS);
-      }
-      if(G.targetSet&&G.targetSet.has(k)){
-        const pulse=Math.sin(vt*6)>0?"#e8b23c55":"#e8b23c33";
-        ctx.fillStyle=pulse; ctx.fillRect(x*TS,top,TS,TS);
-        ctx.fillStyle="#e8b23c"; ctx.fillRect(x*TS,top,TS,1); ctx.fillRect(x*TS,top+TS-1,TS,1);
-      }
-      if(G.phase==="move"&&G.kbPos&&G.kbPos[0]===x&&G.kbPos[1]===y){
-        const pulse=Math.sin(vt*8)>0?2:1;
-        ctx.fillStyle="#ffe08a";
-        ctx.fillRect(x*TS+2,top+2,TS-4,pulse); ctx.fillRect(x*TS+2,top+TS-2-pulse,TS-4,pulse);
-        ctx.fillRect(x*TS+2,top+2,pulse,TS-4); ctx.fillRect(x*TS+TS-2-pulse,top+2,pulse,TS-4);
-      }
-      if(G.active?.alive&&G.active.tx===x&&G.active.ty===y){
-        const col=G.active.side==="ape"?"#ffe08a":"#ff6047";
-        const p=Math.sin(vt*7)>0?1:0, sx=x*TS+p, sy=top+p, n=7;
-        ctx.fillStyle=G.active.side==="ape"?"#e8b23c22":"#c9452e22";
-        ctx.fillRect(x*TS,top,TS,TS);
-        ctx.fillStyle=col;
-        ctx.fillRect(sx,sy,n,2); ctx.fillRect(sx,sy,2,n);
-        ctx.fillRect(sx+TS-n-2,sy,n,2); ctx.fillRect(sx+TS-4,sy,2,n);
-        ctx.fillRect(sx,sy+TS-4,n,2); ctx.fillRect(sx,sy+TS-n-2,2,n);
-        ctx.fillRect(sx+TS-n-2,sy+TS-4,n,2); ctx.fillRect(sx+TS-4,sy+TS-n-2,2,n);
-      }
-    }
-    // この行に立つユニット・うんち
-    for(const p of G.poops) if(p.ty===y) drawPoop(p);
-    for(const u of G.units) if(u.alive&&u.ty===y&&u!==G.dragging) drawUnit(u);
-    for(let x=0;x<COLS;x++) drawFire(x,y);
-  }
-  // ユニットが立っている射程マスも、枠線だけは手前に出して見失わせない
-  if(G.rangeSet){
-    for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
-      const k=idx(x,y); if(!G.rangeSet.has(k)) continue;
-      const top=tileTop(x,y), col=G.targetSet?.has(k)?"#e8b23c":"#c9452e";
-      ctx.fillStyle=col;
-      ctx.fillRect(x*TS,top,TS,2); ctx.fillRect(x*TS,top+TS-2,TS,2);
-      ctx.fillRect(x*TS,top,2,TS); ctx.fillRect(x*TS+TS-2,top,2,TS);
-    }
-  }
-  if(G.dragging) drawUnit(G.dragging);
-
-  // 雨・投擲
-  const A=G.anim;
-  if(A&&A.kind==="rain"){
-    const k=A.t/A.dur;
-    ctx.globalAlpha=.6*(k<.2?k/.2:k>.8?(1-k)/.2:1);
-    for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
-      const t=at(A.tx+dx,A.ty+dy); if(!t) continue;
-      const sx=(A.tx+dx)*TS, top=tileTop(A.tx+dx,A.ty+dy);
-      ctx.fillStyle="#68d0e022"; ctx.fillRect(sx,top,TS,TS);
-      ctx.fillStyle="#68d0e0";
-      for(let i=0;i<4;i++){
-        const h2=hash((A.tx+dx)*17+i*13+((A.t*9)|0),(A.ty+dy)*19+i*7);
-        const x=sx+2+h2*(TS-4), y=top-12+((h2*100+A.t*150+i*9)%(TS+18));
-        ctx.fillRect(x|0,y|0,1,4);
-      }
-    }
-    ctx.globalAlpha=1;
-  }
-  if(A&&(A.kind==="throw"||A.kind==="flame")){
-    const k=Math.min(1,A.t/A.dur);
-    const x0=A.u.px, y0=A.u.py-14, x1=A.tx*TS+12, y1=tileTop(A.tx,A.ty)+12;
-    if(A.kind==="throw"){
-      const x=x0+(x1-x0)*k, y=y0+(y1-y0)*k-Math.sin(k*Math.PI)*22;
-      ctx.fillStyle="#9a9a9a"; ctx.fillRect(x|0,y|0,4,4);
-      ctx.fillStyle="#cfcfcf"; ctx.fillRect(x|0,y|0,2,2);
-    } else {
-      for(let i=0;i<8;i++){
-        const q=k*(.3+i*.1); if(q>1) continue;
-        const x=x0+(x1-x0)*q+rnd(3,-3), y=y0+(y1-y0)*q+rnd(3,-3);
-        ctx.fillStyle=i>5?"#c33a1e":i>3?"#f2802b":"#ffd34d";
-        ctx.fillRect(x|0,y|0,4,4);
-      }
-    }
-  }
-  // 粒子・数字
-  for(const f of G.fx){ ctx.fillStyle=f.col; ctx.fillRect(f.x|0,f.y|0,2,2); }
-  ctx.font='8px "DotGothic16", monospace';
-  ctx.textAlign="center";
-  for(const f of G.floats){
-    const k=1-f.life/f.max;
-    ctx.globalAlpha=f.life<.4?f.life/.4:1;
-    ctx.fillStyle="#000000c0"; ctx.fillText(f.text,(f.x)|0,(f.y-k*16+1)|0);
-    ctx.fillStyle=f.col;       ctx.fillText(f.text,(f.x)|0,(f.y-k*16)|0);
-    ctx.globalAlpha=1;
-  }
-  ctx.textAlign="left";
-  ctx.restore();
-}
-
-/* ══════════ 更新 ══════════ */
-function update(dt){
-  vt+=dt;
-  G.shake=Math.max(0,G.shake-dt*14);
-  G.fx=G.fx.filter(f=>(f.life-=dt)>0);
-  for(const f of G.fx){ f.x+=f.vx*dt; f.y+=f.vy*dt; f.vy+=42*dt; }
-  G.floats=G.floats.filter(f=>(f.life-=dt)>0);
-  G.poops=G.poops.filter(p=>{
-    const wasAir=p.t<p.land;
-    p.t+=dt; p.life-=dt;
-    if(wasAir&&p.t>=p.land){
-      const K=POOP[p.kind], col=PCOL[p.kind==="gold"?"gold":p.c].l;
-      puff(p.x,p.y+2,col,12+Math.round(K.size*6));
-      puff(p.x,p.y,"#f2e6cf",4);
-      G.shake=Math.max(G.shake,(2+K.shake)*CFG.impactShake);
-      beep(p.kind==="big"?75:120,.12,"triangle",.07,-70);
-    }
-    return p.life>0;
-  });
-  for(const u of G.units){
-    if(!u.alive) continue;
-    u.anim+=dt*6;
-    if(u!==G.dragging && !(G.anim&&G.anim.kind==="walk"&&G.anim.u===u)){
-      u.px += (unitX(u)-u.px)*Math.min(1,dt*12);
-      u.py += (unitY(u)-u.py)*Math.min(1,dt*12);
-    }
-    if(u.squat>0) u.squat-=dt;
-    u.relief=Math.max(0,u.relief-dt);
-  }
-  const A=G.anim;
-  if(A){
-    A.t+=dt;
-    if(A.kind==="walk"){
-      const seg=A.t/A.dur;
-      if(seg>=1){
-        A.t=0; const [nx,ny]=A.path[A.i];
-        A.u.dir = nx>A.u.tx?1: nx<A.u.tx?-1: A.u.dir;
-        A.u.tx=nx; A.u.ty=ny; A.u.px=unitX(A.u); A.u.py=unitY(A.u);
-        SFX.step(); A.i++;
-        if(A.i>=A.path.length){ const f=A.after; G.anim=null; f&&f(); return; }
-      } else {
-        const [nx,ny]=A.path[A.i];
-        const sx=A.u.tx*TS+TS/2, sy=unitY(A.u);
-        const ex=nx*TS+TS/2, ey=ny*TS+YOFF-at(nx,ny).h*HSTEP+TS;
-        A.u.px=sx+(ex-sx)*seg; A.u.py=sy+(ey-sy)*seg-Math.sin(seg*Math.PI)*4;
-      }
-    } else if(A.kind==="squat"){
-      A.u.squat=Math.max(A.u.squat,.5);
-      A.u.squat=A.dur-A.t;
-      G.shake=Math.max(G.shake,Math.max(0,A.t/A.dur-.5)*3);
-      if(!A.fired && A.t>=A.dur-0.25){ A.fired=true; dropPoop(A.u,A.pk,A.pc,A.tx,A.ty); A.u.relief=.5; }
-      if(A.t>=A.dur){ A.u.squat=0; const f=A.after; G.anim=null; f&&f(); return; }
-    } else if(A.t>=A.dur){
-      const f=A.after; G.anim=null; f&&f(); return;
-    }
-  }
-}
-
-/* ══════════ 入力 ══════════ */
-function toWorld(ev){
-  const r=cv.getBoundingClientRect();
-  return {x:(ev.clientX-r.left)/r.width*CW, y:(ev.clientY-r.top)/r.height*CH};
-}
-function tileFromPoint(p){
-  // 高さを考慮：下の行から見て、点が乗っている上面を探す
-  for(let y=ROWS-1;y>=0;y--){
-    for(let x=0;x<COLS;x++){
-      const top=tileTop(x,y);
-      if(p.x>=x*TS&&p.x<x*TS+TS&&p.y>=top&&p.y<top+TS) return [x,y];
-    }
-  }
-  const gx=clamp(Math.floor(p.x/TS),0,COLS-1), gy=clamp(Math.floor((p.y-YOFF)/TS),0,ROWS-1);
-  return [gx,gy];
-}
-function showTileHint(x,y){
-  const t=at(x,y); if(!t) return;
-  const u=unitAt(x,y), veg=[L("裸地","Bare"),L("草","Grass"),L("若木","Sapling"),L("成木","Mature tree")][t.v]||"—";
-  const terrain=t.water?L("水辺","Water"):localize(BIOME[t.c]?.jp||L("土","Soil"));
-  const states=[];
-  if(t.fruit>0) states.push(L(`実 ${t.fruit}`,`Fruit ${t.fruit}`));
-  if(t.fire>0) states.push(L(`火 ${t.fire}`,`Fire ${t.fire}`));
-  if(t.ash>0) states.push(L("灰","Ash"));
-  $("tileHintTitle").textContent=L("マス詳細","TILE INFO");
-  $("tileHint").dataset.x=x; $("tileHint").dataset.y=y;
-  $("tileHintCoord").textContent=`X${x+1} Y${y+1}`;
-  $("tileHintBody").innerHTML=`
-    <span>${L("地形","TERRAIN")}</span><b>${terrain}</b>
-    <span>${L("高さ","HEIGHT")}</span><b>${t.h}</b>
-    <span>${L("草木","GROWTH")}</span><b>${veg}</b>
-    <span>${L("状態","STATE")}</span><b>${states.join(" / ")||L("平常","Clear")}</b>
-    <span>${L("肥沃度","FERTILITY")}</span><b>${Math.max(0,Math.round(t.fert||0))}</b>
-    <span>${L("ユニット","UNIT")}</span><b>${u?`${u.name} · ${localize(S(u).jp)}`:L("なし","None")}</b>`;
-  $("tileHint").hidden=false;
-}
-cv.addEventListener("pointerdown",ev=>{
-  if(G.over) return;
-  cv.setPointerCapture(ev.pointerId);
-  const p=toWorld(ev), [x,y]=tileFromPoint(p);
-  if(G.mode&&G.targetSet){          // 対象を選ぶ
-    if(G.targetSet.has(idx(x,y))) confirmTarget(x,y);
-    return;
-  }
-  if(G.phase==="move"&&G.active&&G.moveSet?.has(idx(x,y))&&!unitAt(x,y)){
-    const u=G.active, path=pathTo(u,G.moveSet,x,y);
-    G.phase="idle"; G.kbPos=null;
-    doMove(u,path,()=>{ G.phase="act"; G.moveSet=null; syncActs(); hint("行動をえらぶ"); });
-    return;
-  }
-  const u=unitAt(x,y);
-  if(G.phase==="move"&&u===G.active){ G.dragging=u; G.dragFrom=[u.tx,u.ty]; return; }
-  if(u){ showCard(u); G.sel=u.id; }
-});
-cv.addEventListener("pointermove",ev=>{
-  const p=toWorld(ev);
-  const [x,y]=tileFromPoint(p); showTileHint(x,y);
-  if(!G.dragging) return;
-  G.dragging.px=clamp(p.x,8,CW-8); G.dragging.py=clamp(p.y,14,CH-4);
-});
-cv.addEventListener("pointerleave",()=>{ if(G.phase!=="move") $("tileHint").hidden=true; });
-function dropUnit(){
-  const u=G.dragging; if(!u) return;
-  G.dragging=null;
-  const p={x:u.px,y:u.py-8};
-  const [x,y]=tileFromPoint(p);
-  const k=idx(x,y);
-  if(G.moveSet&&G.moveSet.has(k)&&!unitAt(x,y)){
-    const path=pathTo(u,G.moveSet,x,y);
-    G.phase="idle"; G.kbPos=null;
-    doMove(u,path,()=>{ G.phase="act"; G.moveSet=null; syncActs(); hint("行動をえらぶ"); });
-  } else {
-    u.px=unitX(u); u.py=unitY(u);
-    if(k!==idx(u.tx,u.ty)) beep(120,.08,"square",.04,-40);
-  }
-}
-cv.addEventListener("pointerup",dropUnit);
-cv.addEventListener("pointercancel",dropUnit);
-
-/* ══════════ 行動ボタン ══════════ */
-const $=id=>document.getElementById(id);
-const bAtk=$("aAttack"), bSk=$("aSkill"), bEat=$("aEat"), bPoop=$("aPoop"), bWait=$("aWait"), bCancel=$("aCancel");
-function hint(s){ $("hint").textContent=localize(s); }
-function canAct(){ return G.active && G.active.side==="ape" && (G.phase==="move"||G.phase==="act"); }
-function syncActs(){
-  const u=G.active, ok=canAct();
-  const st=ok?APE[u.type]:null;
-  bAtk.textContent=L("[1] こうげき","[1] ATTACK");
-  bSk.childNodes[0].nodeValue=L("[2] とくぎ","[2] SKILL");
-  bEat.textContent=L("[3] たべる","[3] EAT");
-  bPoop.textContent=L("[4] うんち","[4] POOP");
-  bWait.textContent=L("[5] まつ","[5] WAIT");
-  bCancel.textContent=L("やめる","CANCEL");
-  bAtk.disabled=!ok; bSk.disabled=!ok; bEat.disabled=!ok; bPoop.disabled=!ok; bWait.disabled=!ok;
-  bCancel.hidden=!G.mode;
-  [bAtk,bSk,bEat,bPoop].forEach(b=>b.classList.remove("on"));
-  if(!ok){ bSk.querySelector("small").textContent=""; return; }
-  bAtk.title = localize(`攻撃範囲：${attackRangeText(st.rng)}`);
-  const cost=skillCost(u);
-  bSk.querySelector("small").textContent = `MP${cost}`;
-  const skillNeedsFruit=u.type==="normal"&&u.belly.length<poopNeed(u);
-  bSk.disabled = u.mp<cost||skillNeedsFruit;
-  bSk.title = localize(skillNeedsFruit ? `${st.sk.n} — 実が ${poopNeed(u)} 個ひつよう` : `${st.sk.n} — ${st.sk.d}`);
-  const t=at(u.tx,u.ty);
-  bEat.disabled = !(t.v===3&&t.fruit>=1)||u.belly.length>=BELLY_MAX;
-  bEat.textContent = bEat.disabled ? L("[3] たべる","[3] EAT") : LANG==="en"?`[3] EAT ${t.c.toUpperCase()} → ${localize(FRUIT_BUFF[t.c].jp)}`:`[3] ${t.c==="r"?"赤":t.c==="b"?"青":"黄"}実→${FRUIT_BUFF[t.c].jp}`;
-  if(u.belly.length>=BELLY_MAX) bEat.title=L("おなかが満杯。うんちをして空きを作る","Belly full. Poop to free a slot");
-  else if(bEat.disabled) bEat.title=localize("実のある成木の上で使う");
-  else {
-    const add=Math.min(FRUIT_BUFF[t.c].gain,Math.max(0,FRUIT_STAT_MAX-fruitStat(u,t.c)));
-    bEat.title=localize(add?`${FRUIT_BUFF[t.c].jp}+${add}（現在 ${fruitStat(u,t.c)}/${FRUIT_STAT_MAX}）`:`${FRUIT_BUFF[t.c].jp}は最大（実はおなかに入る）`);
-  }
-  const need=poopNeed(u);
-  bPoop.disabled = u.belly.length<need;
-  bPoop.title = localize(u.belly.length<need ? `おなかに実が ${need} 個ひつよう` : "その場にうんちをする");
-  if(G.mode==="attack") bAtk.classList.add("on");
-  if(G.mode==="skill") bSk.classList.add("on");
-}
-function applyLanguage(refresh=true){
-  document.documentElement.lang=LANG;
-  $("bLang").textContent=LANG==="ja"?"JP / EN":"EN / JP";
-  $("lStage").textContent=L("ステージ","STAGE"); $("lRound").textContent=L("ラウンド","ROUND");
-  $("lApes").textContent=L("ゴリラ","GORILLAS"); $("lFoes").textContent=L("人族","HUMANS"); $("lObjective").textContent=L("クリア条件","OBJECTIVE");
-  $("lGrowth").textContent=L("成長・誕生予報","GROWTH & BIRTH"); $("lLog").textContent=L("戦況記録","BATTLE LOG"); $("lCamp").textContent=L("戦線野営","WAR CAMP");
-  $("campCopy").innerHTML=L("<b>達成後：</b>実の強化／次代の編成／森の記録","<b>AFTER CLEAR:</b> fruit boosts / roster / forest record");
-  $("scTitle").querySelector(".chapter .tag").textContent=L("第一章　うんちの産声","CHAPTER I — THE FIRST PLOP");
-  $("scTitle").querySelector(".maxim").textContent=L("糞は土となり、森は兵を生む。","Poop becomes soil; the forest raises an army.");
-  $("scTitle").querySelector(".title-hint").textContent=L("ヒント：実とうんちで森を育て、成木を5ターン守れば仲間が生まれる。","Hint: Grow the forest with fruit and poop. Protect a mature tree for 5 turns to gain an ally.");
-  $("bStart").textContent=L("音楽とともにはじめる","START WITH MUSIC"); $("bStartSilent").textContent=L("音なしではじめる","START SILENTLY");
-  $("bAgain").textContent=L("もういちど","TRY AGAIN"); $("bReset").textContent=L("ステージ再開","RESTART STAGE");
-  $("scCamp").querySelector(".sub").textContent=L("戦果をひとつ選んで、群れを次のステージへ。","Choose one reward, then lead the troop to the next stage.");
-  if(refresh&&typeof G!=="undefined"){
-    syncActs(); syncRail(); renderLog();
-    const ol=$("order").querySelector(".olab"); if(ol) ol.textContent=L("行動順","TURN ORDER");
-    if(G.active) showCard(G.active,!$("card").hidden);
-    const th=$("tileHint"); if(!th.hidden) showTileHint(Number(th.dataset.x),Number(th.dataset.y));
-    if(G.phase==="move"&&G.active) hint(`${G.active.name} — ${L("矢印キーで移動先を選び、Enterで決定","Choose a tile with arrows, press Enter")}`);
-  }
-}
-function setTargets(list){
-  G.targetSet=new Set(list.map(([x,y])=>idx(x,y)));
-}
-function setRange(list){
-  G.rangeSet=new Set(list.map(([x,y])=>idx(x,y)));
-}
-bAtk.onclick=()=>{
-  const u=G.active; if(!canAct()) return;
-  G.mode="attack";
-  const st=APE[u.type];
-  const range=tilesInRange(u.tx,u.ty,st.rng);
-  setRange(range);
-  setTargets(range.filter(([x,y])=>{const o=unitAt(x,y);return o&&o.side!==u.side;}));
-  syncActs();
-  hint(`攻撃範囲：${attackRangeText(st.rng)}${G.targetSet.size?" — 金色の敵をえらぶ":" — 今は敵なし"}`);
-};
-bSk.onclick=()=>{
-  const u=G.active; if(!canAct()) return;
-  const st=APE[u.type];
-  if(["monkey","guardian","silver"].includes(u.type)){
-    G.mode=null; G.rangeSet=null; G.targetSet=null; G.phase="idle"; actionSkill(u); return;
-  }
-  G.mode="skill";
-  if(u.type==="normal"){
-    const range=tilesInRange(u.tx,u.ty,3).concat([[u.tx,u.ty]]);
-    setRange(range); setTargets(range);
-  }
-  if(u.type==="wizard"){
-    const range=tilesInRange(u.tx,u.ty,3).concat([[u.tx,u.ty]]);
-    setRange(range); setTargets(range);
-  }
-  if(u.type==="chimp"){
-    const range=tilesInRange(u.tx,u.ty,4);
-    setRange(range);
-    setTargets(range.filter(([x,y])=>{const o=unitAt(x,y);return o&&o.side!==u.side;}));
-  }
-  syncActs(); hint(st.sk.n+" — "+st.sk.d);
-};
-bEat.onclick=()=>{ if(!canAct())return; G.phase="idle"; G.mode=null; G.rangeSet=null; G.targetSet=null; actionEat(G.active); };
-bPoop.onclick=()=>{ if(!canAct())return; G.phase="idle"; G.mode=null; G.rangeSet=null; G.targetSet=null; syncActs(); actionPoop(G.active); };
-bWait.onclick=()=>{ if(!canAct())return; G.phase="idle"; endAct(G.active); };
-bCancel.onclick=()=>{ G.mode=null; G.rangeSet=null; G.targetSet=null; syncActs(); hint("行動をえらぶ"); };
-function confirmTarget(x,y){
-  const u=G.active, m=G.mode;
-  G.mode=null; G.rangeSet=null; G.targetSet=null; G.phase="idle"; syncActs();
-  if(m==="attack") actionAttack(u,x,y);
-  else if(m==="skill") actionSkill(u,x,y);
-}
-addEventListener("keydown",e=>{
-  if(!canAct()) return;
-  const arrows={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]};
-  if(G.phase==="move"&&arrows[e.key]){
-    e.preventDefault();
-    const u=G.active, [dx,dy]=arrows[e.key], [x,y]=G.kbPos||[u.tx,u.ty];
-    const nx=x+dx, ny=y+dy, home=nx===u.tx&&ny===u.ty;
-    if((home||G.moveSet?.has(idx(nx,ny)))&&(!unitAt(nx,ny)||home)){
-      G.kbPos=[nx,ny]; showTileHint(nx,ny); hint(`${u.name} — ${L("矢印キーで移動先を選び、Enterで決定","Choose a tile with arrows, press Enter")}`);
-    } else beep(120,.05,"square",.025,-30);
-    return;
-  }
-  if(G.phase==="move"&&(e.key==="Enter"||e.key===" ")){
-    e.preventDefault();
-    const u=G.active, [x,y]=G.kbPos||[u.tx,u.ty];
-    const path=x===u.tx&&y===u.ty?[]:pathTo(u,G.moveSet,x,y);
-    G.phase="idle"; G.kbPos=null;
-    doMove(u,path,()=>{ G.phase="act"; G.moveSet=null; syncActs(); hint("行動をえらぶ"); });
-    return;
-  }
-  const hot={"1":bAtk,"2":bSk,"3":bEat,"4":bPoop,"5":bWait}[e.key];
-  if(hot&&!hot.disabled){ e.preventDefault(); hot.click(); return; }
-  if(e.key==="Enter"||e.key===" "){ e.preventDefault(); bWait.click(); }
-  if(e.key==="Escape") bCancel.click();
-});
-
-/* ══════════ HUD ══════════ */
-function syncRail(){
-  $("tStage").textContent=G.stage+"/"+STAGE_COUNT;
-  $("tStage").title=stageName(G.stage);
-  $("tRound").textContent=Math.min(G.round,LAST_ROUND)+"/"+LAST_ROUND;
-  $("tObjective").textContent=L(`${LAST_ROUND}ラウンド生存`,`SURVIVE ${LAST_ROUND} ROUNDS`);
-  $("tApes").textContent=G.units.filter(u=>u.alive&&u.side==="ape").length;
-  $("tFoes").textContent=G.units.filter(u=>u.alive&&u.side!=="ape").length;
-  const u=G.active?.alive?G.active:null, turn=$("turnHud");
-  turn.classList.toggle("foe",!!u&&u.side!=="ape");
-  $("turnLabel").textContent=u?(u.side==="ape"?L("現在の手番","CURRENT TURN"):L("敵の手番","ENEMY TURN")):L("次の手番","NEXT TURN");
-  $("turnName").textContent=u?u.name:L("準備中","STAND BY");
-  $("turnHp").textContent=u?`${Math.max(0,Math.ceil(u.hp))}/${u.maxhp}`:"—";
-  $("turnHpBar").style.cssText=`width:${u?Math.round(clamp(u.hp/u.maxhp,0,1)*100):0}%;background:${u&&u.hp<=u.maxhp*.4?"#c9452e":"#7fae2f"}`;
-  $("turnMp").textContent=u?.side==="ape"?`${u.mp}/${u.maxmp}`:"—";
-  $("turnMpBar").style.cssText=`width:${u?.side==="ape"?Math.round(clamp(u.mp/u.maxmp,0,1)*100):0}%;background:#68d0e0`;
-  $("mapActiveName").textContent=u?L(`${u.name}　行動中`,`${u.name} ACTIVE`):L("準備中","STAND BY");
-  $("mapActiveMeta").textContent=u?L(`${u.side==="ape"?"味方":"敵"}・高さ${at(u.tx,u.ty).h}`,`${u.side==="ape"?"ALLY":"ENEMY"} · HEIGHT ${at(u.tx,u.ty).h}`):"—";
-  $("activeKind").textContent=u?(u.side==="ape"?L("手番","CURRENT"):"ENEMY"):"CURRENT";
-  $("commandUnit").textContent=u?.side==="ape"?L(`${u.name}の行動`,`${u.name} — ACTIONS`):L("敵の行動中","ENEMY TURN");
-  syncBirth();
-}
-function syncBirth(){
-  const apes=G.units.filter(u=>u.alive&&u.side==="ape").length;
-  const short=LANG==="en"?{y:"Y",r:"R",b:"B"}:{y:"黄",r:"赤",b:"青"};
-  const typeShort=LANG==="en"?{normal:"Gorilla",monkey:"Monkey",guardian:"Guardian",silver:"Silverback",wizard:"Wizard",chimp:"Chimp"}:{normal:"普通",monkey:"モンキー",guardian:"ガーディアン",silver:"シルバー",wizard:"ウィザード",chimp:"チンパンジー"};
-  let nearest=BIRTH_TREE_TURNS;
-  $("birthHud").innerHTML='<b>出生</b>'+COLORS.map(c=>{
-    const trees=matureTrees(c), age=Math.max(0,...trees.map(t=>t.treeAge));
-    if(trees.length) nearest=Math.min(nearest,Math.max(0,BIRTH_TREE_TURNS-age));
-    const nextType=nextBirthType(c), next=nextType?localize(APE[nextType].jp):L("未解放","Locked");
-    const stopped=!nextType?L("（キャンプで同色種を解放）"," (unlock this color at camp)"):apes>=MAX_APES?L(`（仲間上限${MAX_APES}匹）`,` (ally cap ${MAX_APES})`):!trees.length?L("（成木が必要）"," (mature tree required)"):"";
-    const title=L(`${BIOME[c].jp}：成木 ${trees.length}本／最長生存 ${age}/${BIRTH_TREE_TURNS}ターン／次は ${next}${stopped}`,`${c.toUpperCase()} biome: ${trees.length} mature trees / longest ${age}/${BIRTH_TREE_TURNS} turns / next ${next}${stopped}`);
-    const ready=nextType&&age>=BIRTH_TREE_TURNS&&apes<MAX_APES?" ready":"";
-    return `<span class="birth-chip${ready}" title="${title}"><i style="background:${BIOME[c].berry}"></i>${short[c]} ${trees.length}${L("本"," trees")} ${Math.min(age,BIRTH_TREE_TURNS)}/${BIRTH_TREE_TURNS} → ${nextType?typeShort[nextType]:L("未解放","Locked")}</span>`;
-  }).join("");
-  const wave=WAVES.find(w=>w.r>=G.round);
-  $("nextEventName").textContent=wave&&wave.r===G.round?L("敵の増援","ENEMY WAVE"):nearest<BIRTH_TREE_TURNS?L("森の誕生","FOREST BIRTH"):L("森の成長","FOREST GROWTH");
-  $("nextEventMeta").textContent=wave&&wave.r===G.round?`${localize(FOE[wave.kind].jp)} ×${wave.n}`:nearest<BIRTH_TREE_TURNS?L(`最短あと${nearest}手`,`READY IN ${nearest} TURNS`):L(`成木を${BIRTH_TREE_TURNS}手守る`,`PROTECT TREE ${BIRTH_TREE_TURNS} TURNS`);
-}
-function syncOrder(){
-  const box=$("order");
-  box.innerHTML=`<span class="olab">${L("行動順","TURN ORDER")}</span>`;
-  // 先読み
-  const sim=G.units.filter(u=>u.alive).map(u=>({u,ct:u.ct}));
-  const out=[];
-  for(let g=0;g<600&&out.length<7;g++){
-    const rdy=sim.filter(s=>s.ct>=100).sort((a,b)=>b.ct-a.ct);
-    if(rdy.length){ out.push(rdy[0].u); rdy[0].ct-=100; }
-    else for(const s of sim) s.ct+=S(s.u).spd/4;
-  }
-  out.forEach((u,i)=>{
-    const d=document.createElement("div");
-    d.className="oc"+(i===0?" now":"")+(u.side!=="ape"?" foe":"");
-    const c=document.createElement("canvas"); c.width=24;c.height=26;
-    const g=c.getContext("2d"); g.imageSmoothingEnabled=false;
-    const s=SPR["u_"+u.type];
-    g.drawImage(s,((24-s.width)/2)|0,((26-s.height)/2)|0);
-    d.appendChild(c); d.title=u.name;
-    d.onclick=()=>showCard(u);
-    box.appendChild(d);
-  });
-  syncRail();
-}
-function pb(v,col){ return `<span class="pb"><i style="width:${Math.round(clamp(v,0,1)*100)}%;background:${col}"></i></span>`; }
-function showCard(u,open=true){
-  const card=$("card"); card.hidden=!open;
-  const st=S(u);
-  const pic=$("cPic"), g=pic.getContext("2d");
-  g.imageSmoothingEnabled=false; g.clearRect(0,0,24,26);
-  const s=SPR["u_"+u.type]; g.drawImage(s,((24-s.width)/2)|0,((26-s.height)/2)|0);
-  $("cName").textContent=u.name;
-  $("cType").textContent = u.side==="ape" ? L(`${st.jp}／${st.from}生まれ`,`${localize(st.jp)} / ${localize(st.from+"生まれ")}`) : L(`人族 — ${st.act}`,`HUMAN — ${localize(st.act)}`);
-  const t=at(u.tx,u.ty);
-  const atkBonus=u.side==="ape"?u.buffs.r:0;
-  const spdBonus=u.side==="ape"?u.buffs.y:0;
-  $("cBars").innerHTML =
-    `<span>HP</span>${pb(u.hp/u.maxhp,"#7fae2f")}<b>${Math.max(0,Math.ceil(u.hp))}</b>` +
-    (u.side==="ape"?`<span>MP</span>${pb(u.mp/u.maxmp,"#68d0e0")}<b>${u.mp}/${u.maxmp}</b>`:``) +
-    `<span>${L("こうげき","ATK")}</span>${pb(st.atk/56,"#c9452e")}<b>${st.atk}${atkBonus?` (+${atkBonus})`:""}</b>` +
-    `<span>${L("すばやさ","SPD")}</span>${pb(st.spd/58,"#e8b23c")}<b>${st.spd}${spdBonus?` (+${spdBonus})`:""}</b>` +
-    `<span>${L("いどう","MOVE")}</span>${pb(st.move/7,"#a49070")}<b>${st.move}</b>` +
-    `<span>${L("ジャンプ","JUMP")}</span>${pb(st.jump/3,"#a49070")}<b>${st.jump}</b>` +
-    `<span>${L("いま の 高さ","HEIGHT")}</span>${pb(t.h/3,"#9fd8e0")}<b>${t.h}</b>`;
-  $("cAb").innerHTML = u.side==="ape"
-    ? `<b>★${localize(st.sk.n)}</b> (${L("MP","MP")}${skillCost(u)})<br>${localize(st.sk.d)}`
-    : `<b>★${localize(st.act)}</b>`;
-  const traitsHtml = u.side==="ape"
-    ? `<em>攻撃範囲</em> — ${attackRangeText(st.rng)}<br>`
-      + u.traits.map(k=>`<em>${TRAITS[k].jp}</em> — ${TRAITS[k].d}`).join("<br>")
-      + `<br><em>実の強化</em> — <span style="color:${BIOME.r.berry}">赤 攻撃+${u.buffs.r}</span> ／ <span style="color:${BIOME.b.berry}">青 最大MP+${u.buffs.b}</span> ／ <span style="color:${BIOME.y.berry}">黄 素早さ+${u.buffs.y}</span>（上限${FRUIT_STAT_MAX}）`
-      + `<br><em>おなか 3枠</em> — ${[...u.belly,...Array(BELLY_MAX-u.belly.length).fill(null)].map(c=>c?`<span style="color:${BIOME[c].berry}">● ${BIOME[c].jp}</span>`:`<span>□ 空き</span>`).join(" → ")}`
-    : `<em>攻撃範囲</em> — ${attackRangeText(st.rng)}<br>倒すと森が守られる`;
-  $("cTr").innerHTML=localize(traitsHtml);
-}
-function renderLog(){
-  const box=$("log"); box.innerHTML="";
-  for(const l of G.log){
-    const d=document.createElement("div"); d.className="lg";
-    d.innerHTML=`<i style="background:${l.col}"></i>`;
-    d.appendChild(document.createTextNode(localize(l.msg)));
-    box.appendChild(d);
-  }
-}
-
-/* ══════════ 終了 ══════════ */
-function finish(win,title,sub){
-  if(G.over) return;
-  G.over=win?"win":"lose";
-  const et=$("endTitle");
-  et.textContent=win?"CLEAR":"GAME OVER";
-  et.className="big "+(win?"win":"lose");
-  $("endSub").innerHTML=`<em>${title}</em><br>${sub}`;
-  $("endTally").innerHTML=`
-    <span>到達ステージ</span><b>${G.stage}/${STAGE_COUNT}</b>
-    <span>最終ラウンド</span><b>${Math.min(G.round,LAST_ROUND)}</b>
-    <span>育てた森</span><b>${Math.round(forestValue())}</b>
-    <span>したうんち</span><b>${G.pooCount}</b>
-    <span>きんのうんち</span><b>${G.goldCount}</b>
-    <span>生まれた仲間</span><b>${G.born}</b>
-    <span>死んだ仲間</span><b>${G.dead}</b>
-    <span>倒した人族</span><b>${G.kills}</b>`;
-  $("endTally").innerHTML+=`<span>獲得した戦果</span><b>${G.progress.picks.length}</b>`;
-  $("endObit").textContent = G.obits.length
-    ? "訃報 — " + G.obits.slice(-3).map(o=>`${o.name}（${TRAITS[o.traits[0]].jp}）${o.cause}`).join(" ／ ")
-    : "";
-  $("scEnd").hidden=false;
-  fit();
-  win?SFX.born():SFX.die();
-}
-
-/* ══════════ 起動 ══════════ */
-(function rules(){
-  const box=$("ruleBox");
-  const list=[
-    {spr:"u_normal", b:"実で強化", t:"赤:攻撃　青:最大MP<br>黄:素早さ／3色で金"},
-    {spr:"u_guardian",b:"成木が命をつなぐ", t:`成木が${BIRTH_TREE_TURNS}ターン残ると<br>同色の仲間が生まれる`},
-    {spr:"u_jikon",  b:"ゴリラジコン", t:"殺されたゴリラは<br>敵になる"},
-  ];
-  for(const r of list){
-    const d=document.createElement("div"); d.className="rule";
-    const c=document.createElement("canvas"); c.width=24;c.height=26;
-    const g=c.getContext("2d"); g.imageSmoothingEnabled=false;
-    const s=SPR[r.spr]; g.drawImage(s,((24-s.width)/2)|0,((26-s.height)/2)|0);
-    const p=document.createElement("div"); p.innerHTML=`<b>${r.b}</b>${r.t}`;
-    d.append(c,p); box.appendChild(d);
-  }
-})();
-function fit(){
-  const st=$("battlePanel"), fr=$("frame");
-  const s=Math.min((st.clientWidth-4)/CW,(st.clientHeight-4)/CH);
-  const w=Math.round(CW*s), h=Math.round(CH*s);
-  cv.style.width=w+"px"; cv.style.height=h+"px";
-  fr.style.width=w+"px"; fr.style.height=h+"px";
-  fr.style.transform="none";
-}
-addEventListener("resize",fit);
-function start(){
-  $("scTitle").hidden=true; $("scEnd").hidden=true; $("scCamp").hidden=true;
-  newGame(); syncActs(); fit();
-}
-$("bStart").onclick=()=>{ startMusic(); $("bSound").textContent="♪ ON"; start(); };
-$("bStartSilent").onclick=()=>{ snd=false; stopMusic(); $("bSound").textContent="♪ OFF"; start(); };
-$("bAgain").onclick=()=>{ start(); if(snd&&!musicTimer) startMusic(); };
-let resetArmed=false, resetTimer=0;
-$("bReset").onclick=()=>{
-  if(!resetArmed){
-    resetArmed=true; $("bReset").textContent=L("もう一度押す","PRESS AGAIN");
-    hint(L("もう一度押すと、獲得済みの解放を残して現在ステージを再開","Press again to restart this stage; unlocks are kept"));
-    clearTimeout(resetTimer); resetTimer=setTimeout(()=>{resetArmed=false;$("bReset").textContent=L("ステージ再開","RESTART STAGE");},2400);
-    return;
-  }
-  resetArmed=false; clearTimeout(resetTimer); restartStage();
-};
-$("bLang").onclick=()=>{
-  LANG=LANG==="ja"?"en":"ja";
-  try{ localStorage.setItem("poopulation-lang",LANG); }catch{}
-  applyLanguage();
-};
-$("cClose").onclick=()=>$("card").hidden=true;
-$("bSound").onclick=ev=>{
-  snd=!snd; ev.currentTarget.textContent=snd?"♪ ON":"♪ OFF";
-  if(snd){ startMusic(); beep(660,.06); } else stopMusic();
-};
-
-window.POOPTACT={ get state(){return G;}, start, SPR, APE, FOE, nextTurn,
-  previewCamp(){ if($("scTitle").hidden===false) start(); openCamp(); },
-  previewPoop(kind="normal"){
-    if($("scTitle").hidden===false) start();
-    const u=G.units.find(v=>v.alive&&v.side==="ape"); if(!u)return;
-    G.active=u; G.phase="idle"; u.belly=kind==="gold"?["y","r","b"]:["y"]; actionPoop(u,kind);
+  setState(patch,done){
+    Object.assign(this.state,patch);
+    this.applyUi(); this.applyHud();
+    if(done) done();
   },
-  auto(n){ // 動作確認：n手ぶん、味方も自動で動かす
-    for(let k=0;k<n&&!G.over;k++){
-      const u=G.active;
-      if(!u){ nextTurn(); continue; }
-      if(u.side!=="ape"){ return "foe-turn"; }
-      const st=APE[u.type], t=at(u.tx,u.ty);
-      const foe=G.units.find(o=>o.alive&&o.side!=="ape"&&inRange(u.tx,u.ty,o.tx,o.ty,st.rng));
-      if(foe) actionAttack(u,foe.tx,foe.ty);
-      else if(t.v===3&&t.fruit>=1) actionEat(u);
-      else if(u.belly.length>=poopNeed(u)) actionPoop(u);
-      else endAct(u);
-      return "acted";
+
+  mount(){
+    this.binds={}; ACTIONS.forEach(a=>this.binds[a.key]=a.def);
+    this.audio={bgm:3,sfx:4};
+    this.screen={pp:!!this.props.pixelPerfect,log:true};
+    try{
+      const b=JSON.parse(localStorage.getItem(LS.binds)||"null"); if(b) Object.assign(this.binds,b);
+      const a=JSON.parse(localStorage.getItem(LS.audio)||"null"); if(a) Object.assign(this.audio,a);
+      const s=JSON.parse(localStorage.getItem(LS.screen)||"null"); if(s) Object.assign(this.screen,s);
+    }catch(e){}
+
+    this.onKey=this.onKey.bind(this);
+    window.addEventListener("keydown",this.onKey,true);
+    this.onEvt=this.onEvt.bind(this);
+    ["turn","round","hit","kill","gold","birth","camp","end"].forEach(k=>window.addEventListener("pt:"+k,this.onEvt));
+    this.onResize=()=>window.POOPTACT&&window.POOPTACT.fit();
+    window.addEventListener("resize",this.onResize);
+
+    document.addEventListener("click",e=>{
+      const el=e.target.closest&&e.target.closest("[data-act]");
+      if(!el) return;
+      const fn=this[el.dataset.act];
+      if(typeof fn==="function"){ e.preventDefault(); fn.call(this,e); }
+    });
+
+    if(window.POOP_TACTICS_BOOT) window.POOP_TACTICS_BOOT();
+    const T=window.POOPTACT;
+    if(T){
+      T.setVolumes({bgm:this.audio.bgm/5,sfx:this.audio.sfx/5});
+      T.setPixelPerfect(this.screen.pp);
     }
-    return "done";
-  }
+    document.getElementById("bLang").addEventListener("click",()=>setTimeout(()=>this.applyLang(),0));
+    document.getElementById("bStart").addEventListener("click",()=>{ this.maybeTutorial(); });
+    this.buildBinds();
+    this.applyHud();
+    this.refreshTitle();
+    this.applyLang();
+    this.padLoop=this.padLoop.bind(this); this.padPrev={}; this.padNext=0;
+    requestAnimationFrame(this.padLoop);
+  },
+
+  /* ---------- language ---------- */
+  lang(){ return (window.POOPTACT&&window.POOPTACT.lang)||"ja"; },
+  applyLang(){
+    const en=this.lang()==="en";
+    document.querySelectorAll("#app [data-en]").forEach(el=>{
+      if(!el.dataset.ja) el.dataset.ja=el.textContent;
+      el.textContent=en?el.dataset.en:el.dataset.ja;
+    });
+    this.buildBinds(); this.refreshTitle(); this.applyUi();
+    if(this.state.tut>=0) this.paintTut();
+  },
+
+  /* ---------- overlays ---------- */
+  open(name){ this.setState({ui:name}); },
+  closeUi(){ this.setState({ui:null}); },
+  backFromSub(){ const t=document.getElementById("scTitle"); this.setState({ui:t&&!t.hidden?null:"pause"}); },
+  openPause(){ this.open("pause"); },
+  openSettings(){ this.open("settings"); },
+  openControls(){ this.open("controls"); },
+  openDetails(){ this.setState({ui:this.state.ui==="details"?null:"details"}); },
+
+  applyUi(){
+    const ui=this.state.ui, T=window.POOPTACT;
+    const map={pause:"pauseOverlay",settings:"settingsOverlay",controls:"controlsOverlay",details:"detailsOverlay"};
+    for(const k in map){
+      const el=document.getElementById(map[k]);
+      if(el) el.style.display = ui===k ? "flex" : "none";
+    }
+    if(T) T.setPaused(!!ui);
+    if(ui==="pause"){
+      const st=T&&T.state, el=document.getElementById("pauseMeta");
+      if(el&&st) el.textContent=this.lang()==="en"
+        ? `STAGE ${st.stage} / ROUND ${st.round} — autosaved`
+        : `ステージ ${st.stage}・ラウンド ${st.round}　自動保存済み`;
+    }
+    if(ui==="settings") this.paintSettings();
+  },
+
+  /* ---------- title ---------- */
+  refreshTitle(){
+    const T=window.POOPTACT; if(!T) return;
+    const meta=T.saveMeta&&T.saveMeta();
+    const btn=document.getElementById("btnContinue");
+    if(!btn) return;
+    btn.style.display=meta?"flex":"none";
+    if(meta){
+      const m=document.getElementById("continueMeta");
+      if(m) m.textContent=this.lang()==="en"
+        ? `STAGE ${meta.stage} · ROUND ${meta.round} · ${meta.apes} APES`
+        : `ステージ${meta.stage}・ラウンド${meta.round}・${meta.apes}匹`;
+    }
+  },
+  continueRun(){
+    const T=window.POOPTACT; if(!T) return;
+    if(T.loadRun()){
+      T.setVolumes({bgm:this.audio.bgm/5,sfx:this.audio.sfx/5});
+      this.setState({ui:null});
+    }
+  },
+  toTitle(){
+    const T=window.POOPTACT; if(!T) return;
+    T.saveRun();
+    document.getElementById("scEnd").hidden=true;
+    document.getElementById("scCamp").hidden=true;
+    document.getElementById("scTitle").hidden=false;
+    this.refreshTitle();
+    this.setState({ui:null});
+  },
+
+  /* ---------- settings ---------- */
+  saveAudio(){
+    const T=window.POOPTACT;
+    if(T) T.setVolumes({bgm:this.audio.bgm/5,sfx:this.audio.sfx/5});
+    try{ localStorage.setItem(LS.audio,JSON.stringify(this.audio)); }catch(e){}
+    this.paintSettings();
+  },
+  meter(n){ return "▮▮▮▮▮".slice(0,n)+"▯▯▯▯▯".slice(0,5-n); },
+  paintSettings(){
+    const b=document.getElementById("bgmMeter"), s=document.getElementById("sfxMeter");
+    if(b) b.textContent=this.meter(this.audio.bgm);
+    if(s) s.textContent=this.meter(this.audio.sfx);
+    const pp=document.getElementById("btnPP"); if(pp){ pp.textContent=this.screen.pp?"ON":"OFF"; pp.classList.toggle("on",this.screen.pp); }
+    const lg=document.getElementById("btnLog"); if(lg){ lg.textContent=this.screen.log?"ON":"OFF"; lg.classList.toggle("on",this.screen.log); }
+  },
+  bgmUp(){ this.audio.bgm=Math.min(5,this.audio.bgm+1); this.saveAudio(); },
+  bgmDown(){ this.audio.bgm=Math.max(0,this.audio.bgm-1); this.saveAudio(); },
+  sfxUp(){ this.audio.sfx=Math.min(5,this.audio.sfx+1); this.saveAudio(); },
+  sfxDown(){ this.audio.sfx=Math.max(0,this.audio.sfx-1); this.saveAudio(); },
+  saveScreen(){ try{ localStorage.setItem(LS.screen,JSON.stringify(this.screen)); }catch(e){} this.applyHud(); this.paintSettings(); },
+  togglePixelPerfect(){ this.screen.pp=!this.screen.pp; if(window.POOPTACT) window.POOPTACT.setPixelPerfect(this.screen.pp); this.saveScreen(); },
+  toggleLog(){ this.screen.log=!this.screen.log; this.saveScreen(); },
+  toggleFullscreen(){
+    try{ document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen(); }catch(e){}
+  },
+  wipeSave(){ if(window.POOPTACT) window.POOPTACT.clearSave(); this.refreshTitle(); },
+  applyHud(){
+    const app=document.getElementById("app");
+    if(app) app.style.setProperty("--hud-a",String(this.props.hudOpacity ?? 0.9));
+    const lw=document.getElementById("logWrap");
+    if(lw) lw.style.display=this.screen&&this.screen.log?"flex":"none";
+    const fp=document.getElementById("forestPanel");
+    if(fp) fp.style.display=(this.props.showForestPanel ?? true)?"flex":"none";
+  },
+
+  /* ---------- key binds ---------- */
+  keyLabel(k){
+    if(k==="Escape") return "ESC";
+    if(k==="Enter") return "ENTER";
+    if(k===" ") return "SPACE";
+    return String(k).toUpperCase();
+  },
+  buildBinds(){
+    const box=document.getElementById("bindRows"); if(!box) return;
+    const en=this.lang()==="en";
+    box.innerHTML="";
+    ACTIONS.forEach(a=>{
+      const row=document.createElement("div");
+      row.style.cssText="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 10px;border:1px solid #3a2c1c;background:#1b150f";
+      const label=document.createElement("span");
+      label.style.cssText="font-size:14px";
+      label.textContent=en?a.en:a.ja;
+      const right=document.createElement("div");
+      right.style.cssText="display:flex;align-items:center;gap:8px";
+      if(a.key==="confirm"){
+        const alt=document.createElement("span");
+        alt.style.cssText="font-family:'Silkscreen',monospace;font-size:10px;color:#7fae2f";
+        alt.textContent="SPACE";
+        right.appendChild(alt);
+      }
+      const pad=document.createElement("span");
+      pad.style.cssText="font-family:'Silkscreen',monospace;font-size:10px;color:#6d5a42";
+      pad.textContent="PAD "+a.pad;
+      const btn=document.createElement("button");
+      btn.className="sbtn";
+      btn.style.cssText="padding:0 12px;font-family:'Silkscreen',monospace;font-size:12px;min-width:78px";
+      btn.textContent=this.keyLabel(this.binds[a.key]);
+      btn.onclick=()=>{
+        btn.textContent=en?"press…":"キー入力";
+        this.rebind=a.key; this.rebindBtn=btn;
+      };
+      right.append(pad,btn); row.append(label,right); box.appendChild(row);
+    });
+  },
+
+  /* ---------- input ---------- */
+  onKey(e){
+    if(e.__pt) return;
+    if(this.rebind){
+      e.preventDefault(); e.stopImmediatePropagation();
+      if(e.key!=="Tab"){ this.binds[this.rebind]=e.key; try{ localStorage.setItem(LS.binds,JSON.stringify(this.binds)); }catch(err){} }
+      this.rebind=null; this.buildBinds();
+      return;
+    }
+    const ui=this.state.ui;
+    if(e.key==="Tab"){ e.preventDefault(); e.stopImmediatePropagation(); this.openDetails(); return; }
+    if(e.key==="Escape"){
+      const st=window.POOPTACT&&window.POOPTACT.state;
+      if(ui){ e.preventDefault(); e.stopImmediatePropagation(); if(ui==="settings"||ui==="controls") this.backFromSub(); else this.closeUi(); return; }
+      if(st&&st.mode) return;
+      e.preventDefault(); e.stopImmediatePropagation(); this.openPause(); return;
+    }
+    if(ui){ e.stopImmediatePropagation(); return; }
+    const title=document.getElementById("scTitle");
+    if(title&&!title.hidden) return;
+    /* スペースは盤面の決定キー。直前に押したボタンがフォーカスを保持していても盤面に届かせる */
+    if(e.key===" "){
+      const ae=document.activeElement;
+      if(ae&&ae.tagName==="BUTTON"&&ae.closest("#app")) ae.blur();
+    }
+    const act=ACTIONS.find(a=>this.binds[a.key]===e.key);
+    if(act&&act.def!==e.key){ e.preventDefault(); e.stopImmediatePropagation(); this.send(act.def); }
+  },
+  send(key){
+    const ev=new KeyboardEvent("keydown",{key,bubbles:true});
+    ev.__pt=true;
+    window.dispatchEvent(ev);
+  },
+  padLoop(){
+    if(this.dead) return;
+    requestAnimationFrame(this.padLoop);
+    if(!navigator.getGamepads) return;
+    const pads=navigator.getGamepads();
+    const p=[...pads].find(g=>g&&g.connected); if(!p) return;
+    const now=performance.now();
+    const pressed={};
+    p.buttons.forEach((b,i)=>{ if(b.pressed) pressed[i]=true; });
+    const ax=p.axes[0]||0, ay=p.axes[1]||0;
+    if(ax<-.6) pressed[14]=true; if(ax>.6) pressed[15]=true;
+    if(ay<-.6) pressed[12]=true; if(ay>.6) pressed[13]=true;
+    if(pressed[9]&&!this.padPrev[9]) this.state.ui?this.closeUi():this.openPause();
+    if(pressed[8]&&!this.padPrev[8]) this.openDetails();
+    if(pressed[7]&&!this.padPrev[7]) this.send("5");
+    for(const i in PAD_KEYS){
+      const held=!!pressed[i], was=!!this.padPrev[i];
+      const dir=Number(i)>=12;
+      if(held&&(!was||(dir&&now>this.padNext))){
+        if(this.state.ui){ if(!was&&Number(i)===0) this.closeUi(); }
+        else this.send(PAD_KEYS[i]);
+        this.padNext=now+(was?130:260);
+      }
+    }
+    this.padPrev=pressed;
+  },
+
+  /* ---------- feedback + autosave ---------- */
+  onEvt(e){
+    const T=window.POOPTACT, d=e.detail||{};
+    const type=e.type.slice(3);
+    if(type==="turn"){
+      if(d.side==="ape"&&T) T.saveRun();
+      this.refreshTitle();
+    }
+    if(type==="round"){ this.banner(this.lang()==="en"?`ROUND ${d.round}`:`ラウンド ${d.round}`,"#e8b23c"); }
+    if(type==="hit"&&d.side==="ape") this.flash("#c9452e",.55);
+    if(type==="kill"&&d.side==="ape") this.flash("#c9452e",.9);
+    if(type==="gold"){ this.flash("#e8b23c",.5); this.banner(this.lang()==="en"?"GOLDEN POOP":"きんのうんち","#ffe08a"); }
+    if(type==="birth") this.banner(this.lang()==="en"?`${d.name} BORN`:`${d.name} 誕生`,"#7fae2f");
+    if(type==="camp"||type==="end"){ this.setState({ui:null}); this.refreshTitle(); }
+  },
+  flash(col,a){
+    const el=document.getElementById("flash"); if(!el) return;
+    el.style.background=`radial-gradient(ellipse at center,#00000000 40%,${col} 100%)`;
+    el.style.opacity=String(a);
+    el.style.animation="none";
+    void el.offsetWidth;
+    el.style.animation="flashOut .42s ease-out forwards";
+  },
+  banner(text,col){
+    const wrap=document.getElementById("banner"), box=document.getElementById("bannerBox");
+    if(!wrap||!box) return;
+    box.textContent=text; box.style.color=col; box.style.borderColor=col;
+    wrap.style.display="flex";
+    box.style.animation="none"; void box.offsetWidth;
+    box.style.animation="bannerIn 1.9s ease-out forwards";
+    clearTimeout(this.bannerT);
+    this.bannerT=setTimeout(()=>{ wrap.style.display="none"; },1900);
+  },
+
+  /* ---------- tutorial ---------- */
+  maybeTutorial(){
+    let seen=false;
+    try{ seen=localStorage.getItem(LS.tut)==="1"; }catch(e){}
+    if(seen) return;
+    setTimeout(()=>this.setState({tut:0},()=>this.paintTut()),700);
+  },
+  replayTutorial(){
+    try{ localStorage.removeItem(LS.tut); }catch(e){}
+    this.setState({ui:null,tut:0},()=>this.paintTut());
+  },
+  paintTut(){
+    const el=document.getElementById("tutorial"); if(!el) return;
+    const i=this.state.tut;
+    if(i<0||i>2){ el.style.display="none"; return; }
+    const en=this.lang()==="en";
+    el.style.display="block";
+    document.getElementById("tutStep").textContent=`STEP ${i+1} / 3`;
+    document.getElementById("tutBody").textContent=(en?STEPS_EN:STEPS_JA)[i];
+  },
+  nextTutorial(){
+    const i=this.state.tut+1;
+    if(i>2){ this.skipTutorial(); return; }
+    this.setState({tut:i},()=>this.paintTut());
+  },
+  skipTutorial(){
+    try{ localStorage.setItem(LS.tut,"1"); }catch(e){}
+    this.setState({tut:-1},()=>this.paintTut());
+  },
 };
 
-applyLanguage(false);
-newGame(false);
-applyLanguage();
-let last=performance.now();
-function frame(now){
-  const dt=Math.min(.05,(now-last)/1000); last=now;
-  update(dt); draw();
-  requestAnimationFrame(frame);
-}
-fit(); requestAnimationFrame(frame);
-document.addEventListener("visibilitychange",()=>{ last=performance.now(); });
+window.POOPTACT_UI=App;
+App.mount();
 })();
 </script>
+</body>
+</html>

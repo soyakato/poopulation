@@ -9,9 +9,15 @@ for (const file of ["index.html", "realtime.html", "tactics.html", "studio.html"
     if (code.trim()) new Function(code);
   }
 }
+for (const file of ["poop-config.js", "tactics-engine.js"]) {
+  new Function(fs.readFileSync(new URL(file, import.meta.url), "utf8"));
+}
 
 const realtime = fs.readFileSync(new URL("realtime.html", import.meta.url), "utf8");
-const tactics = fs.readFileSync(new URL("tactics.html", import.meta.url), "utf8");
+const tacticsShell = fs.readFileSync(new URL("tactics.html", import.meta.url), "utf8");
+const tacticsEngine = fs.readFileSync(new URL("tactics-engine.js", import.meta.url), "utf8");
+const tactics = `${tacticsShell}
+${tacticsEngine}`;
 assert.ok(!realtime.includes("GSIZE"), "removed undefined realtime sprite constant");
 assert.match(tactics, /newGame\(false\)/, "title screen must not advance turns");
 assert.match(tactics, /POOPULATION_CONFIG\.tactics/, "tactics reads shared master data");
@@ -45,7 +51,11 @@ assert.match(tactics, /u\.buffs=\{\.\.\.u\.buffs\}/,"eating replaces only the ac
 assert.match(tactics, /id="bLang"/,"battle UI exposes a Japanese-English language switch");
 assert.match(tactics, /localStorage\.setItem\("poopulation-lang",LANG\)/,"language preference persists");
 assert.match(tactics, /ArrowLeft:\[-1,0\],ArrowRight:\[1,0\],ArrowUp:\[0,-1\],ArrowDown:\[0,1\]/,"arrow keys select movement tiles");
-assert.match(tactics, /id="cv"[^>]*tabindex="0"[^>]*aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown Enter"/,"battlefield is keyboard-focusable");
+assert.match(tactics, /id="cv"[^>]*tabindex="0"[^>]*aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown Space Enter"/,"battlefield is keyboard-focusable");
+assert.match(tactics, /const confirmKey = e\.key===" "\|\|e\.code==="Space"/,"space confirms the keyboard tile cursor");
+assert.match(tactics, /if\(G\.phase==="move"&&!G\.mode&&confirmKey\)\{[\s\S]{0,240}?doMove\(u,path,/,"space moves the gorilla onto the selected tile");
+assert.match(tacticsShell, /<script src="tactics-engine\.js/, "battle shell loads the shared tactics engine");
+assert.ok(!tacticsShell.includes("POOP_TACTICS_BOOT = "), "engine lives in tactics-engine.js, not inline");
 assert.match(tactics, /function showTileHint\(x,y\)/,"hovered and keyboard-selected tiles share one detail panel");
 assert.match(tactics, /L\("高さ","HEIGHT"\)/,"tile detail exposes terrain height in both languages");
 assert.match(tactics, /L\("肥沃度","FERTILITY"\)/,"tile detail exposes fertility in both languages");
