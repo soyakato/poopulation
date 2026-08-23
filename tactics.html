@@ -5,7 +5,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Silkscreen:wght@400;700&display=swap">
-<script src="poop-config.js"></script>
+<script src="poop-config.js?v=6"></script>
 
 <style>
   :root{
@@ -50,6 +50,7 @@
   .mode-nav{display:flex;align-items:center;gap:3px;margin-left:auto}
   .mode-nav a{font-family:var(--px);font-size:9px;color:var(--dim);text-decoration:none;padding:5px 6px;border:1px solid var(--line)}
   .mode-nav a:hover,.mode-nav a:focus-visible{color:var(--gold);border-color:var(--gold)}
+  #bLang{font:9px var(--px);min-width:52px;color:var(--gold)}
 
   /* stage */
   #stage{flex:1 1 auto;position:relative;display:flex;align-items:center;justify-content:center;min-height:0}
@@ -159,15 +160,105 @@
     #scTitle{justify-content:flex-start;padding-top:10px}.rules{display:none}
     #card{left:4px;right:4px;top:auto;bottom:4px;width:auto;max-height:42%;overflow:auto}
   }
+
+  /* Superdesign v6 shell */
+  #cab{padding:5px;gap:5px;max-width:1280px}
+  #rail{height:64px;padding:5px 7px;background:#1b150f}
+  #rail .stat{justify-content:center;border-right:1px solid var(--line);padding-right:8px}
+  #rail .stat b{color:var(--gold)}
+  #objective{display:flex;min-width:180px;border-left:0;padding-left:0}
+  #objective b{font-size:12px}
+  #rail .stat span{font-size:10px}
+  #turnHud{min-width:208px;height:49px;align-self:center}
+  #order{flex:0 1 190px}
+  .mode-nav{margin-left:auto}
+  #stage{align-items:stretch;justify-content:stretch;gap:5px}
+  #battlePanel{position:relative;min-width:0;flex:1 1 auto;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#1e1710;border:2px solid var(--line)}
+  #frame{flex:0 0 auto}
+  canvas#cv{border:0}
+  #tacticsPanel{width:270px;flex:0 0 270px;display:flex;flex-direction:column;gap:5px;min-height:0;overflow:hidden}
+  .t-panel{border:2px solid var(--line);background:#18120d;padding:8px;line-height:1.4;min-height:0}
+  .t-panel>header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:5px;margin-bottom:6px;font:9px var(--px);letter-spacing:.12em;color:var(--gold)}
+  .t-panel>header small{font:8px var(--px);color:var(--dim);letter-spacing:.12em}
+  #activePanel{border-color:var(--gold);flex:0 0 auto}
+  #card{position:relative;left:auto;top:auto;width:auto;padding:0;border:0;background:none;display:flex;z-index:auto}
+  #card[hidden]{display:none}
+  #cClose{display:none}
+  .c-head canvas{width:26px;height:28px}
+  .c-nm{font-size:14px}.c-ty{font-size:10px}
+  .c-bars{font-size:10px;grid-template-columns:46px 1fr auto}.c-bars b{font-size:9px}
+  .c-ab{font-size:10px}.c-tr{display:none}
+  #growthPanel{flex:0 0 auto}
+  #birthHud{display:flex;flex-direction:column;align-items:stretch;margin:0;gap:3px}
+  #birthHud>b{display:none}
+  .birth-chip{display:grid;grid-template-columns:7px 1fr;gap:4px;padding:4px 5px;font-family:var(--jp);font-size:10px}
+  #logPanel{flex:1 1 auto;overflow:hidden}
+  #log{position:static;max-width:none;display:flex;gap:2px;overflow:hidden}
+  .lg{background:transparent;border:0;padding:0;font-size:10px;line-height:1.55;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #campPanel{flex:0 0 auto;color:var(--dim);font-size:10px}
+  #campPanel b{color:var(--ink);font-weight:400}
+  .map-tag{position:absolute;z-index:3;top:6px;border:2px solid var(--line);background:#100c07e8;padding:4px 6px;line-height:1.25;pointer-events:none;min-width:90px}
+  .map-tag.left{left:6px;border-color:var(--gold)}.map-tag.right{right:6px;text-align:right}
+  .map-tag small{display:block;font:8px var(--px);letter-spacing:.1em;color:var(--dim)}
+  .map-tag b{font-size:12px;font-weight:400;color:var(--ink)}
+  .map-tag em{font-style:normal;font-size:10px;color:var(--rot)}
+  #tileHint{position:static;width:auto;flex:0 0 auto;border:2px solid var(--line);background:#0b0805ed;padding:6px 8px;line-height:1.35;pointer-events:none}
+  #tileHint[hidden]{display:none}
+  #tileHint header{display:flex;justify-content:space-between;gap:7px;font:9px var(--px);color:var(--gold);margin-bottom:4px}
+  #tileHint header small{color:var(--dim);font-size:8px}
+  #tileHintBody{display:grid;grid-template-columns:1fr 1fr;gap:2px 8px;font-size:10px;color:var(--dim)}
+  #tileHintBody b{font-weight:400;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #acts{min-height:62px;padding:5px;background:#1b150f}
+  .command-label{width:98px;flex:0 0 98px;border-right:1px solid var(--line);line-height:1.25}
+  .command-label small{display:block;font:8px var(--px);letter-spacing:.12em;color:var(--gold)}
+  .command-label b{font-size:11px;font-weight:400}
+  .act{min-height:46px;padding:5px 12px;text-align:left;font-size:12px}
+  .act small{display:block;margin:2px 0 0;font-size:8px}
+  #hint{margin-left:auto;max-width:250px;font-size:10px}
+  #bReset{align-self:stretch}
+  .screen{line-height:normal}
+  #scTitle{position:fixed;inset:0;width:100vw;height:100dvh;z-index:20;gap:10px;background:#0b0805f4;padding:18px;justify-content:center}
+  #scTitle>.scan-line,#scTitle>.drift-a,#scTitle>.drift-b{position:absolute;top:0;pointer-events:none}
+  #scTitle>.scan-line{left:0;width:100%;height:1px;background:var(--gold);opacity:.3;animation:scan 8s linear infinite}
+  #scTitle>.drift-a{right:16%;width:3px;height:3px;background:var(--gold);opacity:.6;animation:drift 9s linear infinite}
+  #scTitle>.drift-b{right:33%;width:2px;height:4px;background:var(--rot);opacity:.6;animation:drift 12s linear 3s infinite}
+  body:has(#scTitle:not([hidden])) #cv{animation:map-pan 10s ease-in-out infinite alternate}
+  @keyframes map-pan{from{transform:scale(1.035) translate(-3px,-2px)}to{transform:scale(1.055) translate(4px,3px)}}
+  @keyframes scan{from{transform:translateY(-12px)}to{transform:translateY(calc(100dvh + 12px))}}
+  @keyframes drift{from{transform:translate(0,-10px)}to{transform:translate(-42px,calc(100dvh + 10px))}}
+  #scTitle .rules,#scTitle .sub{display:none}
+  .chronicle{width:min(360px,86vw)}
+  .chronicle:before,.chronicle:after{width:76%;background:var(--gold)}
+  .logo{font-size:clamp(24px,5vw,38px);letter-spacing:.08em}
+  .chapter{width:min(360px,86vw);padding:9px 12px}
+  .chapter .tag{font-size:11px}.maxim{font-size:13px}
+  .title-hint{width:100%;font-size:9px;line-height:1.45;border-top:2px solid var(--soil-3);padding-top:7px;color:#6d5a42;white-space:normal}
+  .title-actions{width:min(320px,78vw);gap:6px}
+  .start{width:100%;font-family:var(--jp);font-size:12px;padding:10px 18px;box-shadow:none}
+  .start.secondary{padding:7px 18px}
+  .music-note{font-size:7px}
+  @media (max-width:820px){
+    #tacticsPanel{display:none}#objective{min-width:140px}#turnHud{min-width:185px}#order{flex:1 1 auto}
+  }
+  @media (max-width:720px){
+    #rail{height:54px}.population,#objective,#order{display:none}
+    #stage{min-height:0}#battlePanel{width:100%}
+    #scTitle{justify-content:center;padding-top:18px}.rules{display:none}
+    #acts{min-height:54px}.command-label{display:none}.act{padding:4px 8px;min-height:40px;font-size:10px}#hint{display:none}
+  }
+  @media (max-width:480px){
+    #turnHud{min-width:150px;grid-template-columns:auto 70px}.turn-bars{grid-template-columns:14px 1fr auto}
+    #rail .stat{padding-right:4px}.act{padding-inline:6px}.act small{display:none}
+  }
 </style>
 
 <div id="cab">
   <div id="rail">
-    <div class="stat"><b id="tStage">1/1</b><span>ステージ</span></div>
-    <div class="stat"><b id="tRound">1</b><span>ラウンド</span></div>
-    <div class="stat population"><b id="tApes">3</b><span>ゴリラ</span></div>
-    <div class="stat population"><b id="tFoes">0</b><span>人族</span></div>
-    <div class="stat" id="objective"><b id="tObjective">5ラウンド生存</b><span>クリア条件</span></div>
+    <div class="stat"><b id="tStage">1/1</b><span id="lStage">ステージ</span></div>
+    <div class="stat"><b id="tRound">1</b><span id="lRound">ラウンド</span></div>
+    <div class="stat population"><b id="tApes">3</b><span id="lApes">ゴリラ</span></div>
+    <div class="stat population"><b id="tFoes">0</b><span id="lFoes">人族</span></div>
+    <div class="stat" id="objective"><b id="tObjective">5ラウンド生存</b><span id="lObjective">クリア条件</span></div>
     <div id="turnHud" aria-live="polite">
       <span id="turnLabel">CURRENT TURN</span><b id="turnName">準備中</b>
       <div class="turn-bars">
@@ -177,69 +268,85 @@
     </div>
     <div id="order"><span class="olab">行動順</span></div>
     <nav class="mode-nav" aria-label="モード"><a href="realtime.html">REALTIME</a><a href="tactics.html">TACTICS</a><a href="studio.html">STUDIO</a></nav>
+    <button class="btn" id="bLang" aria-label="Switch language">JP / EN</button>
     <button class="btn" id="bSound">♪ ON</button>
-    <button class="btn" id="bReset">やり直す</button>
   </div>
 
-  <div id="stage"><div id="frame">
-    <canvas id="cv" width="336" height="292" aria-label="戦場"></canvas>
-    <div id="log"></div>
-    <div id="card" hidden>
-      <button id="cClose" aria-label="詳細を閉じる">×</button>
-      <div class="c-head">
-        <canvas id="cPic" width="24" height="26"></canvas>
-        <div><div class="c-nm" id="cName">—</div><div class="c-ty" id="cType">—</div></div>
-      </div>
-      <div class="c-bars" id="cBars"></div>
-      <div class="c-ab" id="cAb"></div>
-      <div class="c-tr" id="cTr"></div>
-    </div>
+  <div id="stage">
+    <section id="battlePanel" aria-label="戦場">
+      <div class="map-tag left"><small>ACTIVE</small><b id="mapActiveName">準備中</b><br><em id="mapActiveMeta">—</em></div>
+      <div class="map-tag right"><small>NEXT EVENT</small><b id="nextEventName">森の時間</b><br><em id="nextEventMeta">—</em></div>
+      <div id="frame">
+        <canvas id="cv" width="336" height="292" tabindex="0" aria-label="戦場" aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown Enter"></canvas>
 
-    <div class="screen" id="scTitle">
-      <div class="chronicle">
-        <div class="tag" style="font-size:8px">FOREST CHRONICLE</div>
-        <div class="logo">POOPULATION</div>
-        <div class="tag">T A C T I C S</div>
-      </div>
-      <div class="chapter"><div class="tag">第一章　うんちの産声</div><div class="maxim">糞は土となり、森は兵を生む。</div></div>
-      <p class="sub">神であるあなたは、ゴリラに<em>命令できない</em>。<br>実とうんちで森を育て、襲撃を生き延びろ。</p>
-      <div class="rules" id="ruleBox"></div>
-      <p class="title-hint">ヒント：高所・背後からの攻撃は強い。火は湿地で止まる。</p>
-      <div class="title-actions">
-        <button class="start" id="bStart">音楽とともにはじめる</button>
-        <button class="start secondary" id="bStartSilent">音なしではじめる</button>
-      </div>
-      <p class="music-note">オリジナル 6/8拍子・短調／旋法による森林行進曲</p>
-    </div>
+        <div class="screen" id="scTitle">
+          <span class="scan-line" aria-hidden="true"></span>
+          <span class="drift-a" aria-hidden="true"></span>
+          <span class="drift-b" aria-hidden="true"></span>
+          <div class="chronicle">
+            <div class="tag" style="font-size:8px">FOREST CHRONICLE</div>
+            <div class="logo">POOPULATION</div>
+            <div class="tag">T A C T I C S</div>
+          </div>
+          <div class="chapter"><div class="tag">第一章　うんちの産声</div><div class="maxim">糞は土となり、森は兵を生む。</div><p class="title-hint">ヒント：実とうんちで森を育て、成木を5ターン守れば仲間が生まれる。</p></div>
+          <p class="sub">神であるあなたは、ゴリラに<em>命令できない</em>。<br>実とうんちで森を育て、襲撃を生き延びろ。</p>
+          <div class="rules" id="ruleBox"></div>
+          <div class="title-actions">
+            <button class="start" id="bStart">音楽とともにはじめる</button>
+            <button class="start secondary" id="bStartSilent">音なしではじめる</button>
+          </div>
+        </div>
 
-    <div class="screen" id="scEnd" hidden>
-      <div class="big" id="endTitle">—</div>
-      <p class="sub" id="endSub">—</p>
-      <div class="tally" id="endTally"></div>
-      <p class="obit" id="endObit"></p>
-      <button class="start" id="bAgain">もういちど</button>
-    </div>
+        <div class="screen" id="scEnd" hidden>
+          <div class="big" id="endTitle">—</div>
+          <p class="sub" id="endSub">—</p>
+          <div class="tally" id="endTally"></div>
+          <p class="obit" id="endObit"></p>
+          <button class="start" id="bAgain">もういちど</button>
+        </div>
 
-    <div class="screen" id="scCamp" hidden>
-      <div class="camp-head">
-        <div><div class="tag">STAGE CLEAR</div><div class="big" id="campTitle">森のキャンプ</div></div>
-        <div class="camp-summary" id="campSummary"></div>
+        <div class="screen" id="scCamp" hidden>
+          <div class="camp-head">
+            <div><div class="tag">STAGE CLEAR</div><div class="big" id="campTitle">森のキャンプ</div></div>
+            <div class="camp-summary" id="campSummary"></div>
+          </div>
+          <p class="sub">戦果をひとつ選んで、群れを次のステージへ。</p>
+          <div class="rewards" id="rewardBox"></div>
+          <div class="inventory"><span>RUN INVENTORY</span><div class="inv-row" id="inventory"></div></div>
+        </div>
       </div>
-      <p class="sub">戦果をひとつ選んで、群れを次のステージへ。</p>
-      <div class="rewards" id="rewardBox"></div>
-      <div class="inventory"><span>RUN INVENTORY</span><div class="inv-row" id="inventory"></div></div>
-    </div>
-  </div></div>
+    </section>
+
+    <aside id="tacticsPanel" aria-label="戦況パネル">
+      <section class="t-panel" id="activePanel"><header><span>ACTIVE UNIT</span><small id="activeKind">CURRENT</small></header>
+        <div id="card" hidden>
+          <button id="cClose" aria-label="詳細を閉じる">×</button>
+          <div class="c-head">
+            <canvas id="cPic" width="24" height="26"></canvas>
+            <div><div class="c-nm" id="cName">—</div><div class="c-ty" id="cType">—</div></div>
+          </div>
+          <div class="c-bars" id="cBars"></div>
+          <div class="c-ab" id="cAb"></div>
+          <div class="c-tr" id="cTr"></div>
+        </div>
+      </section>
+      <section class="t-panel" id="growthPanel"><header><span id="lGrowth">成長・誕生予報</span><small>FOREST</small></header><div id="birthHud" aria-label="出生予報"></div></section>
+      <section id="tileHint" hidden><header><span id="tileHintTitle">TILE</span><small id="tileHintCoord">—</small></header><div id="tileHintBody"></div></section>
+      <section class="t-panel" id="logPanel"><header><span id="lLog">戦況記録</span><small>LOG</small></header><div id="log"></div></section>
+      <section class="t-panel" id="campPanel"><header><span id="lCamp">戦線野営</span><small>CAMP</small></header><span id="campCopy"><b>達成後：</b>実の強化／次代の編成／森の記録</span></section>
+    </aside>
+  </div>
 
   <div id="acts">
+    <div class="command-label"><small>COMMAND</small><b id="commandUnit">ゴリラの行動</b></div>
     <button class="act" id="aAttack" aria-keyshortcuts="1">[1] こうげき</button>
     <button class="act" id="aSkill" aria-keyshortcuts="2">[2] とくぎ<small></small></button>
     <button class="act" id="aEat" aria-keyshortcuts="3">[3] たべる</button>
     <button class="act" id="aPoop" aria-keyshortcuts="4">[4] うんち</button>
     <button class="act" id="aWait" aria-keyshortcuts="5">[5] まつ</button>
     <button class="act" id="aCancel" hidden>やめる</button>
-    <div id="birthHud" aria-label="出生予報"></div>
     <div id="hint">—</div>
+    <button class="btn" id="bReset">やり直す</button>
   </div>
 </div>
 
@@ -252,6 +359,47 @@ const TS=24, COLS=14, ROWS=10, HSTEP=7, YOFF=30;
 const CW=COLS*TS, CH=ROWS*TS+YOFF+22;
 const CFG=window.POOPULATION_CONFIG.animation;
 const MASTER=window.POOPULATION_CONFIG.tactics;
+let LANG="ja";
+try{ LANG=localStorage.getItem("poopulation-lang")==="en"?"en":"ja"; }catch{}
+const EN_REPLACE=[
+  ["森を育てて、人族の襲撃をしのげ","Grow the forest and survive the human raids"],
+  ["ドラッグで移動、そのあと行動をえらぶ","Drag to move, then choose an action"],
+  ["実のある成木の上で使う","Stand on a fruiting tree"],
+  ["前後左右 4マス","4 orthogonal tiles"],
+  ["射程内の敵をえらぶ","Choose an enemy in range"],
+  ["金色の敵をえらぶ","Choose a highlighted enemy"],
+  ["行動をえらぶ","Choose an action"],
+  ["その場にうんちをする","Poop on the current tile"],
+  ["おなかに実が","Fruit needed:"],
+  ["個ひつよう",""],
+  ["ラウンド生存"," rounds to survive"],
+  ["普通のゴリラ","Gorilla"],["モンキー","Monkey"],["ガーディアンゴリラ","Guardian Gorilla"],
+  ["シルバーバック","Silverback"],["ウィザードゴリラ","Wizard Gorilla"],["チンパンジー","Chimpanzee"],
+  ["ゴリラを殺すハゲ","Bald Hunter"],["ゴリラを殺す人","Hunter"],["ファイアーメン","Fireman"],["ゴリラジコン","Gorilla Drone"],
+  ["草原生まれ","Grassland-born"],["硬木林生まれ","Hardwood-born"],["湿地生まれ","Wetland-born"],
+  ["草原","Grassland"],["硬木林","Hardwood"],["湿地","Wetland"],["最大MP","Max MP"],["上限","Cap"],
+  ["こうげき","Attack"],["すばやさ","Speed"],["いどう","Move"],["ジャンプ","Jump"],["いま の 高さ","Height"],
+  ["ロケットうんち","Rocket Poop"],["かけぬけ","Dash"],["ふみけし","Stamp Out"],["じだんだ","Tantrum"],["めぐみの雨","Blessed Rain"],["いしつぶて","Stone Throw"],
+  ["もう一度 移動できる","Move again"],
+  ["射程3の指定マスへ、十字5マスを育てる でかうんち を飛ばす","Launch big poop up to range 3; grow a 5-tile cross"],
+  ["まわり3x3の火を消す。自分は焼けない","Extinguish a 3x3 area; immune to fire"],
+  ["隣接する敵ぜんぶに大ダメージ＋ノックバック","Heavy damage and knockback to adjacent enemies"],
+  ["指定3x3すべてに雨。消火し、草木は1段成長、成木は実+1","Rain on a 3x3 area: extinguish, grow plants, add fruit"],
+  ["射程4に強い一撃。高さの不利を無視する","Heavy range-4 hit; ignores height disadvantage"],
+  ["おおぐらい","Glutton"],["こわがり","Timid"],["けんかっぱやい","Rash"],["ものまね","Mimic"],["べんぴ","Constipated"],["おやおもい","Devoted"],
+  ["攻撃範囲","Attack range"],["実の強化","Fruit boosts"],["おなか","Belly"],["からっぽ","Empty"],
+  ["3枠","3 slots"],["空き","Empty"],
+  ["敵の行動中","Enemy turn"],["準備中","Stand by"],["森の成長","Forest growth"],["森の誕生","Forest birth"],["敵の増援","Enemy wave"],
+  ["成木を","Protect a mature tree for "],["手守る"," turns"],["最短あと","Ready in "],
+  ["黄","Y"],["赤","R"],["青","B"],["本"," trees"],["未解放","Locked"],
+];
+function L(ja,en){ return LANG==="en"?en:ja; }
+function localize(value){
+  let out=String(value??"");
+  if(LANG!=="en") return out;
+  for(const [ja,en] of EN_REPLACE) out=out.split(ja).join(en);
+  return out.replace(/\s{2,}/g," ").trim();
+}
 
 const rnd=(a=1,b=0)=>b+Math.random()*(a-b); // 見た目の粒子・揺れだけ。ゲーム結果には使わない
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
@@ -275,6 +423,7 @@ const FRUIT_BUFF={
   y:{jp:"すばやさ",gain:2},
 };
 const FRUIT_STAT_MAX=99;
+const BELLY_MAX=3;
 
 const TRAITS={
   glut  :{jp:"おおぐらい",  d:"たべると 満腹2つぶん"},
@@ -316,6 +465,7 @@ const ABILITY_ORDER=[
   {key:"focus",jp:"奥義集中",d:"すべてのゴリラの、とくぎ消費MPが1減る"},
 ];
 const STAGE_NAMES=["芽吹きの森","伐採前線","火の尾根","支配の森","最後の楽園"];
+const STAGE_NAMES_EN=["Forest Awakening","Logging Front","Ridge of Fire","Dominion Woods","Last Sanctuary"];
 
 const WAVES=MASTER.waves
   .filter(w=>FOE[w.kind]&&Number.isFinite(w.r)&&Number.isFinite(w.n))
@@ -535,6 +685,24 @@ function makeUnit(side,type,tx,ty){
 function unitY(u){ const t=at(u.tx,u.ty); return u.ty*TS+YOFF-(t?t.h:0)*HSTEP+TS; }
 function unitX(u){ return u.tx*TS+TS/2; }
 
+const STAGE_SNAPSHOT_KEYS=["map","units","stage","round","acts","waveIx","born","dead","kills","obits","log","seenPoop","pooCount","goldCount","bornByColor","finalRound","progress"];
+function captureStageStart(){
+  const snap={};
+  for(const key of STAGE_SNAPSHOT_KEYS) snap[key]=structuredClone(G[key]);
+  G.stageStart=snap;
+}
+function restartStage(){
+  if(!G.stageStart) return;
+  const snap=structuredClone(G.stageStart);
+  for(const key of STAGE_SNAPSHOT_KEYS) G[key]=snap[key];
+  Object.assign(G,{active:null,phase:"idle",mode:null,moveSet:null,rangeSet:null,targetSet:null,kbPos:null,over:null,anim:null,queue:[],fx:[],poops:[],floats:[],shake:4,sel:null,intermission:false,rewardOptions:[]});
+  nextId=Math.max(0,...G.units.map(u=>u.id))+1;
+  $("scTitle").hidden=true; $("scEnd").hidden=true; $("scCamp").hidden=true;
+  syncOrder(); syncActs(); fit();
+  logMsg("#e8b23c",L(`ステージ ${G.stage} を最初から再開した`,`Restarted stage ${G.stage}`));
+  setTimeout(nextTurn,180);
+}
+
 function newGame(run=true){
   const roster=MASTER.startRoster.filter(type=>APE[type]).slice(0,8);
   const starters=roster.length?roster:["normal"];
@@ -556,7 +724,7 @@ function newGame(run=true){
     const s=available[0];
     makeUnit("ape",type,s[0],s[1]);
   }
-  syncOrder(); logMsg("#e8b23c","森を育てて、人族の襲撃をしのげ");
+  syncOrder(); logMsg("#e8b23c","森を育てて、人族の襲撃をしのげ"); captureStageStart();
   if(run) nextTurn();
 }
 
@@ -738,10 +906,12 @@ function actionAttack(u,tx,ty){
 function actionEat(u){
   const t=at(u.tx,u.ty);
   if(!(t&&t.v===3&&t.fruit>=1)) return;
+  const slots=BELLY_MAX-u.belly.length;
+  if(slots<=0){ hint(L("おなかが満杯。うんちをして空きを作ろう","Belly full. Poop to free a slot")); return; }
   const glut=u.traits.includes("glut");
   let eaten=1, boost=0;
   t.fruit-=1; u.belly.push(t.c);
-  if(glut&&t.fruit>=1){ t.fruit-=1; u.belly.push(t.c); eaten++; }
+  if(glut&&slots>=2&&t.fruit>=1){ t.fruit-=1; u.belly.push(t.c); eaten++; }
   for(let i=0;i<eaten;i++){
     const add=Math.min(FRUIT_BUFF[t.c].gain,Math.max(0,FRUIT_STAT_MAX-fruitStat(u,t.c)));
     u.buffs[t.c]+=add; boost+=add;
@@ -763,7 +933,12 @@ function actionPoop(u,forced,tx=u.tx,ty=u.ty){
   const dur=consti||kind==="big"?CFG.tacticsBigStrain:CFG.tacticsStrain;
   u.squatMax=dur;
   G.anim={kind:"squat",u,t:0,dur,fired:false,pk:kind,pc:c,tx,ty,after:()=>{
-    if(u.belly.length) u.belly.shift();
+    if(kind==="gold"){
+      for(const color of COLORS){
+        const i=u.belly.indexOf(color);
+        if(i>=0) u.belly.splice(i,1);
+      }
+    } else if(u.belly.length) u.belly.shift();
     endAct(u);
   }};
   SFX.strain();
@@ -879,18 +1054,20 @@ function nextTurn(){
   u.ct-=100;
   G.active=u; G.sel=u.id;
   if(!beginAct(u)){ G.active=null; setTimeout(nextTurn,150); return; }
-  syncOrder(); showCard(u,matchMedia("(min-width:721px)").matches);
+  syncOrder(); showCard(u,matchMedia("(min-width:821px)").matches);
   if(u.side==="ape"){ startMovePhase(u); }
   else { G.phase="foe"; setTimeout(()=>foeTurn(u),380); }
 }
 function startMovePhase(u){
   G.phase="move"; G.mode=null; G.rangeSet=null; G.targetSet=null;
   G.moveSet=reachable(u);
+  G.kbPos=[u.tx,u.ty];
   G.startPos={x:u.tx,y:u.ty};
+  showTileHint(u.tx,u.ty);
   syncActs(); hint(`${u.name} — ドラッグで移動、そのあと行動をえらぶ`);
 }
 
-function stageName(n){ return STAGE_NAMES[n-1]||`第${n}森域`; }
+function stageName(n){ return LANG==="en"?(STAGE_NAMES_EN[n-1]||`Forest Sector ${n}`):(STAGE_NAMES[n-1]||`第${n}森域`); }
 function freeApeSpot(){
   const spots=[];
   for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
@@ -950,7 +1127,7 @@ function chooseReward(i){
   if(!G.intermission) return;
   const r=G.rewardOptions[i]; r.apply(); G.progress.picks.push(r.title);
   G.intermission=false; $("scCamp").hidden=true;
-  nextStage(); syncOrder(); fit(); setTimeout(nextTurn,250);
+  nextStage(); captureStageStart(); syncOrder(); fit(); setTimeout(nextTurn,250);
 }
 function clearStageIfReady(){
   if(!G.finalRound||G.over||G.intermission||G.units.some(u=>u.alive&&u.side!=="ape")) return false;
@@ -1275,12 +1452,6 @@ function drawUnit(u){
     const bob=Math.sin(vt*5)>0?0:1;
     ctx.fillRect(Math.round(u.px)-3,Math.round(u.py-s.height-6-bob),6,2);
     ctx.fillRect(Math.round(u.px)-1,Math.round(u.py-s.height-4-bob),2,2);
-    const label=u.side==="ape"?`▶ ${u.name} 行動中`:`敵 ▶ ${u.name}`;
-    ctx.font='8px "DotGothic16", monospace';
-    const tw=Math.ceil(ctx.measureText(label).width)+6;
-    const lx=clamp(Math.round(u.px-tw/2),1,CW-tw-1), ly=Math.max(1,Math.round(u.py-s.height-29-bob));
-    ctx.fillStyle="#0b0805e8"; ctx.fillRect(lx,ly,tw,11);
-    ctx.fillStyle=col; ctx.fillRect(lx,ly,2,11); ctx.fillText(label,lx+4,ly+8);
   }
   if(u.rage>0&&Math.sin(vt*13)>0){ ctx.fillStyle="#c9452e55"; ctx.fillRect(x,y,s.width,s.height); }
   ctx.save();
@@ -1376,6 +1547,12 @@ function draw(){
         const pulse=Math.sin(vt*6)>0?"#e8b23c55":"#e8b23c33";
         ctx.fillStyle=pulse; ctx.fillRect(x*TS,top,TS,TS);
         ctx.fillStyle="#e8b23c"; ctx.fillRect(x*TS,top,TS,1); ctx.fillRect(x*TS,top+TS-1,TS,1);
+      }
+      if(G.phase==="move"&&G.kbPos&&G.kbPos[0]===x&&G.kbPos[1]===y){
+        const pulse=Math.sin(vt*8)>0?2:1;
+        ctx.fillStyle="#ffe08a";
+        ctx.fillRect(x*TS+2,top+2,TS-4,pulse); ctx.fillRect(x*TS+2,top+TS-2-pulse,TS-4,pulse);
+        ctx.fillRect(x*TS+2,top+2,pulse,TS-4); ctx.fillRect(x*TS+TS-2-pulse,top+2,pulse,TS-4);
       }
       if(G.active?.alive&&G.active.tx===x&&G.active.ty===y){
         const col=G.active.side==="ape"?"#ffe08a":"#ff6047";
@@ -1529,6 +1706,26 @@ function tileFromPoint(p){
   const gx=clamp(Math.floor(p.x/TS),0,COLS-1), gy=clamp(Math.floor((p.y-YOFF)/TS),0,ROWS-1);
   return [gx,gy];
 }
+function showTileHint(x,y){
+  const t=at(x,y); if(!t) return;
+  const u=unitAt(x,y), veg=[L("裸地","Bare"),L("草","Grass"),L("若木","Sapling"),L("成木","Mature tree")][t.v]||"—";
+  const terrain=t.water?L("水辺","Water"):localize(BIOME[t.c]?.jp||L("土","Soil"));
+  const states=[];
+  if(t.fruit>0) states.push(L(`実 ${t.fruit}`,`Fruit ${t.fruit}`));
+  if(t.fire>0) states.push(L(`火 ${t.fire}`,`Fire ${t.fire}`));
+  if(t.ash>0) states.push(L("灰","Ash"));
+  $("tileHintTitle").textContent=L("マス詳細","TILE INFO");
+  $("tileHint").dataset.x=x; $("tileHint").dataset.y=y;
+  $("tileHintCoord").textContent=`X${x+1} Y${y+1}`;
+  $("tileHintBody").innerHTML=`
+    <span>${L("地形","TERRAIN")}</span><b>${terrain}</b>
+    <span>${L("高さ","HEIGHT")}</span><b>${t.h}</b>
+    <span>${L("草木","GROWTH")}</span><b>${veg}</b>
+    <span>${L("状態","STATE")}</span><b>${states.join(" / ")||L("平常","Clear")}</b>
+    <span>${L("肥沃度","FERTILITY")}</span><b>${Math.max(0,Math.round(t.fert||0))}</b>
+    <span>${L("ユニット","UNIT")}</span><b>${u?`${u.name} · ${localize(S(u).jp)}`:L("なし","None")}</b>`;
+  $("tileHint").hidden=false;
+}
 cv.addEventListener("pointerdown",ev=>{
   if(G.over) return;
   cv.setPointerCapture(ev.pointerId);
@@ -1539,7 +1736,7 @@ cv.addEventListener("pointerdown",ev=>{
   }
   if(G.phase==="move"&&G.active&&G.moveSet?.has(idx(x,y))&&!unitAt(x,y)){
     const u=G.active, path=pathTo(u,G.moveSet,x,y);
-    G.phase="idle";
+    G.phase="idle"; G.kbPos=null;
     doMove(u,path,()=>{ G.phase="act"; G.moveSet=null; syncActs(); hint("行動をえらぶ"); });
     return;
   }
@@ -1548,10 +1745,12 @@ cv.addEventListener("pointerdown",ev=>{
   if(u){ showCard(u); G.sel=u.id; }
 });
 cv.addEventListener("pointermove",ev=>{
-  if(!G.dragging) return;
   const p=toWorld(ev);
+  const [x,y]=tileFromPoint(p); showTileHint(x,y);
+  if(!G.dragging) return;
   G.dragging.px=clamp(p.x,8,CW-8); G.dragging.py=clamp(p.y,14,CH-4);
 });
+cv.addEventListener("pointerleave",()=>{ if(G.phase!=="move") $("tileHint").hidden=true; });
 function dropUnit(){
   const u=G.dragging; if(!u) return;
   G.dragging=null;
@@ -1560,7 +1759,7 @@ function dropUnit(){
   const k=idx(x,y);
   if(G.moveSet&&G.moveSet.has(k)&&!unitAt(x,y)){
     const path=pathTo(u,G.moveSet,x,y);
-    G.phase="idle";
+    G.phase="idle"; G.kbPos=null;
     doMove(u,path,()=>{ G.phase="act"; G.moveSet=null; syncActs(); hint("行動をえらぶ"); });
   } else {
     u.px=unitX(u); u.py=unitY(u);
@@ -1573,34 +1772,62 @@ cv.addEventListener("pointercancel",dropUnit);
 /* ══════════ 行動ボタン ══════════ */
 const $=id=>document.getElementById(id);
 const bAtk=$("aAttack"), bSk=$("aSkill"), bEat=$("aEat"), bPoop=$("aPoop"), bWait=$("aWait"), bCancel=$("aCancel");
-function hint(s){ $("hint").textContent=s; }
+function hint(s){ $("hint").textContent=localize(s); }
 function canAct(){ return G.active && G.active.side==="ape" && (G.phase==="move"||G.phase==="act"); }
 function syncActs(){
   const u=G.active, ok=canAct();
   const st=ok?APE[u.type]:null;
+  bAtk.textContent=L("[1] こうげき","[1] ATTACK");
+  bSk.childNodes[0].nodeValue=L("[2] とくぎ","[2] SKILL");
+  bEat.textContent=L("[3] たべる","[3] EAT");
+  bPoop.textContent=L("[4] うんち","[4] POOP");
+  bWait.textContent=L("[5] まつ","[5] WAIT");
+  bCancel.textContent=L("やめる","CANCEL");
   bAtk.disabled=!ok; bSk.disabled=!ok; bEat.disabled=!ok; bPoop.disabled=!ok; bWait.disabled=!ok;
   bCancel.hidden=!G.mode;
   [bAtk,bSk,bEat,bPoop].forEach(b=>b.classList.remove("on"));
-  if(!ok){ bSk.querySelector("small").textContent=""; bEat.textContent="[3] たべる"; return; }
-  bAtk.title = `攻撃範囲：${attackRangeText(st.rng)}`;
+  if(!ok){ bSk.querySelector("small").textContent=""; return; }
+  bAtk.title = localize(`攻撃範囲：${attackRangeText(st.rng)}`);
   const cost=skillCost(u);
   bSk.querySelector("small").textContent = `MP${cost}`;
   const skillNeedsFruit=u.type==="normal"&&u.belly.length<poopNeed(u);
   bSk.disabled = u.mp<cost||skillNeedsFruit;
-  bSk.title = skillNeedsFruit ? `${st.sk.n} — 実が ${poopNeed(u)} 個ひつよう` : `${st.sk.n} — ${st.sk.d}`;
+  bSk.title = localize(skillNeedsFruit ? `${st.sk.n} — 実が ${poopNeed(u)} 個ひつよう` : `${st.sk.n} — ${st.sk.d}`);
   const t=at(u.tx,u.ty);
-  bEat.disabled = !(t.v===3&&t.fruit>=1);
-  bEat.textContent = bEat.disabled ? "[3] たべる" : `[3] ${t.c==="r"?"赤":t.c==="b"?"青":"黄"}実→${FRUIT_BUFF[t.c].jp}`;
-  if(bEat.disabled) bEat.title="実のある成木の上で使う";
+  bEat.disabled = !(t.v===3&&t.fruit>=1)||u.belly.length>=BELLY_MAX;
+  bEat.textContent = bEat.disabled ? L("[3] たべる","[3] EAT") : LANG==="en"?`[3] EAT ${t.c.toUpperCase()} → ${localize(FRUIT_BUFF[t.c].jp)}`:`[3] ${t.c==="r"?"赤":t.c==="b"?"青":"黄"}実→${FRUIT_BUFF[t.c].jp}`;
+  if(u.belly.length>=BELLY_MAX) bEat.title=L("おなかが満杯。うんちをして空きを作る","Belly full. Poop to free a slot");
+  else if(bEat.disabled) bEat.title=localize("実のある成木の上で使う");
   else {
     const add=Math.min(FRUIT_BUFF[t.c].gain,Math.max(0,FRUIT_STAT_MAX-fruitStat(u,t.c)));
-    bEat.title=add?`${FRUIT_BUFF[t.c].jp}+${add}（現在 ${fruitStat(u,t.c)}/${FRUIT_STAT_MAX}）`:`${FRUIT_BUFF[t.c].jp}は最大（実はおなかに入る）`;
+    bEat.title=localize(add?`${FRUIT_BUFF[t.c].jp}+${add}（現在 ${fruitStat(u,t.c)}/${FRUIT_STAT_MAX}）`:`${FRUIT_BUFF[t.c].jp}は最大（実はおなかに入る）`);
   }
   const need=poopNeed(u);
   bPoop.disabled = u.belly.length<need;
-  bPoop.title = u.belly.length<need ? `おなかに実が ${need} 個ひつよう` : "その場にうんちをする";
+  bPoop.title = localize(u.belly.length<need ? `おなかに実が ${need} 個ひつよう` : "その場にうんちをする");
   if(G.mode==="attack") bAtk.classList.add("on");
   if(G.mode==="skill") bSk.classList.add("on");
+}
+function applyLanguage(refresh=true){
+  document.documentElement.lang=LANG;
+  $("bLang").textContent=LANG==="ja"?"JP / EN":"EN / JP";
+  $("lStage").textContent=L("ステージ","STAGE"); $("lRound").textContent=L("ラウンド","ROUND");
+  $("lApes").textContent=L("ゴリラ","GORILLAS"); $("lFoes").textContent=L("人族","HUMANS"); $("lObjective").textContent=L("クリア条件","OBJECTIVE");
+  $("lGrowth").textContent=L("成長・誕生予報","GROWTH & BIRTH"); $("lLog").textContent=L("戦況記録","BATTLE LOG"); $("lCamp").textContent=L("戦線野営","WAR CAMP");
+  $("campCopy").innerHTML=L("<b>達成後：</b>実の強化／次代の編成／森の記録","<b>AFTER CLEAR:</b> fruit boosts / roster / forest record");
+  $("scTitle").querySelector(".chapter .tag").textContent=L("第一章　うんちの産声","CHAPTER I — THE FIRST PLOP");
+  $("scTitle").querySelector(".maxim").textContent=L("糞は土となり、森は兵を生む。","Poop becomes soil; the forest raises an army.");
+  $("scTitle").querySelector(".title-hint").textContent=L("ヒント：実とうんちで森を育て、成木を5ターン守れば仲間が生まれる。","Hint: Grow the forest with fruit and poop. Protect a mature tree for 5 turns to gain an ally.");
+  $("bStart").textContent=L("音楽とともにはじめる","START WITH MUSIC"); $("bStartSilent").textContent=L("音なしではじめる","START SILENTLY");
+  $("bAgain").textContent=L("もういちど","TRY AGAIN"); $("bReset").textContent=L("ステージ再開","RESTART STAGE");
+  $("scCamp").querySelector(".sub").textContent=L("戦果をひとつ選んで、群れを次のステージへ。","Choose one reward, then lead the troop to the next stage.");
+  if(refresh&&typeof G!=="undefined"){
+    syncActs(); syncRail(); renderLog();
+    const ol=$("order").querySelector(".olab"); if(ol) ol.textContent=L("行動順","TURN ORDER");
+    if(G.active) showCard(G.active,!$("card").hidden);
+    const th=$("tileHint"); if(!th.hidden) showTileHint(Number(th.dataset.x),Number(th.dataset.y));
+    if(G.phase==="move"&&G.active) hint(`${G.active.name} — ${L("矢印キーで移動先を選び、Enterで決定","Choose a tile with arrows, press Enter")}`);
+  }
 }
 function setTargets(list){
   G.targetSet=new Set(list.map(([x,y])=>idx(x,y)));
@@ -1652,6 +1879,24 @@ function confirmTarget(x,y){
 }
 addEventListener("keydown",e=>{
   if(!canAct()) return;
+  const arrows={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]};
+  if(G.phase==="move"&&arrows[e.key]){
+    e.preventDefault();
+    const u=G.active, [dx,dy]=arrows[e.key], [x,y]=G.kbPos||[u.tx,u.ty];
+    const nx=x+dx, ny=y+dy, home=nx===u.tx&&ny===u.ty;
+    if((home||G.moveSet?.has(idx(nx,ny)))&&(!unitAt(nx,ny)||home)){
+      G.kbPos=[nx,ny]; showTileHint(nx,ny); hint(`${u.name} — ${L("矢印キーで移動先を選び、Enterで決定","Choose a tile with arrows, press Enter")}`);
+    } else beep(120,.05,"square",.025,-30);
+    return;
+  }
+  if(G.phase==="move"&&(e.key==="Enter"||e.key===" ")){
+    e.preventDefault();
+    const u=G.active, [x,y]=G.kbPos||[u.tx,u.ty];
+    const path=x===u.tx&&y===u.ty?[]:pathTo(u,G.moveSet,x,y);
+    G.phase="idle"; G.kbPos=null;
+    doMove(u,path,()=>{ G.phase="act"; G.moveSet=null; syncActs(); hint("行動をえらぶ"); });
+    return;
+  }
   const hot={"1":bAtk,"2":bSk,"3":bEat,"4":bPoop,"5":bWait}[e.key];
   if(hot&&!hot.disabled){ e.preventDefault(); hot.click(); return; }
   if(e.key==="Enter"||e.key===" "){ e.preventDefault(); bWait.click(); }
@@ -1663,35 +1908,44 @@ function syncRail(){
   $("tStage").textContent=G.stage+"/"+STAGE_COUNT;
   $("tStage").title=stageName(G.stage);
   $("tRound").textContent=Math.min(G.round,LAST_ROUND)+"/"+LAST_ROUND;
-  $("tObjective").textContent=`${LAST_ROUND}ラウンド生存`;
+  $("tObjective").textContent=L(`${LAST_ROUND}ラウンド生存`,`SURVIVE ${LAST_ROUND} ROUNDS`);
   $("tApes").textContent=G.units.filter(u=>u.alive&&u.side==="ape").length;
   $("tFoes").textContent=G.units.filter(u=>u.alive&&u.side!=="ape").length;
   const u=G.active?.alive?G.active:null, turn=$("turnHud");
   turn.classList.toggle("foe",!!u&&u.side!=="ape");
-  $("turnLabel").textContent=u?(u.side==="ape"?"CURRENT TURN":"ENEMY TURN"):"NEXT TURN";
-  $("turnName").textContent=u?u.name:"準備中";
+  $("turnLabel").textContent=u?(u.side==="ape"?L("現在の手番","CURRENT TURN"):L("敵の手番","ENEMY TURN")):L("次の手番","NEXT TURN");
+  $("turnName").textContent=u?u.name:L("準備中","STAND BY");
   $("turnHp").textContent=u?`${Math.max(0,Math.ceil(u.hp))}/${u.maxhp}`:"—";
   $("turnHpBar").style.cssText=`width:${u?Math.round(clamp(u.hp/u.maxhp,0,1)*100):0}%;background:${u&&u.hp<=u.maxhp*.4?"#c9452e":"#7fae2f"}`;
   $("turnMp").textContent=u?.side==="ape"?`${u.mp}/${u.maxmp}`:"—";
   $("turnMpBar").style.cssText=`width:${u?.side==="ape"?Math.round(clamp(u.mp/u.maxmp,0,1)*100):0}%;background:#68d0e0`;
+  $("mapActiveName").textContent=u?L(`${u.name}　行動中`,`${u.name} ACTIVE`):L("準備中","STAND BY");
+  $("mapActiveMeta").textContent=u?L(`${u.side==="ape"?"味方":"敵"}・高さ${at(u.tx,u.ty).h}`,`${u.side==="ape"?"ALLY":"ENEMY"} · HEIGHT ${at(u.tx,u.ty).h}`):"—";
+  $("activeKind").textContent=u?(u.side==="ape"?L("手番","CURRENT"):"ENEMY"):"CURRENT";
+  $("commandUnit").textContent=u?.side==="ape"?L(`${u.name}の行動`,`${u.name} — ACTIONS`):L("敵の行動中","ENEMY TURN");
   syncBirth();
 }
 function syncBirth(){
   const apes=G.units.filter(u=>u.alive&&u.side==="ape").length;
-  const short={y:"黄",r:"赤",b:"青"};
-  const typeShort={normal:"普通",monkey:"モンキー",guardian:"ガーディアン",silver:"シルバー",wizard:"ウィザード",chimp:"チンパンジー"};
+  const short=LANG==="en"?{y:"Y",r:"R",b:"B"}:{y:"黄",r:"赤",b:"青"};
+  const typeShort=LANG==="en"?{normal:"Gorilla",monkey:"Monkey",guardian:"Guardian",silver:"Silverback",wizard:"Wizard",chimp:"Chimp"}:{normal:"普通",monkey:"モンキー",guardian:"ガーディアン",silver:"シルバー",wizard:"ウィザード",chimp:"チンパンジー"};
+  let nearest=BIRTH_TREE_TURNS;
   $("birthHud").innerHTML='<b>出生</b>'+COLORS.map(c=>{
     const trees=matureTrees(c), age=Math.max(0,...trees.map(t=>t.treeAge));
-    const nextType=nextBirthType(c), next=nextType?APE[nextType].jp:"未解放";
-    const stopped=!nextType?"（キャンプで同色種を解放）":apes>=MAX_APES?`（仲間上限${MAX_APES}匹）`:!trees.length?"（成木が必要）":"";
-    const title=`${BIOME[c].jp}：成木 ${trees.length}本／最長生存 ${age}/${BIRTH_TREE_TURNS}ターン／次は ${next}${stopped}`;
+    if(trees.length) nearest=Math.min(nearest,Math.max(0,BIRTH_TREE_TURNS-age));
+    const nextType=nextBirthType(c), next=nextType?localize(APE[nextType].jp):L("未解放","Locked");
+    const stopped=!nextType?L("（キャンプで同色種を解放）"," (unlock this color at camp)"):apes>=MAX_APES?L(`（仲間上限${MAX_APES}匹）`,` (ally cap ${MAX_APES})`):!trees.length?L("（成木が必要）"," (mature tree required)"):"";
+    const title=L(`${BIOME[c].jp}：成木 ${trees.length}本／最長生存 ${age}/${BIRTH_TREE_TURNS}ターン／次は ${next}${stopped}`,`${c.toUpperCase()} biome: ${trees.length} mature trees / longest ${age}/${BIRTH_TREE_TURNS} turns / next ${next}${stopped}`);
     const ready=nextType&&age>=BIRTH_TREE_TURNS&&apes<MAX_APES?" ready":"";
-    return `<span class="birth-chip${ready}" title="${title}"><i style="background:${BIOME[c].berry}"></i>${short[c]} ${trees.length}本 ${Math.min(age,BIRTH_TREE_TURNS)}/${BIRTH_TREE_TURNS} → ${nextType?typeShort[nextType]:"未解放"}</span>`;
+    return `<span class="birth-chip${ready}" title="${title}"><i style="background:${BIOME[c].berry}"></i>${short[c]} ${trees.length}${L("本"," trees")} ${Math.min(age,BIRTH_TREE_TURNS)}/${BIRTH_TREE_TURNS} → ${nextType?typeShort[nextType]:L("未解放","Locked")}</span>`;
   }).join("");
+  const wave=WAVES.find(w=>w.r>=G.round);
+  $("nextEventName").textContent=wave&&wave.r===G.round?L("敵の増援","ENEMY WAVE"):nearest<BIRTH_TREE_TURNS?L("森の誕生","FOREST BIRTH"):L("森の成長","FOREST GROWTH");
+  $("nextEventMeta").textContent=wave&&wave.r===G.round?`${localize(FOE[wave.kind].jp)} ×${wave.n}`:nearest<BIRTH_TREE_TURNS?L(`最短あと${nearest}手`,`READY IN ${nearest} TURNS`):L(`成木を${BIRTH_TREE_TURNS}手守る`,`PROTECT TREE ${BIRTH_TREE_TURNS} TURNS`);
 }
 function syncOrder(){
   const box=$("order");
-  box.innerHTML='<span class="olab">行動順</span>';
+  box.innerHTML=`<span class="olab">${L("行動順","TURN ORDER")}</span>`;
   // 先読み
   const sim=G.units.filter(u=>u.alive).map(u=>({u,ct:u.ct}));
   const out=[];
@@ -1721,34 +1975,35 @@ function showCard(u,open=true){
   g.imageSmoothingEnabled=false; g.clearRect(0,0,24,26);
   const s=SPR["u_"+u.type]; g.drawImage(s,((24-s.width)/2)|0,((26-s.height)/2)|0);
   $("cName").textContent=u.name;
-  $("cType").textContent = u.side==="ape" ? `${st.jp}／${st.from}生まれ` : `人族 — ${st.act}`;
+  $("cType").textContent = u.side==="ape" ? L(`${st.jp}／${st.from}生まれ`,`${localize(st.jp)} / ${localize(st.from+"生まれ")}`) : L(`人族 — ${st.act}`,`HUMAN — ${localize(st.act)}`);
   const t=at(u.tx,u.ty);
   const atkBonus=u.side==="ape"?u.buffs.r:0;
   const spdBonus=u.side==="ape"?u.buffs.y:0;
   $("cBars").innerHTML =
     `<span>HP</span>${pb(u.hp/u.maxhp,"#7fae2f")}<b>${Math.max(0,Math.ceil(u.hp))}</b>` +
     (u.side==="ape"?`<span>MP</span>${pb(u.mp/u.maxmp,"#68d0e0")}<b>${u.mp}/${u.maxmp}</b>`:``) +
-    `<span>こうげき</span>${pb(st.atk/56,"#c9452e")}<b>${st.atk}${atkBonus?` (+${atkBonus})`:""}</b>` +
-    `<span>すばやさ</span>${pb(st.spd/58,"#e8b23c")}<b>${st.spd}${spdBonus?` (+${spdBonus})`:""}</b>` +
-    `<span>いどう</span>${pb(st.move/7,"#a49070")}<b>${st.move}</b>` +
-    `<span>ジャンプ</span>${pb(st.jump/3,"#a49070")}<b>${st.jump}</b>` +
-    `<span>いま の 高さ</span>${pb(t.h/3,"#9fd8e0")}<b>${t.h}</b>`;
+    `<span>${L("こうげき","ATK")}</span>${pb(st.atk/56,"#c9452e")}<b>${st.atk}${atkBonus?` (+${atkBonus})`:""}</b>` +
+    `<span>${L("すばやさ","SPD")}</span>${pb(st.spd/58,"#e8b23c")}<b>${st.spd}${spdBonus?` (+${spdBonus})`:""}</b>` +
+    `<span>${L("いどう","MOVE")}</span>${pb(st.move/7,"#a49070")}<b>${st.move}</b>` +
+    `<span>${L("ジャンプ","JUMP")}</span>${pb(st.jump/3,"#a49070")}<b>${st.jump}</b>` +
+    `<span>${L("いま の 高さ","HEIGHT")}</span>${pb(t.h/3,"#9fd8e0")}<b>${t.h}</b>`;
   $("cAb").innerHTML = u.side==="ape"
-    ? `<b>★${st.sk.n}</b>（MP${skillCost(u)}）<br>${st.sk.d}`
-    : `<b>★${st.act}</b>`;
-  $("cTr").innerHTML = u.side==="ape"
+    ? `<b>★${localize(st.sk.n)}</b> (${L("MP","MP")}${skillCost(u)})<br>${localize(st.sk.d)}`
+    : `<b>★${localize(st.act)}</b>`;
+  const traitsHtml = u.side==="ape"
     ? `<em>攻撃範囲</em> — ${attackRangeText(st.rng)}<br>`
       + u.traits.map(k=>`<em>${TRAITS[k].jp}</em> — ${TRAITS[k].d}`).join("<br>")
       + `<br><em>実の強化</em> — <span style="color:${BIOME.r.berry}">赤 攻撃+${u.buffs.r}</span> ／ <span style="color:${BIOME.b.berry}">青 最大MP+${u.buffs.b}</span> ／ <span style="color:${BIOME.y.berry}">黄 素早さ+${u.buffs.y}</span>（上限${FRUIT_STAT_MAX}）`
-      + `<br><em>おなか</em> — ${u.belly.length?u.belly.map(c=>`<span style="color:${BIOME[c].berry}">● ${BIOME[c].jp}</span>`).join(" → "):"からっぽ"}`
+      + `<br><em>おなか 3枠</em> — ${[...u.belly,...Array(BELLY_MAX-u.belly.length).fill(null)].map(c=>c?`<span style="color:${BIOME[c].berry}">● ${BIOME[c].jp}</span>`:`<span>□ 空き</span>`).join(" → ")}`
     : `<em>攻撃範囲</em> — ${attackRangeText(st.rng)}<br>倒すと森が守られる`;
+  $("cTr").innerHTML=localize(traitsHtml);
 }
 function renderLog(){
   const box=$("log"); box.innerHTML="";
   for(const l of G.log){
     const d=document.createElement("div"); d.className="lg";
     d.innerHTML=`<i style="background:${l.col}"></i>`;
-    d.appendChild(document.createTextNode(l.msg));
+    d.appendChild(document.createTextNode(localize(l.msg)));
     box.appendChild(d);
   }
 }
@@ -1797,14 +2052,12 @@ function finish(win,title,sub){
   }
 })();
 function fit(){
-  const st=$("stage"), fr=$("frame");
-  const overlayOpen=!$("scTitle").hidden||!$("scEnd").hidden||!$("scCamp").hidden;
-  const side=st.clientWidth>720&&!overlayOpen?170:0;
-  const s=Math.min((st.clientWidth-side-8)/CW,(st.clientHeight-4)/CH);
+  const st=$("battlePanel"), fr=$("frame");
+  const s=Math.min((st.clientWidth-4)/CW,(st.clientHeight-4)/CH);
   const w=Math.round(CW*s), h=Math.round(CH*s);
   cv.style.width=w+"px"; cv.style.height=h+"px";
   fr.style.width=w+"px"; fr.style.height=h+"px";
-  fr.style.transform=side?`translateX(${-side/2}px)`:"none";
+  fr.style.transform="none";
 }
 addEventListener("resize",fit);
 function start(){
@@ -1814,7 +2067,21 @@ function start(){
 $("bStart").onclick=()=>{ startMusic(); $("bSound").textContent="♪ ON"; start(); };
 $("bStartSilent").onclick=()=>{ snd=false; stopMusic(); $("bSound").textContent="♪ OFF"; start(); };
 $("bAgain").onclick=()=>{ start(); if(snd&&!musicTimer) startMusic(); };
-$("bReset").onclick=()=>{ start(); if(snd&&!musicTimer) startMusic(); };
+let resetArmed=false, resetTimer=0;
+$("bReset").onclick=()=>{
+  if(!resetArmed){
+    resetArmed=true; $("bReset").textContent=L("もう一度押す","PRESS AGAIN");
+    hint(L("もう一度押すと、獲得済みの解放を残して現在ステージを再開","Press again to restart this stage; unlocks are kept"));
+    clearTimeout(resetTimer); resetTimer=setTimeout(()=>{resetArmed=false;$("bReset").textContent=L("ステージ再開","RESTART STAGE");},2400);
+    return;
+  }
+  resetArmed=false; clearTimeout(resetTimer); restartStage();
+};
+$("bLang").onclick=()=>{
+  LANG=LANG==="ja"?"en":"ja";
+  try{ localStorage.setItem("poopulation-lang",LANG); }catch{}
+  applyLanguage();
+};
 $("cClose").onclick=()=>$("card").hidden=true;
 $("bSound").onclick=ev=>{
   snd=!snd; ev.currentTarget.textContent=snd?"♪ ON":"♪ OFF";
@@ -1845,7 +2112,9 @@ window.POOPTACT={ get state(){return G;}, start, SPR, APE, FOE, nextTurn,
   }
 };
 
+applyLanguage(false);
 newGame(false);
+applyLanguage();
 let last=performance.now();
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000); last=now;
