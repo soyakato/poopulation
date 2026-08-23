@@ -236,11 +236,11 @@ const FRUIT_BUFF={
 const FRUIT_STAT_MAX=99;
 
 const TRAITS={
-  glut  :{jp:"おおぐらい",  d:"たべると 満腹2つぶん。うんちも大きい"},
+  glut  :{jp:"おおぐらい",  d:"たべると 満腹2つぶん"},
   timid :{jp:"こわがり",    d:"火のマスから真っ先に逃げる。こうげき −25%"},
   rash  :{jp:"けんかっぱやい",d:"敵が射程にいると、勝手にこうげきしてしまう"},
   mimic :{jp:"ものまね",    d:"隣の仲間の特性をコピーする"},
-  consti:{jp:"べんぴ",      d:"満腹3つぶん溜めてから、でかうんちを出す"},
+  consti:{jp:"べんぴ",      d:"うんちの力み時間が長い"},
   filial:{jp:"おやおもい",  d:"仲間が死ぬと激怒。こうげき +50%"},
 };
 const TKEY=Object.keys(TRAITS);
@@ -249,7 +249,7 @@ const NAMES=["ゴロ","バナ","ドン","キバ","モモ","タロ","ウホ","ボ
 // move=移動力 / jump=登れる段差 / rng=射程 / def=被ダメ倍率
 const APE={
   normal  :{jp:"普通のゴリラ",     from:"草原",  ...MASTER.allies.normal,
-            sk:{n:"つよいうんち", c:5, d:"その場に でかうんち を落とす（肥料6）"}, ab:"はこぶ"},
+            sk:{n:"ロケットうんち", c:5, d:"射程3の指定マスへ、十字5マスを育てる でかうんち を飛ばす"}, ab:"はこぶ"},
   monkey  :{jp:"モンキー",         from:"草原",  ...MASTER.allies.monkey,
             sk:{n:"かけぬけ",     c:3, d:"もう一度 移動できる"}, ab:"すばしっこい"},
   guardian:{jp:"ガーディアンゴリラ",from:"硬木林",...MASTER.allies.guardian,
@@ -590,15 +590,13 @@ function killUnit(d,killer){
 /* ══════════ うんち ══════════ */
 function poopKind(u){
   if(new Set(u.belly).size>=3) return "gold";
-  if(u.traits.includes("consti")) return "big";
-  if(u.type==="silver") return "big";
-  if(u.type==="monkey") return "pellet";
-  if(u.traits.includes("glut")) return "big";
   return "normal";
 }
-function dropPoop(u,kind,c){
+function dropPoop(u,kind,c,tx=u.tx,ty=u.ty){
   const K=POOP[kind];
-  G.poops.push({x:unitX(u)-u.dir*10, y:unitY(u)-6, dir:u.dir, tx:u.tx, ty:u.ty, c, kind, t:0, land:.34, life:5});
+  const thrown=tx!==u.tx||ty!==u.ty;
+  G.poops.push({x:thrown?tx*TS+12:unitX(u)-u.dir*10,y:thrown?tileTop(tx,ty)+TS-6:unitY(u)-6,
+    fromX:unitX(u)-u.dir*10,fromY:unitY(u)-6,thrown,dir:u.dir,tx,ty,c,kind,t:0,land:thrown?.62:.34,life:5});
   G.shake=Math.max(G.shake,1.5*CFG.impactShake);
   puff(unitX(u)-u.dir*8,unitY(u)-8,PCOL[kind==="gold"?"gold":c].l,8);
   SFX.plop();
@@ -607,8 +605,8 @@ function dropPoop(u,kind,c){
   if(kind==="gold"){ G.goldCount++; SFX.gold(); logMsg(PCOL.gold.m,"きんのうんち！ 土が一気に育つ"); }
   if(!G.seenPoop){ G.seenPoop=true; logMsg(PCOL[c].m,"うんちの色が、生える森の色になる"); }
   // 土に効かせる
-  soak(u.tx,u.ty,c,K.fert,K);
-  if(K.splash>0) for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]) soak(u.tx+dx,u.ty+dy,c,K.splash,K);
+  soak(tx,ty,c,K.fert,K);
+  if(K.splash>0) for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]) soak(tx+dx,ty+dy,c,K.splash,K);
 }
 function soak(x,y,c,amt,K){
   const t=at(x,y); if(!t||t.fire>0) return;
@@ -683,15 +681,15 @@ function actionEat(u){
   logMsg(BIOME[t.c].berry,`${u.name}が${BIOME[t.c].jp}の実を食べた — ${F.jp} ${boost?"+"+boost:"は上限"}`);
   endAct(u);
 }
-function poopNeed(u){ return u.traits.includes("consti")?3:1; }
-function actionPoop(u,forced){
+function poopNeed(){ return 1; }
+function actionPoop(u,forced,tx=u.tx,ty=u.ty){
   const consti=u.traits.includes("consti");
   const kind = forced || poopKind(u);
   const c = u.belly.length?u.belly[0]:(at(u.tx,u.ty).c||"y");
   const dur=consti||kind==="big"?CFG.tacticsBigStrain:CFG.tacticsStrain;
   u.squatMax=dur;
-  G.anim={kind:"squat",u,t:0,dur,fired:false,pk:kind,pc:c,after:()=>{
-    if(u.belly.length){ if(consti) u.belly.length=0; else u.belly.shift(); }
+  G.anim={kind:"squat",u,t:0,dur,fired:false,pk:kind,pc:c,tx,ty,after:()=>{
+    if(u.belly.length) u.belly.shift();
     endAct(u);
   }};
   SFX.strain();
@@ -702,12 +700,13 @@ function actionSkill(u,tx,ty){
   const T=u.type;
   if(u.mp<cost) return false;
   if(T==="normal"&&u.belly.length<poopNeed(u)){
-    hint(`つよいうんちには実が ${poopNeed(u)} 個ひつよう`);
+    hint(`${sk.n}には実が ${poopNeed(u)} 個ひつよう`);
     return false;
   }
   u.mp-=cost;
   if(T==="normal"){
-    actionPoop(u,"big");
+    u.dir=tx>u.tx?1:tx<u.tx?-1:u.dir;
+    actionPoop(u,"big",tx,ty);
     return;
   }
   if(T==="monkey"){
@@ -1251,7 +1250,9 @@ function drawPoop(p){
   const air=clamp(1-p.t/p.land,0,1), fall=air*CFG.arc, s=K.size;
   let sq=1; const since=p.t-p.land;
   if(since>=0&&since<.22) sq=1-CFG.squash*Math.sin((1-since/.22)*Math.PI*.5);
-  const x=(p.x+p.dir*air*7)|0, y=(p.y-fall)|0;
+  const flight=1-air;
+  const x=(p.thrown?p.fromX+(p.x-p.fromX)*flight:p.x+p.dir*air*7)|0;
+  const y=(p.thrown?p.fromY+(p.y-p.fromY)*flight-Math.sin(flight*Math.PI)*CFG.arc*1.4:p.y-fall)|0;
   const R=(w,h,col,ox,oy)=>{ctx.fillStyle=col;ctx.fillRect((x+ox*s)|0,(y+oy*s*sq)|0,Math.max(1,Math.round(w*s)),Math.max(1,Math.round(h*sq*s)));};
   if(p.kind==="pellet"){ R(2,2,C.m,-3,-2);R(2,2,C.d,0,-3);R(2,2,C.m,1,-1);R(1,1,C.l,-3,-2); }
   else if(p.kind==="big"){ R(8,2,C.d,-4,-1);R(6,2,C.m,-3,-3);R(4,2,C.m,-2,-5);R(2,1,C.l,-1,-6);R(3,1,C.l,-3,-3); }
@@ -1430,7 +1431,7 @@ function update(dt){
       A.u.squat=Math.max(A.u.squat,.5);
       A.u.squat=A.dur-A.t;
       G.shake=Math.max(G.shake,Math.max(0,A.t/A.dur-.5)*3);
-      if(!A.fired && A.t>=A.dur-0.25){ A.fired=true; dropPoop(A.u,A.pk,A.pc); A.u.relief=.5; }
+      if(!A.fired && A.t>=A.dur-0.25){ A.fired=true; dropPoop(A.u,A.pk,A.pc,A.tx,A.ty); A.u.relief=.5; }
       if(A.t>=A.dur){ A.u.squat=0; const f=A.after; G.anim=null; f&&f(); return; }
     } else if(A.t>=A.dur){
       const f=A.after; G.anim=null; f&&f(); return;
@@ -1546,10 +1547,14 @@ bAtk.onclick=()=>{
 bSk.onclick=()=>{
   const u=G.active; if(!canAct()) return;
   const st=APE[u.type];
-  if(["normal","monkey","guardian","silver"].includes(u.type)){
+  if(["monkey","guardian","silver"].includes(u.type)){
     G.mode=null; G.rangeSet=null; G.targetSet=null; G.phase="idle"; actionSkill(u); return;
   }
   G.mode="skill";
+  if(u.type==="normal"){
+    const range=tilesInRange(u.tx,u.ty,3).concat([[u.tx,u.ty]]);
+    setRange(range); setTargets(range);
+  }
   if(u.type==="wizard"){
     const range=tilesInRange(u.tx,u.ty,3).concat([[u.tx,u.ty]]);
     setRange(range); setTargets(range);
@@ -1741,7 +1746,7 @@ window.POOPTACT={ get state(){return G;}, start, SPR, APE, FOE, nextTurn,
       const foe=G.units.find(o=>o.alive&&o.side!=="ape"&&inRange(u.tx,u.ty,o.tx,o.ty,st.rng));
       if(foe) actionAttack(u,foe.tx,foe.ty);
       else if(t.v===3&&t.fruit>=1) actionEat(u);
-      else if(u.belly.length>=(u.traits.includes("consti")?3:1)) actionPoop(u);
+      else if(u.belly.length>=poopNeed(u)) actionPoop(u);
       else endAct(u);
       return "acted";
     }
