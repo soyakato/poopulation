@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "targets": {
+    "/tactics.html#opening-and-shell": {
+      "targetKind": "existing-ui",
+      "projectId": "d3847e05-dd39-44f7-b8fe-b87bbd63408c",
+      "baselineDraftId": "77ad9d0a-83ce-41e5-9cce-e3c5479bd20a",
+      "activeDraftId": "77ad9d0a-83ce-41e5-9cce-e3c5479bd20a",
+      "designSystemPath": ".superdesign/design-system.md",
+      "referenceIds": [],
+      "contextFiles": [
+        ".superdesign/design-system.md",
+        ".superdesign/init/theme.md",
+        "tactics.html:1:209",
+        "tactics.html:1510:1690"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "57082856fb105523c67a444f4509aea71065eea7877fc4d350578899f5eecb28",
+        ".superdesign/init/theme.md": "67d075a204194f341ab2b0eaa5f2ac493ac441e27efd746f074c981065962dee",
+        "tactics.html": "e0b922b37f622c0cb973cef718bf365303c8bd6a2b6c9205af4fb74ddef243bb"
+      },
+      "components": [],
+      "drafts": {
+        "77ad9d0a-83ce-41e5-9cce-e3c5479bd20a": {
+          "title": "POOPULATION TACTICS — 森林戦記 序章",
+          "visualDirection": "original forest war chronicle tactical RPG opening and unified battle HUD",
+          "currentVersion": 6
+        }
+      },
+      "updatedAt": "2026-08-24T04:30:02.0435029+09:00"
+    }
+  }
+}
