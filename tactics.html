@@ -910,8 +910,10 @@ function actionEat(u){
   if(slots<=0){ hint(L("おなかが満杯。うんちをして空きを作ろう","Belly full. Poop to free a slot")); return; }
   const glut=u.traits.includes("glut");
   let eaten=1, boost=0;
-  t.fruit-=1; u.belly.push(t.c);
-  if(glut&&slots>=2&&t.fruit>=1){ t.fruit-=1; u.belly.push(t.c); eaten++; }
+  t.fruit-=1;
+  if(glut&&slots>=2&&t.fruit>=1){ t.fruit-=1; eaten++; }
+  u.belly=[...u.belly,...Array(eaten).fill(t.c)];
+  u.buffs={...u.buffs};
   for(let i=0;i<eaten;i++){
     const add=Math.min(FRUIT_BUFF[t.c].gain,Math.max(0,FRUIT_STAT_MAX-fruitStat(u,t.c)));
     u.buffs[t.c]+=add; boost+=add;

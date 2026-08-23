@@ -40,6 +40,8 @@ assert.ok(!tactics.includes("音楽はオリジナル"),"opening screen omits me
 assert.match(tactics, /const BELLY_MAX=3;/,"tactics belly has exactly three fruit slots");
 assert.match(tactics, /u\.belly\.length>=BELLY_MAX/,"eating is disabled when all three belly slots are full");
 assert.match(tactics, /if\(glut&&slots>=2&&t\.fruit>=1\)/,"glutton eating also respects remaining belly slots");
+assert.match(tactics, /u\.belly=\[\.\.\.u\.belly,\.\.\.Array\(eaten\)\.fill\(t\.c\)\]/,"eating replaces only the active gorilla's fruit slots");
+assert.match(tactics, /u\.buffs=\{\.\.\.u\.buffs\}/,"eating replaces only the active gorilla's fruit buffs");
 assert.match(tactics, /id="bLang"/,"battle UI exposes a Japanese-English language switch");
 assert.match(tactics, /localStorage\.setItem\("poopulation-lang",LANG\)/,"language preference persists");
 assert.match(tactics, /ArrowLeft:\[-1,0\],ArrowRight:\[1,0\],ArrowUp:\[0,-1\],ArrowDown:\[0,1\]/,"arrow keys select movement tiles");
