@@ -1,0 +1,1565 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>POOPULATION</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Silkscreen:wght@400;700&display=swap">
+<script src="poop-config.js"></script>
+
+<style>
+  :root{
+    --soil:#17120c;
+    --soil-2:#221a11;
+    --soil-3:#2e2317;
+    --line:#4a3823;
+    --ink:#f2e6cf;
+    --ink-dim:#a4907097;
+    --gold:#e8b23c;
+    --rot:#7fae2f;
+    --blood:#c9452e;
+    --shadow:0 0 0 2px #0b0805;
+    --jp:"DotGothic16","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+    --px:"Silkscreen","Courier New",monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;min-height:100dvh}
+  body{
+    background:var(--soil);
+    color:var(--ink);
+    font-family:var(--jp);
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+    -webkit-user-select:none;user-select:none;
+    -webkit-tap-highlight-color:transparent;
+    touch-action:none;
+  }
+
+  /* ---- cabinet ---- */
+  #cab{
+    display:flex;flex-direction:column;
+    width:100%;height:100dvh;max-height:100%;max-width:1100px;
+    padding:8px;gap:6px;
+  }
+
+  /* ---- top rail ---- */
+  #rail{
+    display:flex;align-items:stretch;gap:6px;
+    background:var(--soil-2);
+    border:2px solid var(--line);
+    padding:6px 8px;
+    flex:0 0 auto;
+  }
+  .stat{display:flex;flex-direction:column;gap:2px;min-width:64px}
+  .stat b{
+    font-family:var(--px);font-size:15px;font-weight:700;
+    letter-spacing:.02em;font-variant-numeric:tabular-nums;line-height:1.1;
+  }
+  .stat span{font-size:10px;color:var(--ink-dim);letter-spacing:.08em}
+  #gauge{flex:1 1 auto;display:flex;flex-direction:column;gap:3px;justify-content:center;min-width:90px}
+  #gauge .g-lab{display:flex;justify-content:space-between;font-size:10px;color:var(--ink-dim)}
+  #gauge .g-lab em{font-style:normal;color:var(--blood)}
+  .bar{height:12px;background:#0f0b07;border:2px solid var(--line);position:relative;overflow:hidden}
+  .bar i{display:block;height:100%;width:0;background:var(--rot);transition:width .25s linear}
+  .bar u{position:absolute;top:0;bottom:0;width:2px;background:var(--blood);opacity:.85}
+  .btn{
+    font-family:var(--jp);font-size:12px;color:var(--ink);
+    background:var(--soil-3);border:2px solid var(--line);
+    padding:4px 10px;cursor:pointer;
+  }
+  .btn:hover{background:var(--line)}
+  .btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .mode-nav{display:flex;align-items:center;gap:3px;margin-left:auto}
+  .mode-nav a{font-family:var(--px);font-size:9px;color:var(--ink-dim);text-decoration:none;padding:5px 6px;border:1px solid var(--line)}
+  .mode-nav a:hover,.mode-nav a:focus-visible{color:var(--gold);border-color:var(--gold)}
+
+  /* ---- stage ---- */
+  #stage{
+    flex:1 1 auto;position:relative;
+    display:flex;align-items:center;justify-content:center;
+    min-height:0;
+  }
+  #frame{position:relative;line-height:0}
+  canvas{
+    image-rendering:pixelated;image-rendering:crisp-edges;
+    border:2px solid var(--line);
+    background:#3a2a1b;
+    display:block;
+  }
+
+  /* ---- toasts ---- */
+  #toasts{
+    position:absolute;left:0;bottom:0;padding:8px;
+    display:flex;flex-direction:column-reverse;gap:4px;
+    pointer-events:none;max-width:70%;
+  }
+  .toast{
+    display:flex;align-items:center;gap:6px;
+    background:#0e0a06e6;border:2px solid var(--line);
+    padding:3px 8px;font-size:12px;line-height:1.5;
+    animation:pop .18s steps(3);
+  }
+  .toast i{width:8px;height:8px;flex:0 0 auto;display:block}
+  @keyframes pop{from{transform:translateY(4px);opacity:0}to{transform:none;opacity:1}}
+
+  /* ---- inspector ---- */
+  #insp{
+    position:absolute;top:6px;right:6px;width:172px;z-index:4;
+    background:#100c07f2;border:2px solid var(--line);
+    padding:7px 8px;display:flex;flex-direction:column;gap:6px;line-height:1.4;
+  }
+  #insp[hidden]{display:none}
+  #inspX{
+    position:absolute;top:2px;right:3px;background:none;border:0;color:var(--ink-dim);
+    font-family:var(--px);font-size:13px;cursor:pointer;padding:2px 4px;line-height:1;
+  }
+  #inspX:hover{color:var(--ink)}
+  .i-head{display:flex;gap:7px;align-items:center}
+  .i-head canvas{width:28px;height:28px;border:0;background:#0000;flex:0 0 auto}
+  .i-nm{font-size:13px}
+  .i-ty{font-size:9px;color:var(--ink-dim)}
+  .i-ab{
+    font-size:10px;border-left:3px solid var(--gold);padding-left:6px;color:var(--ink);
+  }
+  .i-ab b{color:var(--gold);font-weight:400}
+  .i-stats{display:grid;grid-template-columns:auto 1fr auto;gap:3px 5px;align-items:center;font-size:9px}
+  .i-stats span{color:var(--ink-dim);letter-spacing:.04em}
+  .i-stats b{font-family:var(--px);font-size:9px;font-weight:400;font-variant-numeric:tabular-nums;color:var(--ink)}
+  .sbar{height:6px;background:#0b0805;border:1px solid var(--line);position:relative}
+  .sbar i{display:block;height:100%;background:var(--ink)}
+  .i-tr{font-size:9px;color:var(--ink-dim);border-top:1px solid var(--line);padding-top:5px}
+  .i-tr em{font-style:normal;color:var(--ink)}
+
+  /* ---- roster dock ---- */
+  #dock{
+    flex:0 0 auto;display:flex;gap:4px;overflow-x:auto;
+    padding:4px;background:var(--soil-2);border:2px solid var(--line);
+    scrollbar-width:none;min-height:46px;align-items:center;
+  }
+  #dock::-webkit-scrollbar{display:none}
+  .chip{
+    display:flex;align-items:center;gap:5px;flex:0 0 auto;
+    background:var(--soil-3);border:2px solid #0000;padding:2px 6px 2px 2px;
+    cursor:pointer;
+  }
+  .chip.hurt{border-color:var(--blood)}
+  .chip.hungry{border-color:var(--gold)}
+  .chip.on{border-color:var(--ink);background:var(--line)}
+  .chip canvas{border:0;background:#0000;width:30px;height:30px;image-rendering:pixelated}
+  .chip .nm{font-size:11px;line-height:1.2}
+  .chip .tr{font-size:9px;color:var(--ink-dim);line-height:1.2;white-space:nowrap}
+  .empty{font-size:11px;color:var(--ink-dim);padding:0 6px}
+
+  /* ---- overlays ---- */
+  .screen{
+    position:absolute;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:14px;
+    background:#0b0805f2;text-align:center;padding:14px;z-index:5;
+    overflow:auto;line-height:normal;
+  }
+  .screen[hidden]{display:none}
+  .logo{
+    font-family:var(--px);font-weight:700;
+    font-size:clamp(28px,7vw,58px);letter-spacing:.06em;color:var(--gold);
+    text-shadow:4px 4px 0 #6b3f14, 8px 8px 0 #00000080;line-height:1;
+  }
+  .sub{font-size:13px;line-height:1.9;max-width:42ch;text-wrap:balance;line-break:strict}
+  .sub em{font-style:normal;color:var(--gold)}
+  .rules{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;max-width:40ch}
+  .rule{
+    width:100px;border:2px solid var(--line);background:var(--soil-2);
+    padding:8px 6px;font-size:10px;line-height:1.6;color:var(--ink)
+  }
+  .rule canvas{border:0;background:#0000;width:36px;height:36px;margin:0 auto 4px;display:block;image-rendering:pixelated}
+  .big{
+    font-family:var(--px);font-size:clamp(20px,5vw,34px);font-weight:700;
+    letter-spacing:.04em;
+  }
+  .win{color:var(--rot)}.lose{color:var(--blood)}
+  .tally{
+    display:grid;grid-template-columns:auto auto;gap:2px 18px;
+    font-size:12px;border:2px solid var(--line);padding:10px 14px;background:var(--soil-2)
+  }
+  .tally b{font-family:var(--px);font-weight:400;text-align:right;font-variant-numeric:tabular-nums}
+  .tally span{color:var(--ink-dim)}
+  .obit{font-size:11px;color:var(--ink-dim);max-width:36ch;line-height:1.8}
+  .start{
+    font-family:var(--px);font-size:16px;font-weight:700;letter-spacing:.08em;
+    background:var(--gold);color:#22160a;border:0;padding:10px 26px;cursor:pointer;
+    box-shadow:4px 4px 0 #6b3f14;
+  }
+  .start:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #6b3f14}
+  .start:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+  .foot{font-size:10px;color:var(--ink-dim);letter-spacing:.04em}
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+  }
+  @media (max-width:520px){
+    .stat{min-width:52px}
+    .stat b{font-size:13px}
+  }
+</style>
+
+<div id="cab">
+  <div id="rail">
+    <div class="stat"><b id="tTime">0:00</b><span>TIME</span></div>
+    <div class="stat"><b id="tPop">3</b><span>ゴリラ</span></div>
+    <div id="gauge">
+      <div class="g-lab"><span id="gLabL">森の規模</span><em id="gLabR">— 次の襲撃 0:00</em></div>
+      <div class="bar"><i id="gBar"></i></div>
+    </div>
+    <nav class="mode-nav" aria-label="モード"><a href="realtime.html">REALTIME</a><a href="tactics.html">TACTICS</a><a href="studio.html">STUDIO</a></nav>
+    <button class="btn" id="bSound" aria-label="音">♪ ON</button>
+    <button class="btn" id="bReset">やり直す</button>
+  </div>
+
+  <div id="stage"><div id="frame">
+    <canvas id="cv" width="480" height="288" aria-label="ゴリラの森"></canvas>
+    <div id="toasts"></div>
+
+    <div id="insp" hidden>
+      <button id="inspX" aria-label="閉じる">×</button>
+      <div class="i-head">
+        <canvas id="inspPic" width="24" height="24"></canvas>
+        <div>
+          <div class="i-nm" id="inspName">—</div>
+          <div class="i-ty" id="inspType">—</div>
+        </div>
+      </div>
+      <div class="i-ab" id="inspAb"></div>
+      <div class="i-stats" id="inspStats"></div>
+      <div class="i-tr" id="inspTraits"></div>
+    </div>
+
+    <div class="screen" id="scTitle">
+      <div class="logo">POOPULATION</div>
+      <p class="sub">神であるあなたは、ゴリラに<em>命令できない</em>。<br>できるのは「どこで食べさせるか」だけだ。</p>
+      <div class="rules" id="ruleBox"></div>
+      <p class="foot">黄の草原で稼ぎ、青の湿地で囲い、赤の硬木林で守る</p>
+      <button class="start" id="bStart">はじめる</button>
+    </div>
+
+    <div class="screen" id="scEnd" hidden>
+      <div class="big" id="endTitle">—</div>
+      <p class="sub" id="endSub">—</p>
+      <div class="tally" id="endTally"></div>
+      <p class="obit" id="endObit"></p>
+      <button class="start" id="bAgain">もういちど</button>
+    </div>
+  </div></div>
+
+  <div id="dock"><span class="empty">ゴリラ</span></div>
+</div>
+
+<script>
+(() => {
+"use strict";
+
+/* ═════════════════════════ 定数 ═════════════════════════ */
+const TS = 16, COLS = 30, ROWS = 18, W = COLS*TS, H = ROWS*TS;
+const CFG = window.POOPULATION_CONFIG.animation;
+
+const BIOME = {
+  y:{ jp:"草原",   grow:1.75, fruit:0.42, cap:3, flam:1.00,
+      ground:"#4a3c1e", grass:["#8f9a2c","#aab63a","#6f7a22"], trunk:"#6b5322",
+      leaf:["#93a02e","#b0bd42"], berry:"#e8c33a" },
+  r:{ jp:"硬木林", grow:1.20, fruit:0.34, cap:2, flam:0.28,
+      ground:"#3b2a1c", grass:["#4a6b2c","#5c7f36","#3a5522"], trunk:"#5a3421",
+      leaf:["#2f5b31","#3f7340"], berry:"#d94436" },
+  b:{ jp:"湿地",   grow:0.62, fruit:0.16, cap:2, flam:0.00,
+      ground:"#2c4247", grass:["#3f7d7a","#57a0a2","#2f6165"], trunk:"#3d5a52",
+      leaf:["#3e7f83","#59a8a4"], berry:"#68d0e0" },
+};
+const COLORS = ["y","r","b"];
+
+const TRAITS = {
+  glut:{ jp:"おおぐらい", d:"食べる量2倍。うんちも2倍" },
+  timid:{ jp:"こわがり",  d:"火から逃げるのが速い。戦闘は弱い" },
+  rash:{ jp:"けんかっぱやい", d:"人族に自分から突っ込む" },
+  mimic:{ jp:"ものまね",  d:"隣の個体の特性をコピーする" },
+  consti:{ jp:"べんぴ",   d:"ほとんどうんちをしない。するときは巨大" },
+  filial:{ jp:"おやおもい", d:"仲間が死ぬと激怒し、攻撃力↑" },
+};
+const TRAIT_KEYS = Object.keys(TRAITS);
+
+const NAMES = ["ゴロ","バナ","ドン","キバ","モモ","タロ","ウホ","ボン","ガル","ズン",
+               "ペコ","ノコ","ムク","ゲン","ラム","ポポ","デカ","チビ","ヌシ","マメ"];
+
+// 💩 の種類 — 何を食べたか、どんな個体かで変わる
+const POOP = {
+  normal:{ jp:"ふつうのうんち", fert:1.0, size:1.0, splash:0,   shake:0 },
+  pellet:{ jp:"ころころうんち", fert:0.6, size:0.8, splash:0,   shake:0 },
+  big   :{ jp:"でかうんち",     fert:3.0, size:1.7, splash:0.35,shake:5 },
+  gold  :{ jp:"きんのうんち",   fert:4.0, size:1.2, splash:0.5, shake:3, boost:26 },
+};
+// うんちの色 ＝ 食べた実の色。土に落ちた色が、生える森の色になる
+const PCOL = {
+  y:{ d:"#6e6420", m:"#8a7d2c", l:"#b3a63f" },
+  r:{ d:"#5e2c1f", m:"#7a3d2b", l:"#a3583c" },
+  b:{ d:"#264c55", m:"#33616b", l:"#4a8792" },
+  gold:{ d:"#9a6c14", m:"#e8b23c", l:"#ffe08a" },
+};
+
+// 森の色が、次に生まれる種族を決める。move ＝ 1ターンに動かせるマス数。
+const GTYPE = {
+  normal  :{ jp:"普通のゴリラ",      from:"草原",   atk:8,  hp:100, spd:23, move:3, def:1,
+             ab:"はこぶ",     abd:"実を食べたら、置いた場所まで戻ってうんちをする" },
+  monkey  :{ jp:"モンキー",          from:"草原",   atk:5,  hp:40,  spd:46, move:7, def:1,
+             ab:"すばしっこい", abd:"1ターンに7マス動ける。遠くの実も自分で取りに行く。ただし、すぐ死ぬ" },
+  guardian:{ jp:"ガーディアンゴリラ", from:"硬木林", atk:18, hp:165, spd:20, move:2, def:0.5,
+             ab:"ひをけす",   abd:"火から逃げない。踏み消す。受けるダメージ半分" },
+  silver  :{ jp:"シルバーバック",    from:"硬木林", atk:23, hp:240, spd:17, move:2, def:0.34,
+             ab:"びくともしない", abd:"受けるダメージ 1/3。生まれる確率は 1/10" },
+  wizard  :{ jp:"ウィザードゴリラ",  from:"湿地",   atk:11, hp:88,  spd:27, move:4, def:1,
+             ab:"めぐみの雨", abd:"ときどき雨を呼ぶ。火が消え、まわりの森が育つ" },
+  chimp   :{ jp:"チンパンジー",      from:"湿地",   atk:9,  hp:72,  spd:30, move:5, def:1,
+             ab:"石を投げる", abd:"離れたところから石を投げる。近寄らずに戦える" },
+  jikon   :{ jp:"ゴリラジコン",      from:"人族",   atk:20, hp:130, spd:25, move:0, def:0.8,
+             ab:"寄生",       abd:"こいつが殺したゴリラは、ゴリラジコンになってしまう" },
+};
+// 色ごとの出生表（重み）
+const BORN = { y:[["normal",7],["monkey",3]], r:[["guardian",9],["silver",1]], b:[["wizard",7],["chimp",3]] };
+
+/* ───── ターン制（試験） ───── */
+const TURN_SECS = 12;     // 1ターンで進む世界の時間
+const RES_SPEED = 3;      // 解決フェーズの再生速度
+const TOTAL_TURNS = 20;   // 1ラン
+
+// 木の成長しきい値（growth=1.0 換算の秒）
+const T_GRASS = 13, T_SAP = 29, T_TREE = 48;
+
+const WAVES = [
+  { t: 70,  kind:'killer',  base:1, jp:'ゴリラを殺す人',   act:'ゴリラを狙う' },
+  { t:170,  kind:'bald',    base:2, jp:'ゴリラを殺すハゲ', act:'木を伐り倒す' },
+  { t:275,  kind:'fireman', base:3, jp:'ファイアーメン',   act:'森を焼き払う' },
+];
+const CLEAR_T = 360;
+
+/* ═════════════════════════ 小道具 ═════════════════════════ */
+const rnd = (a=1,b=0)=> b + Math.random()*(a-b);
+const ri  = n => (Math.random()*n)|0;
+const pick = a => a[(Math.random()*a.length)|0];
+const clamp = (v,a,b)=> v<a?a:v>b?b:v;
+const dist2 = (a,b,c,d)=>{const x=a-c,y=b-d;return x*x+y*y;};
+function hash(x,y){ let h = x*374761393 + y*668265263; h = (h^(h>>13))*1274126177; return ((h^(h>>16))>>>0)/4294967296; }
+
+function sprite(w,h,rects){
+  const c = document.createElement("canvas"); c.width=w; c.height=h;
+  const g = c.getContext("2d");
+  for(const r of rects){ g.fillStyle=r[4]; g.fillRect(r[0],r[1],r[2],r[3]); }
+  return c;
+}
+
+/* ═════════════════════════ スプライト ═════════════════════════ */
+// ゴリラ ＝ ノーマルゴリラ.svg / ガーディアンゴリラ.svg を 24x24 に写した忠実版。
+// 元データの矩形と重ね順をそのまま保っている（横向き・頭は右上・手はピンク）
+const GW = 24, GH = 26;                 // 類人猿は 24x26（頭上にアンテナ用の余白）
+const apeSprite = rects => sprite(GW,GH, rects.map(r=>[r[0], r[1]+2, r[2], r[3], r[4]]));
+
+const G_ARMOR = [[2,20,5,2],[10,10,4,4],[13,11,3,3],[10,16,3,3],[1,20,2,1],
+                 [14,20,2,1],[21,19,2,1],[10,21,6,2],[1,21,5,2],[17,20,6,2]];
+function gorillaRects(p){
+  const r = [
+    [2,7,5,5,p.P],          // 手（ピンク）
+    [17,9,6,13,p.A],        // 右腕
+    [2,9,6,13,p.A],         // 左腕
+    [12,1,9,8,p.KH||p.K],   // 頭
+    [4,8,18,11,p.K],        // 胴
+    [1,11,5,12,p.G],        // 手前の脚
+    [15,6,5,3,p.F],         // 顔
+    [14,3,6,3,p.F],         // 額
+    [11,5,3,4,p.F],         // 胸の白
+  ];
+  if(p.BIGEYE) r.push([19,4,1,2,p.E],[17,5,1,1,p.E],[17,6,3,1,p.M],[16,4,2,2,p.E]);
+  else         r.push([19,5,1,1,p.E],[17,6,3,1,p.M],[16,5,1,1,p.E]);
+  r.push([10,10,6,13,p.G], [1,8,5,5,p.P]);
+  if(p.ARM) for(const a of G_ARMOR) r.push([a[0],a[1],a[2],a[3],p.ARM]);
+  if(p.GEM) r.push([15,2,2,1,p.GEM],[16,1,1,1,p.GEM]);
+  if(p.ANT) r.push([16,1,1,3,"#000000"],[16,-1,1,2,"#000000"],[16,-2,1,1,"#f52f2f"]);
+  return r;
+}
+const GPAL = {
+  // 普通のゴリラ（ノーマルゴリラ.svg そのまま）
+  normal  :{ K:"#000000", A:"#343434", G:"#494949", F:"#d9d9d9", E:"#000000", M:"#000000", P:"#fae1e1" },
+  // ガーディアンゴリラ（緑の体・白い装甲・赤い目）
+  guardian:{ K:"#49a013", A:"#27752f", G:"#72b24d", F:"#d9d9d9", E:"#ff3434", M:"#49a013", P:"#fae1e1", ARM:"#d9d9d9" },
+  // ウィザードゴリラ（湿地生まれ。同じ描き方で青紫に）
+  wizard  :{ K:"#3f47a8", A:"#2c3178", G:"#6f80e0", F:"#d9d9d9", E:"#68d0e0", M:"#3f47a8", P:"#fae1e1", GEM:"#68d0e0" },
+  // シルバーバック（銀の体躯）
+  silver  :{ KH:"#adadad", K:"#b4b4b4", A:"#343434", G:"#494949", F:"#d9d9d9", E:"#000000", M:"#000000", P:"#fae1e1" },
+  // ゴリラジコン（アンテナと、見開いた目）
+  jikon   :{ K:"#000000", A:"#343434", G:"#494949", F:"#d9d9d9", E:"#000000", M:"#000000", P:"#fae1e1", ANT:true, BIGEYE:true },
+};
+
+// チンパンジー — 細身。斜めの長い腕とピンクの手
+const CHIMP = (()=>{ const K="#000000",A="#343434",G="#494949",F="#d9d9d9",P="#fae1e1";
+  return [
+    [2,11,4,4,P],
+    [17,9,2,14,A],
+    [12,1,7,7,K],
+    [3,10,4,4,K],[6,8,4,4,K],[9,7,4,4,K],[12,5,4,4,K],[14,4,5,4,K],
+    [9,12,3,11,K],[6,13,3,10,K],
+    [13,5,6,3,F],[13,3,5,2,F],[10,4,2,3,F],
+    [17,3,1,1,K],[15,3,1,1,K],[16,6,3,1,K],
+    [11,9,3,14,G],
+    [1,11,4,4,P],
+  ];})();
+
+// モンキー — 小さい。長いしっぽ
+const MONKEY = (()=>{ const B="#c8881a",D="#86590a",L="#e0a43c",F="#ffe7d2",P="#fae1e1",E="#000000";
+  return [
+    [8,13,2,2,P],
+    [16,17,2,6,D],[9,17,2,6,D],
+    [13,10,5,5,B],
+    [7,14,10,6,B],
+    [1,20,2,2,B],[2,18,2,2,B],[3,17,2,2,B],[4,16,2,2,B],[5,15,2,2,B],[6,14,2,1,B],
+    [15,13,4,3,F],[15,11,3,1,F],[12,12,1,1,F],
+    [17,12,1,1,E],[16,13,2,1,E],[14,12,1,1,E],
+    [13,17,3,6,L],[7,17,3,6,L],
+    [7,14,2,2,P],
+  ];})();
+
+const SPR = {};
+for(const k in GPAL) SPR["g_"+k] = apeSprite(gorillaRects(GPAL[k]));
+SPR.g_chimp  = apeSprite(CHIMP);
+SPR.g_monkey = apeSprite(MONKEY);
+SPR.h_jikon  = SPR.g_jikon;                 // 敵側だが見た目はゴリラ
+
+// 人族：人.svg／人-1.svg／ファイアーメン.svg を 16x16 に落とし込み
+// （黄の頭・白シャツ・赤ネクタイ・スーツ。目は一本線の睨み）
+const SKIN="#f4cc6e", TIE="#ff0000", SHIRT="#ffffff";
+function humanRects(suit, head, eye){
+  return [
+    [6,4,6,4,suit],                       // 胴
+    [5,4,1,7,suit],[11,4,1,7,suit],       // 両腕
+    [7,8,4,1,suit],                       // 腰
+    [7,8,2,8,suit],[10,8,2,8,suit],       // 両脚
+    [7,0,4,4,SKIN],                       // 顔
+    ...head,                              // 髪／ハゲ／フード
+    [7,2,3,1,eye],                        // 目
+    [7,4,4,4,SHIRT],                      // シャツ
+    [8,4,2,1,TIE],[8,5,1,3,TIE],          // ネクタイ
+  ];
+}
+// ゴリラを殺す人（黒スーツ・髪あり）
+SPR.h_killer = sprite(16,16, humanRects("#343434", [[7,0,4,1,"#000"]], "#000"));
+// ゴリラを殺すハゲ（黒スーツ・側頭部だけ） ＋ 斧
+SPR.h_bald = sprite(16,16, [...humanRects("#343434", [[7,0,1,1,"#000"],[10,0,1,1,"#000"]], "#000"),
+  [4,7,1,6,"#7a5a33"],[2,6,3,2,"#b9c0c6"],[2,6,1,2,"#8b939a"]]);
+// ファイアーメン ＝ 森を燃やす人（赤スーツ・火炎放射器）
+SPR.h_fireman = sprite(16,16, [...humanRects("#ff1616", [[7,0,4,1,"#ff1616"]], "#ff1616"),
+  [0,8,6,1,"#343434"],[2,8,3,3,"#343434"],[5,9,1,2,"#343434"],[0,8,1,1,"#f2802b"]]);
+
+SPR.mark = sprite(8,8,[
+  [3,0,2,1,"#e8b23c"],[0,3,1,2,"#e8b23c"],[7,3,1,2,"#e8b23c"],[3,7,2,1,"#e8b23c"],
+]);
+
+/* ═════════════════════════ 音 ═════════════════════════ */
+let AC=null, soundOn=true;
+function beep(f,dur,type="square",vol=0.06,slide=0){
+  if(!soundOn) return;
+  try{
+    AC = AC || new (window.AudioContext||window.webkitAudioContext)();
+    const o=AC.createOscillator(), g=AC.createGain();
+    o.type=type; o.frequency.setValueAtTime(f,AC.currentTime);
+    if(slide) o.frequency.exponentialRampToValueAtTime(Math.max(40,f+slide),AC.currentTime+dur);
+    g.gain.setValueAtTime(vol,AC.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.0001,AC.currentTime+dur);
+    o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime+dur);
+  }catch(e){}
+}
+const SFX = {
+  eat  : ()=> beep(520,0.07,"square",0.05,120),
+  poop : ()=> beep(300,0.16,"triangle",0.07,-180),
+  grow : ()=> beep(700,0.09,"sine",0.05,300),
+  birth: ()=>{ beep(500,0.09,"square",0.06); setTimeout(()=>beep(660,0.09,"square",0.06),90); setTimeout(()=>beep(880,0.14,"square",0.06),180); },
+  fire : ()=> beep(180,0.22,"sawtooth",0.05,-80),
+  die  : ()=> beep(160,0.4,"sawtooth",0.08,-100),
+  wave : ()=>{ beep(220,0.16,"square",0.07); setTimeout(()=>beep(180,0.26,"square",0.07),170); },
+  hit  : ()=> beep(120,0.06,"square",0.05,-40),
+};
+
+/* ═════════════════════════ 世界 ═════════════════════════ */
+const cv = document.getElementById("cv");
+const ctx = cv.getContext("2d");
+ctx.imageSmoothingEnabled = false;
+
+let G;   // ゲーム状態
+
+function newTile(){ return { v:0, c:null, fert:0, grow:0, fruit:0, fire:0, ash:0, wild:false }; }
+
+function newGame(){
+  G = {
+    t:0, running:false, over:null, tiles:[], gorillas:[], humans:[], poops:[],
+    jets:[], rains:[], fx:[], drag:null, waveIx:0, nextId:1, forest:0, peakForest:0,
+    born:0, dead:0, kills:0, obits:[], seenPoop:false, seenGrass:false, seenFruit:false,
+    spreadT:0, birthT:20, target:null, targetT:0, shake:0, sel:null, pooCount:0,
+  };
+  for(let i=0;i<COLS*ROWS;i++) G.tiles.push(newTile());
+
+  // 三色の群生地 — どの森を育てるかは、プレイヤーが決める
+  const spots = [];
+  for(const c of ["y","r","b"]){
+    let x,y,ok=false,guard=0;
+    while(!ok && guard++<200){
+      x = 4+ri(COLS-8); y = 3+ri(ROWS-6);
+      ok = spots.every(s=> Math.abs(s.x-x)+Math.abs(s.y-y) > 11);
+    }
+    spots.push({x,y,c});
+    const cells = [[0,0],[1,0],[0,1],[-1,1],[1,1],[-1,0],[0,-1]];
+    cells.forEach(([dx,dy],i)=>{
+      const t = at(x+dx,y+dy); if(!t) return;
+      t.c = c; t.wild = true;
+      if(i<3){ t.v=3; t.grow=T_TREE; t.fruit=BIOME[c].cap; t.fert=1; }
+      else   { t.v=1; t.grow=T_GRASS; t.fert=0.5; }
+    });
+    for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){
+      const t = at(x+dx,y+dy);
+      if(t && t.v===0 && Math.random()<0.45){ t.v=1; t.c=c; t.grow=T_GRASS; t.wild=true; }
+    }
+  }
+  // 最初の3匹
+  for(let i=0;i<3;i++) addGorilla("normal", W/2 + (i-1)*22, H/2 + rnd(8,-8), true);
+  syncDock();
+}
+const at = (x,y)=> (x<0||y<0||x>=COLS||y>=ROWS) ? null : G.tiles[y*COLS+x];
+const tileOf = (px,py)=> at((px/TS)|0, (py/TS)|0);
+
+function addGorilla(type, x, y, first){
+  const used = new Set(G.gorillas.map(g=>g.name));
+  let nm = pick(NAMES), n=0;
+  while(used.has(nm) && n++<40) nm = pick(NAMES) + (n>20?"太":"");
+  const ts = [];
+  while(ts.length<2){ const k=pick(TRAIT_KEYS); if(!ts.includes(k)) ts.push(k); }
+  const st = GTYPE[type];
+  const g = {
+    id:G.nextId++, name:nm, type, traits:ts,
+    x, y, vx:0, vy:0, hp:st.hp, maxhp:st.hp,
+    hunger: first?0.45:0.1, belly:[], poopT: first?rnd(26,16):rnd(10,6), atkT:0, rage:0,
+    order:null, tgt:null, held:false, anim:rnd(6), face:1, eatT:0, age:0, mimicT:6,
+    rainT: rnd(16,9), squat:0, squatMax:1, relief:0, stoneT:0,
+    home:{x,y}, moved:false,
+  };
+  G.gorillas.push(g);
+  if(!first){
+    G.born++; SFX.birth();
+    const c = COLORS.find(k=>BORN[k].some(b=>b[0]===type)) || "y";
+    toast(BIOME[c].berry, `${nm} が生まれた（${GTYPE[type].jp}）`);
+  }
+  return g;
+}
+// ダメージは種族の防御力で減る
+function hurtGorilla(g, dmg, cause, byJikon){
+  g.hp -= dmg * (GTYPE[g.type].def ?? 1);
+  if(g.hp<=0) killGorilla(g, cause, byJikon);
+}
+function killGorilla(g, cause, byJikon){
+  const i = G.gorillas.indexOf(g); if(i<0) return;
+  G.gorillas.splice(i,1); G.dead++;
+  G.obits.push(`${g.name}（${TRAITS[g.traits[0]].jp}）— ${cause}`);
+  toast("#c9452e", `${g.name} が死んだ — ${cause}`);
+  SFX.die();
+  for(const o of G.gorillas) if(o.traits.includes("filial")) o.rage = 20;
+  puff(g.x, g.y, "#c9452e", 12);
+  if(byJikon && G.humans.filter(h=>h.kind==="jikon").length < 6){
+    // 寄生 ─ 殺されたゴリラが、ゴリラジコンとして起き上がる
+    addHuman("jikon", false, g.x, g.y);
+    G.shake = Math.max(G.shake, 6);
+    toast("#f52f2f", `${g.name} が ゴリラジコン にされた`);
+    beep(70,0.5,"sawtooth",0.09,180);
+  }
+  syncDock();
+}
+
+function addHuman(kind, lead, px, py){
+  let x,y;
+  if(px!=null){ x=px; y=py; }
+  else {
+    const edge = ri(4);
+    if(edge===0){ x=rnd(W-40,40); y=-10; }
+    else if(edge===1){ x=rnd(W-40,40); y=H+10; }
+    else if(edge===2){ x=-10; y=rnd(H-40,40); }
+    else { x=W+10; y=rnd(H-40,40); }
+  }
+  const hp = kind==="bald"?82: kind==="fireman"?46: kind==="jikon"?130: 52;
+  G.humans.push({ kind, x, y, hp, maxhp:hp, tgt:null, prey:null, act:0, atkT:0, anim:rnd(6), face:-1, lead:!!lead });
+}
+
+/* ═════════════════════════ 進行 ═════════════════════════ */
+function forestValue(){
+  let v=0;
+  for(const t of G.tiles){ if(t.fire>0) continue; if(t.v===1) v+=0.25; else if(t.v===2) v+=0.6; else if(t.v===3) v+=1.6; }
+  return v;
+}
+
+function step(dt){
+  G.t += dt;
+  growth(dt);
+  spread(dt);
+  gorillaAI(dt);
+  humanAI(dt);
+  jets(dt);
+  rains(dt);
+  poops(dt);
+  births(dt);
+  waves();
+  G.forest = forestValue();
+  G.peakForest = Math.max(G.peakForest, G.forest);
+
+  // 決着
+  if(G.gorillas.length===0) end(false, "ゴリラ全滅", "神は、群れを絶やした。");
+  else if(G.t>60 && G.forest<0.5) end(false, "森が焼き尽くされた", "うんちの記憶まで灰になった。");
+  else if(G.t>=CLEAR_T) end(true, "森は残った", "三度の襲撃を耐え、森は次の世代へ渡った。");
+
+  G.fx = G.fx.filter(f => (f.life -= dt) > 0);
+  for(const f of G.fx){ f.x += f.vx*dt; f.y += f.vy*dt; f.vy += 40*dt; }
+  if(G.shake>0) G.shake = Math.max(0, G.shake - dt*14);
+}
+
+function growth(dt){
+  for(let i=0;i<G.tiles.length;i++){
+    const t = G.tiles[i];
+    if(t.fire>0){
+      t.fire -= dt;
+      if(t.fire<=0){
+        t.v=0; t.grow=0; t.fruit=0; t.fert=0.25; t.ash=9;
+        puff((i%COLS)*TS+8, ((i/COLS)|0)*TS+8, "#463c31", 4);
+      }
+      continue;
+    }
+    if(t.ash>0){ t.ash -= dt; continue; }
+    if(!t.c) continue;
+    const B = BIOME[t.c];
+    if(t.v<3){
+      if(t.fert>0){
+        t.grow += dt*B.grow*(0.55 + Math.min(t.fert,3.2)*0.45);   // うんちを重ねた土ほど速い
+        t.fert = Math.max(0, t.fert - dt*0.048);
+      }
+      const was = t.v;
+      t.v = t.grow>=T_TREE ? 3 : t.grow>=T_SAP ? 2 : t.grow>=T_GRASS ? 1 : 0;
+      if(t.v>was){
+        if(t.v===1 && !G.seenGrass){ G.seenGrass=true; toast(B.berry,"土が肥えて、草が生えた"); }
+        if(t.v>=1) SFX.grow();
+      }
+    } else {
+      const was = t.fruit|0;
+      t.fruit = Math.min(B.cap, t.fruit + dt*B.fruit*(t.fert>0?1.35:0.75));
+      if(t.fert>0) t.fert = Math.max(0, t.fert - dt*0.02);
+      if((t.fruit|0)>was && !G.seenFruit && !t.wild){ G.seenFruit=true; toast(B.berry,`育てた${B.jp}に実がなった`); }
+    }
+  }
+}
+
+function ignite(x,y,force){
+  const t = at(x,y); if(!t || t.v<1 || t.fire>0 || t.ash>0) return false;
+  const B = BIOME[t.c];
+  if(B.flam<=0) return false;                       // 湿地は燃えない＝延焼を止める
+  if(!force && Math.random() > B.flam) return false;
+  t.fire = 2.6 + Math.random()*1.4;
+  puff(x*TS+8, y*TS+8, "#f2802b", 5);
+  return true;
+}
+function spread(dt){
+  G.spreadT -= dt; if(G.spreadT>0) return;
+  G.spreadT = 0.45;
+  const lit=[];
+  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){ const t=at(x,y); if(t.fire>0) lit.push([x,y]); }
+  for(const [x,y] of lit){
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+      const n = at(x+dx,y+dy); if(!n || n.v<1 || n.fire>0) continue;
+      if(Math.random() < BIOME[n.c].flam*0.62) { n.fire = 2.4+Math.random()*1.4; }
+    }
+  }
+  if(lit.length) SFX.fire();
+}
+
+/* ---- ゴリラ ---- */
+function nearestFruit(g, ignoreLeash){
+  let best=null, bd=1e9;
+  const ox = g.order? g.order.x : g.x, oy = g.order? g.order.y : g.y;
+  const leash = (g.order && !ignoreLeash) ? 88*88 : 1e9;
+  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+    const t=at(x,y); if(t.v<3 || t.fruit<1 || t.fire>0) continue;
+    const px=x*TS+8, py=y*TS+8;
+    if(dist2(px,py,ox,oy) > leash) continue;
+    const d = dist2(px,py,g.x,g.y);
+    if(d<bd){ bd=d; best={x:px,y:py,tx:x,ty:y}; }
+  }
+  // 指示の周りに実がなければ、腹が減った個体は勝手に遠出する
+  if(!best && !ignoreLeash && g.order && g.hunger>0.6) return nearestFruit(g,true);
+  return best;
+}
+function nearestHuman(g,r){
+  let best=null,bd=r*r;
+  for(const h of G.humans){ const d=dist2(h.x,h.y,g.x,g.y); if(d<bd){bd=d;best=h;} }
+  return best;
+}
+function fireNear(x,y,r){
+  const cx=(x/TS)|0, cy=(y/TS)|0, R=Math.ceil(r/TS);
+  let best=null,bd=1e9;
+  for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){
+    const t=at(cx+dx,cy+dy); if(!t||t.fire<=0) continue;
+    const d=dist2((cx+dx)*TS+8,(cy+dy)*TS+8,x,y);
+    if(d<bd){bd=d;best={x:(cx+dx)*TS+8,y:(cy+dy)*TS+8,d:Math.sqrt(d)};}
+  }
+  return best;
+}
+
+function gorillaAI(dt){
+  for(const g of [...G.gorillas]){
+    g.age += dt; g.anim += dt*6; g.relief=Math.max(0,g.relief-dt);
+    if(g.rage>0) g.rage -= dt;
+    if(g.held){ continue; }
+
+    const st = GTYPE[g.type];
+    const glut = g.traits.includes("glut");
+    const timid = g.traits.includes("timid");
+
+    // ものまね
+    if(g.traits.includes("mimic")){
+      g.mimicT -= dt;
+      if(g.mimicT<=0){
+        g.mimicT = 7;
+        const nb = G.gorillas.find(o=>o!==g && dist2(o.x,o.y,g.x,g.y)<40*40);
+        if(nb){ const cand = nb.traits.find(k=>!g.traits.includes(k)); if(cand){ g.traits[1]=cand; syncDock(); } }
+      }
+    }
+
+    // 空腹（満ちていれば、ゆっくり傷が癒える）
+    g.hunger = clamp(g.hunger + dt*(glut?0.040:0.020), 0, 1.4);
+    if(g.hunger>=1){ g.hp -= dt*5; if(g.hp<=0){ killGorilla(g,"うえ死に"); continue; } }
+    else if(g.hunger<0.35) g.hp = Math.min(g.maxhp, g.hp + dt*2.2);
+
+    let spd = st.spd, tx=null, ty=null, mode="wander";
+    const guard = g.type==="guardian";
+
+    // 種族能力：ウィザードは「めぐみの雨」を呼ぶ
+    if(g.type==="wizard"){
+      g.rainT -= dt;
+      if(g.rainT<=0){ g.rainT = 21; makeRain(g.x,g.y,g.name); }
+    }
+
+    // 1) 火 — ガーディアンだけは逃げずに踏み消す
+    const fire = fireNear(g.x,g.y, guard?64 : (timid?46:34));
+    if(fire){
+      if(guard){
+        mode="douse"; spd *= 1.45; tx=fire.x; ty=fire.y;
+        if(fire.d<11){
+          const t = tileOf(fire.x,fire.y);
+          if(t && t.fire>0){
+            t.fire -= dt*2.0;
+            if(t.fire<=0){                       // 消し止めた木は残る（ただし痛む）
+              t.fire=0; t.v=Math.max(1,t.v-1); t.grow=Math.min(t.grow,T_SAP-1); t.fruit=0;
+              puff(fire.x,fire.y,"#9fb0bd",6); SFX.grow();
+            }
+          }
+          g.hp -= dt*13;
+        }
+      } else {
+        mode="flee"; spd *= timid?2.1:1.5;
+        tx = g.x + (g.x-fire.x)*3; ty = g.y + (g.y-fire.y)*3;
+        g.hp -= dt * (fire.d<10 ? 26 : 0);
+      }
+      if(g.hp<=0){ killGorilla(g,"焼け死んだ"); continue; }
+    }
+    // 2) 戦う（けんかっぱやいは自分から突っ込む＝止められない）
+    if(mode==="wander"){
+      const rash = g.traits.includes("rash");
+      const foe = nearestHuman(g, rash? 999 : 34);
+      if(foe){
+        mode="fight"; tx=foe.x; ty=foe.y; spd*=1.25;
+        if(dist2(foe.x,foe.y,g.x,g.y) < 13*13){
+          g.atkT -= dt;
+          if(g.atkT<=0){
+            g.atkT = 0.55;
+            let dmg = st.atk * (timid?0.6:1) * (g.rage>0?1.5:1);
+            foe.hp -= dmg; SFX.hit();
+            puff(foe.x,foe.y-6,"#ffd34d",3);
+            if(foe.hp<=0){
+              toast("#7fae2f", `${g.name} が${foe.kind==="fireman"?"ファイアーメン":"人族"}を倒した`);
+              killHuman(foe);
+            }
+          }
+        }
+      }
+    }
+    // 3) 食べに行く
+    if(mode==="wander" && g.hunger>0.3){
+      if(!g.tgt || !at(g.tgt.tx,g.tgt.ty) || at(g.tgt.tx,g.tgt.ty).fruit<1) g.tgt = nearestFruit(g);
+      if(g.tgt){
+        mode="feed"; tx=g.tgt.x; ty=g.tgt.y;
+        if(dist2(tx,ty,g.x,g.y) < 10*10){
+          g.eatT -= dt;
+          if(g.eatT<=0){
+            g.eatT = glut?0.5:0.9;
+            const t = at(g.tgt.tx,g.tgt.ty);
+            if(t && t.fruit>=1){
+              t.fruit -= 1;
+              g.hunger = Math.max(0, g.hunger - 0.5);
+              g.belly.push(t.c);
+              if(glut && t.fruit>=1){ t.fruit-=1; g.belly.push(t.c); }
+              g.hp = Math.min(g.maxhp, g.hp + 6);
+              SFX.eat(); puff(g.x,g.y-10,BIOME[t.c].berry,4);
+            }
+            g.tgt=null;
+          }
+        }
+      }
+    }
+    // 4) 種族能力：普通のゴリラは、食べたものを指示された場所まで「はこぶ」
+    const carry = g.type==="normal" && g.order && g.belly.length>0;
+    if(mode==="wander" && carry && dist2(g.order.x,g.order.y,g.x,g.y) > 26*26){
+      mode="carry"; tx=g.order.x; ty=g.order.y;
+    }
+    // 5) 指示地点へ／うろつく
+    if(mode==="wander"){
+      if(g.order && dist2(g.order.x,g.order.y,g.x,g.y) > 22*22){ tx=g.order.x; ty=g.order.y; }
+      else {
+        const base = g.order || {x:W/2,y:H/2};
+        const rad = g.order ? 24 : 52;     // 指示された個体は狭く歩く＝うんちが集まる
+        if(!g.wander || dist2(g.wander.x,g.wander.y,g.x,g.y)<9*9 || Math.random()<dt*0.35)
+          g.wander = { x: clamp(base.x + rnd(rad,-rad),10,W-10), y: clamp(base.y + rnd(rad,-rad),10,H-10) };
+        tx=g.wander.x; ty=g.wander.y; spd*=0.55;
+      }
+    }
+
+    // 移動（力んでいる間は動けない）
+    if(tx!==null && g.squat<=0){
+      const dx=tx-g.x, dy=ty-g.y, d=Math.hypot(dx,dy)||1;
+      g.x = clamp(g.x + dx/d*spd*dt, 8, W-8);
+      g.y = clamp(g.y + dy/d*spd*dt, 10, H-6);
+      if(Math.abs(dx)>1) g.face = dx>0?1:-1;
+    }
+
+    // うんち
+    // ── うんち ──────────────────────────────────
+    const consti = g.traits.includes("consti");
+    const need = consti ? 3 : 1;
+    const placed = !carry || dist2(g.order.x,g.order.y,g.x,g.y) < 26*26;
+
+    if(g.squat>0){                       // 力み中：足を止めて踏ん張る
+      g.squat -= dt;
+      if(Math.random()<dt*9) puff(g.x - g.face*11, g.y-4, "#00000055", 1);
+      if(g.squat<=0){
+        const c = g.belly.shift();
+        const kind = g.previewKind || poopKind(g,c);
+        if(consti) g.belly.length = 0;
+        g.previewKind = null;
+        dropPoop(g.x - g.face*12, g.y, c, kind, glut?1.6:1, g.face);
+        g.relief = .5;
+        g.poopT = consti ? 15 : (glut? 5 : 8);
+        G.pooCount = (G.pooCount||0)+1;
+      }
+    } else {
+      g.poopT -= dt * (mode==="flee"||mode==="douse"||mode==="fight"?0.15:1);
+      if(g.belly.length>=need && g.poopT<=0 && placed && mode!=="flee" && mode!=="fight"){
+        g.squat = consti ? CFG.realtimeBigStrain : CFG.realtimeStrain;
+        g.squatMax = g.squat;
+        beep(consti?150:220, 0.1, "triangle", 0.04, -40);
+      }
+    }
+  }
+}
+
+/* ---- めぐみの雨（ウィザードゴリラの能力） ---- */
+function makeRain(x,y,who){
+  G.rains.push({ x, y, t:0, dur:3.2, r:34 });
+  toast("#68d0e0", `${who} が めぐみの雨 を呼んだ`);
+  beep(880,0.18,"sine",0.05,-260);
+}
+function rains(dt){
+  for(const r of G.rains){
+    r.t += dt;
+    const cx=(r.x/TS)|0, cy=(r.y/TS)|0, R=2;
+    for(let dy=-R;dy<=R;dy++)for(let dx=-R;dx<=R;dx++){
+      const t=at(cx+dx,cy+dy); if(!t) continue;
+      if(t.fire>0){ t.fire=0; t.v=Math.max(1,t.v-1); t.grow=Math.min(t.grow,T_SAP-1); puff((cx+dx)*TS+8,(cy+dy)*TS+8,"#9fd8e0",3); }
+      if(t.ash>0) t.ash = Math.max(0, t.ash-dt*4);
+      if(t.c) t.fert = Math.min(3.2, t.fert + dt*0.30);
+    }
+  }
+  G.rains = G.rains.filter(r=>r.t<r.dur);
+}
+
+// どのうんちが出るかを決める
+function poopKind(g,c){
+  if(new Set([c,...g.belly]).size>=3) return "gold";           // 3色そろうと きんのうんち
+  if(g.traits.includes("consti")) return "big";                // べんぴ は溜めて巨大
+  if(g.traits.includes("glut") && Math.random()<0.55) return "big";
+  if(g.hunger>0.45 && Math.random()<0.5) return "pellet";      // 腹が減ったまま＝ころころ
+  return "normal";
+}
+function dropPoop(x,y,c,kind,mult,dir=1){
+  const K = POOP[kind];
+  G.poops.push({ x, y:y-2, c, kind, mult, dir, life:5.2, t:0, land:0.34, spin:rnd(1) });
+  G.shake = Math.max(G.shake, 1.5*CFG.impactShake);
+  puff(x+dir*4,y-7,PCOL[kind==="gold"?"gold":c].l,8);
+  SFX.poop();
+  if(kind==="gold"){ SFX.birth(); toast(PCOL.gold.m, "きんのうんち！ 土が一気に育つ"); }
+  if(!G.seenPoop){ G.seenPoop=true; toast(PCOL[c].m, `${K.jp} — うんちの色が、生える森の色になる`); }
+}
+function poops(dt){
+  for(const p of G.poops){
+    const wasAir = p.t < p.land;
+    p.t += dt; p.life -= dt;
+    if(wasAir && p.t>=p.land){                                  // 着地
+      const K=POOP[p.kind], col=PCOL[p.kind==="gold"?"gold":p.c].l;
+      puff(p.x,p.y+2,col,12+Math.round(K.size*6));
+      puff(p.x,p.y,"#f2e6cf",4);
+      G.shake=Math.max(G.shake,(2+K.shake)*CFG.impactShake);
+      beep(p.kind==="big"?75:120,0.12,"triangle",0.07,-70);
+    }
+    if(p.life<=0){
+      const K = POOP[p.kind], amt = K.fert*p.mult;
+      const tx=(p.x/TS)|0, ty=(p.y/TS)|0;
+      soak(tx,ty,p.c,amt,K);
+      if(K.splash>0){
+        for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]) soak(tx+dx,ty+dy,p.c,amt*K.splash,K);
+      }
+      puff(p.x,p.y,PCOL[p.c].m,3);
+    }
+  }
+  G.poops = G.poops.filter(p=>p.life>0);
+}
+function soak(tx,ty,c,amt,K){
+  const t = at(tx,ty); if(!t || t.fire>0) return;
+  // 育った森は他の色に塗り替わらない ― 草地までなら、上書きできる
+  if(t.v===0 || t.c===c) t.c = c;
+  else if(t.v===1 && Math.random() < 0.12*amt){ t.c = c; t.grow = T_GRASS; }
+  else if(t.v>=2) return;                                          // 木は自分の色を守る
+  t.fert = Math.min(3.2, t.fert + amt);
+  t.wild = false;
+  if(t.ash>0) t.ash = 0;
+  if(K && K.boost){ t.grow += K.boost; for(let i=0;i<6;i++) G.fx.push({x:tx*TS+8+rnd(6,-6),y:ty*TS+8,vx:rnd(14,-14),vy:rnd(-20,-46),col:PCOL.gold.l,life:rnd(0.9,0.5)}); }
+}
+
+// 💩 の描画 — 種類ごとに形がちがう。落ちて、つぶれて、湯気が立つ
+function drawPoop(p){
+  const K = POOP[p.kind], C = PCOL[p.kind==="gold"?"gold":p.c];
+  const air = clamp(1 - p.t/p.land, 0, 1);
+  const s = K.size;
+  const fall = air*CFG.arc;
+  let sq = 1;                                    // 着地のつぶれ
+  const since = p.t - p.land;
+  if(since>=0 && since<0.22) sq = 1 - CFG.squash*Math.sin((1-since/0.22)*Math.PI*0.5);
+  const x = (p.x + p.dir*air*7)|0, y = (p.y - fall)|0;
+  const fade = p.life<1 ? p.life : 1;
+  ctx.globalAlpha = fade;
+  const R = (w,h,col,ox,oy)=>{ ctx.fillStyle=col; ctx.fillRect((x+ox*s)|0, (y+oy*s*sq)|0, Math.max(1,Math.round(w*s)), Math.max(1,Math.round(h*sq*s))); };
+  if(p.kind==="pellet"){
+    R(2,2,C.m,-3,-2); R(2,2,C.d,0,-3); R(2,2,C.m,1,-1); R(1,1,C.l,-3,-2);
+  } else if(p.kind==="big"){
+    R(8,2,C.d,-4,-1); R(6,2,C.m,-3,-3); R(4,2,C.m,-2,-5); R(2,1,C.l,-1,-6); R(3,1,C.l,-3,-3);
+  } else if(p.kind==="gold"){
+    R(6,2,C.d,-3,-1); R(4,2,C.m,-2,-3); R(2,1,C.l,-1,-4);
+    if(Math.sin(G.t*9+p.spin*6)>0){ R(1,1,"#fff9d6",-4,-5); R(1,1,"#fff9d6",3,-3); }
+  } else {
+    R(6,2,C.d,-3,-1); R(4,2,C.m,-2,-3); R(2,1,C.l,-1,-4);
+  }
+  if(since>=0 && since<0.45){
+    const q=since/0.45, rad=Math.round(5+q*(12+K.size*5)), rh=Math.max(2,Math.round(rad*0.45));
+    ctx.globalAlpha=(1-q)*0.9; ctx.fillStyle=C.l;
+    ctx.fillRect(x-rad,y-rh,rad*2,2); ctx.fillRect(x-rad,y+rh-2,rad*2,2);
+    ctx.fillRect(x-rad,y-rh,2,rh*2); ctx.fillRect(x+rad-2,y-rh,2,rh*2);
+    ctx.globalAlpha=fade;
+  }
+  // 湯気
+  if(since>0 && since<CFG.steam){
+    ctx.fillStyle = "#ffffff38";
+    const k = since*7;
+    ctx.fillRect((x-2+Math.sin(k)*2)|0, (y-6-since*5)|0, 1,2);
+    ctx.fillRect((x+2+Math.sin(k+2)*2)|0, (y-8-since*4)|0, 1,2);
+  }
+  ctx.globalAlpha = 1;
+}
+
+// 森が、次の世代のゴリラを決める。
+// 4本以上育った色だけが抽選に参加し、大きい森ほど当たりやすい（が、独占はしない）
+function births(dt){
+  if(G.gorillas.length>=14) return;
+  G.birthT -= dt;
+  if(G.birthT>0) return;
+  const w = {}; let total = 0;
+  for(const c of COLORS){
+    let n=0;
+    for(const t of G.tiles) if(t.v===3 && t.c===c && t.fire<=0) n++;
+    w[c] = n>=4 ? Math.sqrt(n) : 0;
+    total += w[c];
+  }
+  if(total<=0){ G.birthT = 2; return; }
+  let r = Math.random()*total, c = COLORS[0];
+  for(const k of COLORS){ r -= w[k]; if(r<=0){ c = k; break; } }
+  const spots=[];
+  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){ const t=at(x,y); if(t.v===3&&t.c===c&&t.fire<=0) spots.push([x,y]); }
+  if(!spots.length){ G.birthT = 3; return; }
+  const s = pick(spots);
+  // 同じ色でも、まれに珍しい種族が出る（シルバーバックは 1/10）
+  const table = BORN[c];
+  let tot = table.reduce((a,b)=>a+b[1],0), rr = Math.random()*tot, type = table[0][0];
+  for(const [k,wt] of table){ rr -= wt; if(rr<=0){ type = k; break; } }
+  addGorilla(type, s[0]*TS+8, s[1]*TS+10, false);
+  for(let i=0;i<10;i++) G.fx.push({x:s[0]*TS+8+rnd(8,-8), y:s[1]*TS+10, vx:rnd(20,-20), vy:rnd(-18,-48), col:BIOME[c].berry, life:rnd(1,0.5)});
+  syncDock();
+  G.birthT = 17;
+}
+
+/* ---- 人族 ---- */
+function bestForest(){
+  let best=null, bv=-1;
+  for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){
+    let v=0;
+    for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+      const t=at(x+dx,y+dy); if(!t||t.fire>0) continue;
+      v += t.v===3?3 : t.v===2?1 : t.v===1?0.3 : 0;
+    }
+    if(v>bv){ bv=v; best={x,y,v}; }
+  }
+  return bv>0.5 ? best : null;
+}
+function killHuman(h){
+  const i=G.humans.indexOf(h); if(i<0) return;
+  G.humans.splice(i,1); G.kills++; puff(h.x,h.y-6,"#c9452e",7);
+  if(G.humans.length===0) toast("#7fae2f","襲撃を撃退した");
+}
+function humanAI(dt){
+  G.targetT -= dt;
+  if(G.targetT<=0){ G.targetT=2.5; G.target = bestForest(); }
+  for(const h of [...G.humans]){
+    h.anim += dt*5;
+    h.atkT -= dt;
+    // 火に巻かれる（自分の火でも死ぬ）
+    const f = fireNear(h.x,h.y,10);
+    if(f && f.d<9){ h.hp -= dt*22; if(h.hp<=0){ killHuman(h); continue; } }
+
+    // ゴリラを殺す人 ／ ハゲ は、近づいたゴリラを殴る
+    let prey = null;
+    if(h.kind==="killer") prey = nearestGorilla(h.x,h.y,999);
+    else if(h.kind!=="fireman") prey = nearestGorilla(h.x,h.y,26);
+    if(prey){
+      const d = Math.hypot(prey.x-h.x, prey.y-h.y);
+      if(d>12){
+        const spd = h.kind==="killer"?24:18;
+        h.x += (prey.x-h.x)/d*spd*dt; h.y += (prey.y-h.y)/d*spd*dt;
+        h.face = prey.x>h.x?1:-1;
+      } else if(h.atkT<=0){
+        h.atkT = 0.85;
+        prey.hp -= (h.kind==="killer"?12:9) * (prey.type==="guardian"?0.5:1);  // 装甲
+        puff(prey.x,prey.y-8,"#c9452e",3); SFX.hit();
+        if(prey.hp<=0) killGorilla(prey, h.kind==="killer"?"ゴリラを殺す人にやられた":"ハゲに殴り殺された");
+      }
+      if(h.kind==="killer") continue;                 // 殺す人は森に興味がない
+      continue;
+    }
+
+    // ファイアーメンはゴリラに詰められると距離を取る（だから止めにくい）
+    if(h.kind==="fireman"){
+      const g = nearestGorilla(h.x,h.y,42);
+      if(g){
+        const d = Math.hypot(h.x-g.x,h.y-g.y)||1;
+        h.x = clamp(h.x + (h.x-g.x)/d*27*dt, 4, W-4);
+        h.y = clamp(h.y + (h.y-g.y)/d*27*dt, 4, H-4);
+        h.face = g.x>h.x?1:-1;
+        h.act += dt*0.5;
+      }
+    }
+
+    const T = G.target;
+    if(!T){ // 狙う森がない → 引き上げる
+      h.y -= dt*26;
+      if(h.y<-18 || h.y>H+18) G.humans.splice(G.humans.indexOf(h),1);
+      continue;
+    }
+    if(!h.tgt || Math.random()<dt*0.25) h.tgt = pickTargetTile(h,T);
+    const tx=h.tgt.x*TS+8, ty=h.tgt.y*TS+10;
+    const range = h.kind==="fireman" ? 34 : 11;
+    const d = Math.hypot(tx-h.x, ty-h.y) || 1;
+    if(d > range){
+      const spd = h.kind==="bald"?17:20;
+      h.x += (tx-h.x)/d*spd*dt; h.y += (ty-h.y)/d*spd*dt;
+      if(Math.abs(tx-h.x)>1) h.face = tx>h.x?1:-1;
+      h.act = 0;
+    } else {
+      h.act += dt;
+      if(h.kind==="bald" && h.act>2.4){
+        h.act=0; const t=at(h.tgt.x,h.tgt.y);
+        if(t && t.v>0){ t.v=0; t.grow=0; t.fruit=0; t.fert=Math.max(0,t.fert-1); puff(tx,ty,"#6b5322",6); beep(90,0.1,"square",0.05,-30); }
+        h.tgt=null;
+      }
+      if(h.kind==="fireman" && h.act>1.3){
+        h.act=0;
+        G.jets.push({ x:h.x, y:h.y-4, tx, ty, t:0, dur:0.5 });
+        h.face = tx>h.x?1:-1;
+        SFX.fire();
+      }
+    }
+  }
+}
+function nearestGorilla(x,y,r){
+  let best=null,bd=r*r;
+  for(const g of G.gorillas){ if(g.held) continue; const d=dist2(g.x,g.y,x,y); if(d<bd){bd=d;best=g;} }
+  return best;
+}
+function pickTargetTile(h,T){
+  const cands=[];
+  for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){
+    const x=T.x+dx, y=T.y+dy, t=at(x,y);
+    if(!t||t.fire>0) continue;
+    if(h.kind==="bald" ? t.v>=2 : (t.v>=1 && BIOME[t.c].flam>0)) cands.push({x,y});
+  }
+  return cands.length? pick(cands) : {x:T.x,y:T.y};
+}
+// 火炎放射 — 標的の手前から奥へ、一直線に舐める
+function jets(dt){
+  for(const j of G.jets){
+    const was = j.t; j.t += dt;
+    const k = Math.min(1, j.t/j.dur);
+    const px = j.x+(j.tx-j.x)*k, py = j.y+(j.ty-j.y)*k;
+    if((was/j.dur)<1) puff(px,py,Math.random()<0.5?"#f2802b":"#ffd34d",2);
+    if(was<j.dur*0.6 && j.t>=j.dur*0.6){
+      const cx=(j.tx/TS)|0, cy=(j.ty/TS)|0;
+      ignite(cx,cy,true);
+      const d = pick([[1,0],[-1,0],[0,1],[0,-1]]);
+      ignite(cx+d[0], cy+d[1], true);          // 舐めた先も燃える
+    }
+  }
+  G.jets = G.jets.filter(j=>j.t<j.dur);
+}
+
+function waves(){
+  if(G.waveIx>=WAVES.length) return;
+  const w = WAVES[G.waveIx];
+  if(G.t < w.t) return;
+  G.waveIx++;
+  const n = Math.min(w.base+8, w.base + Math.floor(G.forest/14));  // 森の規模＝資産に応じて強くなる
+  for(let i=0;i<n;i++) addHuman(w.kind, i===0);
+  SFX.wave();
+  toast("#c9452e", `WAVE ${G.waveIx} — ${w.jp} ×${n}（${w.act}）`);
+}
+
+/* ═════════════════════════ 描画 ═════════════════════════ */
+function puff(x,y,col,n){
+  for(let i=0;i<n;i++) G.fx.push({ x, y, vx:rnd(26,-26), vy:rnd(-6,-34), col, life:rnd(0.7,0.3) });
+}
+
+function draw(){
+  ctx.save();
+  if(G.shake>0.2) ctx.translate(Math.round(rnd(G.shake,-G.shake)), Math.round(rnd(G.shake,-G.shake)));
+  // 地面
+  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+    const t=at(x,y), px=x*TS, py=y*TS, h=hash(x,y);
+    let base = "#4a3623";
+    if(t.c && t.v>0) base = BIOME[t.c].ground;
+    else if(t.c && t.fert>0) base = BIOME[t.c].ground;
+    if(t.ash>0) base = "#2f2820";
+    ctx.fillStyle = base; ctx.fillRect(px,py,TS,TS);
+    // ディザ
+    ctx.fillStyle = "#00000024";
+    if(h<0.34) ctx.fillRect(px+((h*13)|0)%12, py+((h*29)|0)%12, 3, 2);
+    ctx.fillStyle = "#ffffff10";
+    if(h>0.72) ctx.fillRect(px+((h*17)|0)%12, py+((h*7)|0)%12, 2, 2);
+    if(t.ash>0){
+      ctx.fillStyle="#1c1712";
+      ctx.fillRect(px+2+((h*9)|0)%8, py+4+((h*5)|0)%8, 3,2);
+      ctx.fillRect(px+8, py+9, 2,2);
+    }
+    if(t.fert>0 && t.v===0 && t.ash<=0){
+      ctx.fillStyle = BIOME[t.c].berry+"55";
+      ctx.fillRect(px+5,py+6,2,2); ctx.fillRect(px+9,py+9,2,2);
+    }
+  }
+  // 植生
+  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+    const t=at(x,y); if(t.v<1) continue;
+    drawVeg(x,y,t);
+  }
+  // うんち
+  for(const p of G.poops) drawPoop(p);
+  // 指示マーカー
+  for(const g of G.gorillas){
+    if(!g.order) continue;
+    const a = 0.45 + 0.35*Math.sin(G.t*5);
+    ctx.globalAlpha = a;
+    ctx.drawImage(SPR.mark, (g.order.x-4)|0, (g.order.y-4)|0);
+    ctx.globalAlpha = 1;
+  }
+  // 火炎放射
+  for(const j of G.jets){
+    const k = Math.min(1, j.t/j.dur);
+    for(let i=0;i<7;i++){
+      const q = k*(0.35+i*0.11);
+      if(q>1) continue;
+      const x = j.x+(j.tx-j.x)*q + rnd(2,-2), y = j.y+(j.ty-j.y)*q + rnd(2,-2);
+      ctx.fillStyle = i>4?"#c33a1e" : i>2?"#f2802b" : "#ffd34d";
+      ctx.fillRect(x|0, y|0, 3, 3);
+    }
+  }
+  // 生き物（Y ソート）
+  const ents = [...G.gorillas.map(g=>({e:g,k:"g"})), ...G.humans.map(h=>({e:h,k:"h"}))];
+  ents.sort((a,b)=> a.e.y - b.e.y);
+  for(const {e,k} of ents) k==="g" ? drawGorilla(e) : drawHuman(e);
+  // 炎（最前面）
+  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+    const t=at(x,y); if(t.fire<=0) continue;
+    drawFire(x,y,t);
+  }
+  // めぐみの雨
+  for(const r of G.rains){
+    const k = r.t/r.dur, fade = k<0.15 ? k/0.15 : k>0.8 ? (1-k)/0.2 : 1;
+    ctx.globalAlpha = 0.55*fade;
+    ctx.fillStyle="#68d0e0";
+    for(let i=0;i<26;i++){
+      const h2 = hash(i*13+((r.t*9)|0), i*7);
+      const x = r.x-36 + h2*72, y = r.y-40 + ((h2*400 + r.t*130) % 80);
+      ctx.fillRect(x|0, y|0, 1, 3);
+    }
+    ctx.globalAlpha = 0.16*fade; ctx.fillStyle="#9fe4ea";
+    ctx.fillRect((r.x-40)|0,(r.y-40)|0,80,80);
+    ctx.globalAlpha = 1;
+  }
+  // 粒子
+  for(const f of G.fx){ ctx.fillStyle=f.col; ctx.fillRect(f.x|0,f.y|0,2,2); }
+  // つまみ上げ中のゴリラは最前面
+  if(G.drag && G.drag.g && G.drag.g.held) drawGorilla(G.drag.g);
+  ctx.restore();
+}
+
+function drawVeg(x,y,t){
+  const B=BIOME[t.c], px=x*TS, py=y*TS, h=hash(x,y), sway=Math.sin(G.t*1.6+x*0.7+y*0.4);
+  if(t.v===1){
+    ctx.fillStyle=B.grass[0];
+    ctx.fillRect(px+2+((h*7)|0)%3, py+9, 2, 4);
+    ctx.fillRect(px+7, py+11, 2, 3);
+    ctx.fillStyle=B.grass[1];
+    ctx.fillRect(px+11, py+8+((h*5)|0)%2, 2, 5);
+    ctx.fillRect(px+5, py+12, 2, 2);
+  } else if(t.v===2){
+    ctx.fillStyle=B.trunk; ctx.fillRect(px+7, py+8, 2, 6);
+    ctx.fillStyle=B.leaf[0]; ctx.fillRect(px+4+(sway>0?1:0), py+5, 8, 4);
+    ctx.fillStyle=B.leaf[1]; ctx.fillRect(px+6, py+3, 4, 3);
+    ctx.fillStyle=B.grass[2]; ctx.fillRect(px+2,py+13,3,2); ctx.fillRect(px+11,py+13,3,2);
+  } else {
+    const s = sway>0?1:0;
+    ctx.fillStyle=B.trunk; ctx.fillRect(px+7, py+8, 3, 8);
+    ctx.fillStyle="#00000040"; ctx.fillRect(px+3, py+14, 11, 2);
+    ctx.fillStyle=B.leaf[0]; ctx.fillRect(px+2+s, py+2, 12, 8);
+    ctx.fillStyle=B.leaf[1]; ctx.fillRect(px+4+s, py+0, 8, 4);
+    ctx.fillStyle="#00000030"; ctx.fillRect(px+2+s, py+8, 12, 2);
+    const n = t.fruit|0;
+    for(let i=0;i<n;i++){
+      ctx.fillStyle=B.berry;
+      ctx.fillRect(px+3+s+i*4, py+5+((i*5+((h*9)|0))%3), 2, 2);
+    }
+    if(t.fert>0){ ctx.fillStyle="#ffffff30"; ctx.fillRect(px+4+s,py+1,2,1); }
+  }
+}
+
+function drawFire(x,y,t){
+  const px=x*TS, py=y*TS, k=Math.floor(G.t*11);
+  for(let i=0;i<5;i++){
+    const h2 = hash(x*7+i+k, y*3+k);
+    const fx = px+2+((h2*12)|0), fy = py+3+((h2*11)|0);
+    ctx.fillStyle = h2>0.66?"#ffd34d" : h2>0.3?"#f2802b" : "#c33a1e";
+    ctx.fillRect(fx, fy, 2+((h2*2)|0), 3);
+  }
+  ctx.fillStyle="#ffd34d40"; ctx.fillRect(px+3,py+2,10,12);
+}
+
+function drawGorilla(g){
+  const s = SPR["g_"+g.type];
+  const squat = g.squat>0;
+  const strain = squat ? clamp(1-g.squat/Math.max(.01,g.squatMax),0,1) : 0;
+  // 力むと横に潰れて震える／持ち上げると足がぶらつく
+  const shake = squat ? Math.round(Math.sin(G.t*(28+strain*22))*(.5+strain*1.5)) : 0;
+  const drop  = squat ? Math.round(Math.sin(strain*Math.PI)*4) : 0;
+  const recoil = g.relief>0 ? -Math.round(Math.sin((g.relief/.5)*Math.PI)*7) : 0;
+  const bob = g.held ? -9 - Math.abs(Math.sin(G.t*8))*2 : recoil || (Math.sin(g.anim)>0.4?-1:0);
+  const x = (g.x-12+shake)|0, y = (g.y-22+bob+drop)|0;
+  const sh = squat ? 13 : 10;
+  ctx.fillStyle="#00000045"; ctx.fillRect((g.x-sh/2)|0, (g.y-2)|0, sh, 3);
+  if(g.rage>0 && Math.sin(G.t*14)>0){ ctx.fillStyle="#c9452e66"; ctx.fillRect(x,y,s.width,s.height); }
+  if(G.sel===g.id){                                    // 選択リング
+    ctx.fillStyle="#e8b23c";
+    for(let i=0;i<s.width;i+=4){ ctx.fillRect(x+i,y-2,2,1); ctx.fillRect(x+i,y+s.height,2,1); }
+    for(let i=0;i<s.height;i+=4){ ctx.fillRect(x-2,y+i,1,2); ctx.fillRect(x+s.width+1,y+i,1,2); }
+  }
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  if(g.face<0){ ctx.translate(x+s.width,y); ctx.scale(-1,1); ctx.drawImage(s,0,0); }
+  else ctx.drawImage(s,x,y);
+  ctx.restore();
+  // 力みマーク（頭の上の汗と震え線）
+  if(squat){
+    const k = Math.sin(G.t*24)>0 ? 1 : 0;
+    ctx.fillStyle="#ffffffcc";
+    ctx.fillRect(x+s.width-3+k, y-4, 2,2);
+    ctx.fillStyle="#e8b23c";
+    ctx.fillRect(x+3-k, y-3, 3,1); ctx.fillRect(x+s.width-8+k, y-6, 3,1);
+    if(strain>.72){
+      ctx.fillStyle=PCOL[g.belly[0]||"y"].m;
+      const q=Math.max(1,Math.round((strain-.72)*10));
+      ctx.fillRect((g.x-g.face*9-q/2)|0,(g.y-6-q/2)|0,q,Math.max(1,(q*.65)|0));
+    }
+  }
+  // 空腹サイン
+  if(g.hunger>0.72 && Math.sin(G.t*4)>0){
+    ctx.fillStyle="#e8b23c"; ctx.fillRect(x+10,y-7,4,2); ctx.fillRect(x+11,y-9,2,2);
+  }
+  // お腹の中身（食べた実の色）
+  for(let i=0;i<Math.min(3,g.belly.length);i++){
+    ctx.fillStyle = BIOME[g.belly[i]].berry;
+    ctx.fillRect(x+8+i*3, y+s.height-3, 2,2);
+  }
+  // HP
+  if(g.hp < g.maxhp*0.98){
+    ctx.fillStyle="#0b0805"; ctx.fillRect(x+3,y-3,18,2);
+    ctx.fillStyle = g.hp>g.maxhp*0.4 ? "#7fae2f":"#c9452e";
+    ctx.fillRect(x+3,y-3, Math.max(1,(18*g.hp/g.maxhp)|0), 2);
+  }
+}
+function drawHuman(h){
+  const s = SPR["h_"+h.kind];
+  const bob = Math.sin(h.anim)>0.4?-1:0;
+  const x=(h.x-8)|0, y=(h.y-15+bob)|0;
+  ctx.fillStyle="#00000045"; ctx.fillRect((h.x-4)|0,(h.y-1)|0,9,2);
+  ctx.save();
+  // 道具は左手持ちで描いてあるので、右へ進むときだけ反転
+  if(h.face>0){ ctx.translate(x+16,y); ctx.scale(-1,1); ctx.drawImage(s,0,0); }
+  else ctx.drawImage(s,x,y);
+  ctx.restore();
+  if(h.hp<h.maxhp*0.99){
+    ctx.fillStyle="#0b0805"; ctx.fillRect(x+3,y-3,10,2);
+    ctx.fillStyle="#c9452e"; ctx.fillRect(x+3,y-3,Math.max(1,(10*h.hp/h.maxhp)|0),2);
+  }
+}
+
+/* ═════════════════════════ HUD ═════════════════════════ */
+const $ = id => document.getElementById(id);
+const elTime=$("tTime"), elPop=$("tPop"), elBar=$("gBar"), elGL=$("gLabL"), elGR=$("gLabR");
+const dock=$("dock"), toastBox=$("toasts");
+
+function mmss(s){ s=Math.max(0,Math.floor(s)); return `${(s/60)|0}:${String(s%60).padStart(2,"0")}`; }
+function toast(col,msg){
+  const d=document.createElement("div"); d.className="toast";
+  d.innerHTML = `<i style="background:${col}"></i><span></span>`;
+  d.lastChild.textContent = msg;
+  toastBox.appendChild(d);
+  while(toastBox.children.length>4) toastBox.firstChild.remove();
+  setTimeout(()=>d.remove(), 4200);
+}
+let hudT=0;
+function hud(dt){
+  hudT-=dt; if(hudT>0) return; hudT=0.2;
+  elTime.textContent = mmss(G.t);
+  elPop.textContent = G.gorillas.length;
+  const pct = clamp(G.forest/120,0,1);
+  elBar.style.width = (pct*100)+"%";
+  elBar.style.background = pct>0.66?"#c9452e":pct>0.33?"#e8b23c":"#7fae2f";
+  elGL.textContent = `森 ${Math.round(G.forest)}　＝　狙われる理由`;
+  const w = WAVES[G.waveIx];
+  elGR.textContent = G.humans.length ? `人族 ${G.humans.length} 侵入中`
+    : w ? `WAVE ${G.waveIx+1} まで ${mmss(w.t-G.t)}`
+        : `クリアまで ${mmss(CLEAR_T-G.t)}`;
+}
+
+/* ---- 個体の能力を見る ---- */
+const insp=$("insp"), inspPic=$("inspPic"), inspPicG=inspPic.getContext("2d");
+inspPicG.imageSmoothingEnabled=false;
+$("inspX").onclick = ()=>{ G.sel=null; insp.hidden=true; };
+function select(g){
+  if(!g){ G.sel=null; insp.hidden=true; return; }
+  G.sel = g.id; insp.hidden=false;
+  const T = GTYPE[g.type];
+  inspPicG.clearRect(0,0,24,24);
+  inspPicG.drawImage(SPR["g_"+g.type],0,0);
+  $("inspName").textContent = g.name;
+  $("inspType").textContent = `${T.jp}／${T.from}生まれ`;
+  $("inspAb").innerHTML = `<b>★${T.ab}</b><br>${T.abd}`;
+  $("inspTraits").innerHTML = g.traits.map(k=>`<em>${TRAITS[k].jp}</em> — ${TRAITS[k].d}`).join("<br>");
+  inspStats(g);
+  syncDock();
+}
+function bar(v,col){ return `<span class="sbar"><i style="width:${Math.round(clamp(v,0,1)*100)}%;background:${col}"></i></span>`; }
+function inspStats(g){
+  const T = GTYPE[g.type];
+  $("inspStats").innerHTML =
+    `<span>ちから</span>${bar(T.atk/20,"#c9452e")}<b>${T.atk}</b>` +
+    `<span>たいりょく</span>${bar(g.hp/180,"#7fae2f")}<b>${Math.ceil(g.hp)}</b>` +
+    `<span>はやさ</span>${bar(T.spd/30,"#68d0e0")}<b>${T.spd}</b>` +
+    `<span>はらぺこ</span>${bar(g.hunger,"#e8b23c")}<b>${Math.round(g.hunger*100)}</b>` +
+    `<span>おなかの実</span>${bar(g.belly.length/3,"#a49070")}<b>${g.belly.length}</b>`;
+}
+let inspT=0;
+function inspTick(dt){
+  if(insp.hidden) return;
+  inspT-=dt; if(inspT>0) return; inspT=0.25;
+  const g = G.gorillas.find(x=>x.id===G.sel);
+  if(!g){ select(null); return; }
+  inspStats(g);
+}
+
+const chipCache = new Map();
+function syncDock(){
+  dock.innerHTML = "";
+  if(!G.gorillas.length){ dock.innerHTML = '<span class="empty">ゴリラがいない</span>'; return; }
+  for(const g of G.gorillas){
+    const el = document.createElement("div");
+    el.className = "chip" + (G.sel===g.id ? " on" : "");
+    const c = document.createElement("canvas"); c.width=24; c.height=24;
+    const cg = c.getContext("2d"); cg.imageSmoothingEnabled=false;
+    cg.drawImage(SPR["g_"+g.type],0,0);
+    const box = document.createElement("div");
+    const nm = document.createElement("div"); nm.className="nm";
+    nm.textContent = g.name;
+    const T = GTYPE[g.type];
+    const tr = document.createElement("div"); tr.className="tr";
+    tr.textContent = `★${T.ab}｜${g.traits.map(k=>TRAITS[k].jp).join("・")}`;
+    box.append(nm,tr); el.append(c,box);
+    el.title = `${T.jp}／${T.ab}：${T.abd}`;
+    el.onclick = ()=> select(g);
+    chipCache.set(g.id, el);
+    dock.appendChild(el);
+  }
+}
+let dockT=0;
+function dockTick(dt){
+  dockT-=dt; if(dockT>0) return; dockT=0.4;
+  for(const g of G.gorillas){
+    const el = chipCache.get(g.id); if(!el) continue;
+    el.classList.toggle("hurt", g.hp < g.maxhp*0.5);
+    el.classList.toggle("hungry", g.hunger>0.7 && g.hp>=g.maxhp*0.5);
+  }
+}
+
+/* ═════════════════════════ 入力 ═════════════════════════ */
+function toWorld(ev){
+  const r = cv.getBoundingClientRect();
+  return { x: (ev.clientX-r.left)/r.width*W, y: (ev.clientY-r.top)/r.height*H };
+}
+cv.addEventListener("pointerdown", ev=>{
+  if(!G.running) return;
+  cv.setPointerCapture(ev.pointerId);
+  const p = toWorld(ev);
+  let best=null, bd=22*22;
+  for(const g of G.gorillas){ const d=dist2(g.x,g.y-10,p.x,p.y); if(d<bd){bd=d;best=g;} }
+  if(best){
+    best.held=true;
+    G.drag={ g:best, x0:p.x, y0:p.y, moved:0, ox:best.x, oy:best.y };
+    beep(660,0.05,"sine",0.04);
+  } else if(G.sel!=null) select(null);
+});
+cv.addEventListener("pointermove", ev=>{
+  if(!G.drag) return;
+  const p = toWorld(ev);
+  G.drag.moved = Math.max(G.drag.moved, Math.hypot(p.x-G.drag.x0, p.y-G.drag.y0));
+  G.drag.g.x = clamp(p.x,10,W-10); G.drag.g.y = clamp(p.y,14,H-4);
+});
+function release(){
+  if(!G.drag) return;
+  const g = G.drag.g; g.held=false;
+  if(G.drag.moved < 7){          // 動かさずに離した＝能力を見る
+    g.x = G.drag.ox; g.y = G.drag.oy;
+    select(g);
+  } else {                       // 運んだ＝つれていく
+    g.order = { x:g.x, y:g.y }; g.tgt=null; g.wander=null; g.squat=0;
+    beep(440,0.07,"sine",0.04,-80);
+    puff(g.x,g.y,"#e8b23c",5);
+  }
+  G.drag=null;
+}
+cv.addEventListener("pointerup", release);
+cv.addEventListener("pointercancel", release);
+
+/* ═════════════════════════ 画面 ═════════════════════════ */
+function fit(){
+  const st=$("stage"), fr=$("frame");
+  const s = Math.min((st.clientWidth-4)/W, (st.clientHeight-4)/H);
+  const w = Math.round(W*s), h = Math.round(H*s);
+  cv.style.width = w+"px"; cv.style.height = h+"px";
+  fr.style.width = w+"px"; fr.style.height = h+"px";
+}
+addEventListener("resize", fit);
+
+function end(win, title, sub){
+  if(G.over) return;
+  G.over = win?"win":"lose"; G.running=false;
+  const et=$("endTitle"), es=$("endSub");
+  et.textContent = win ? "CLEAR" : "GAME OVER";
+  et.className = "big " + (win?"win":"lose");
+  es.innerHTML = `<em>${title}</em><br>${sub}`;
+  $("endTally").innerHTML = `
+    <span>生き延びた時間</span><b>${mmss(G.t)}</b>
+    <span>森の最大規模</span><b>${Math.round(G.peakForest)}</b>
+    <span>生まれたゴリラ</span><b>${G.born}</b>
+    <span>死んだゴリラ</span><b>${G.dead}</b>
+    <span>追い払った人族</span><b>${G.kills}</b>`;
+  $("endObit").textContent = G.obits.length ? "訃報 — " + G.obits.slice(-3).join(" ／ ") : "";
+  $("scEnd").hidden = false;
+  win ? SFX.birth() : SFX.die();
+}
+
+function start(){
+  newGame();
+  insp.hidden = true;
+  $("scTitle").hidden = true; $("scEnd").hidden = true;
+  toastBox.innerHTML = "";
+  G.running = true;
+  toast("#e8b23c","ゴリラをつまんで、実のなる木へはなす");
+  fit();
+}
+$("bStart").onclick = start;
+$("bAgain").onclick = start;
+$("bReset").onclick = start;
+$("bSound").onclick = ev => {
+  soundOn = !soundOn;
+  ev.currentTarget.textContent = soundOn ? "♪ ON" : "♪ OFF";
+  if(soundOn) beep(660,0.06);
+};
+
+// タイトルの3ルール
+(function(){
+  const box=$("ruleBox");
+  const rules = [
+    { spr:"g_normal",  t:"実の色 → 森の色<br>黄＋赤＋青で<br>きんのうんち" },
+    { spr:"g_guardian",t:"森が仲間を生む<br>赤い森からは<br>ガーディアン" },
+    { spr:"h_fireman", t:"ファイアーメン<br>一番育った森を<br>焼きに来る" },
+  ];
+  for(const r of rules){
+    const d=document.createElement("div"); d.className="rule";
+    const c=document.createElement("canvas"); c.width=24;c.height=24;
+    const g=c.getContext("2d"); g.imageSmoothingEnabled=false;
+    const s=SPR[r.spr];
+    g.drawImage(s, ((24-s.width)/2)|0, ((24-s.height)/2)|0);
+    const p=document.createElement("div"); p.innerHTML=r.t;
+    d.append(c,p); box.appendChild(d);
+  }
+})();
+
+/* ═════════════════════════ ループ ═════════════════════════ */
+// 動作確認用フック（コンソールから世界を覗ける）
+window.POOPULATION = { get state(){ return G; }, step, start, newGame, BIOME, TRAITS, GTYPE, POOP, SPR,
+  previewPoop(kind="normal"){
+    if(!G.running) start();
+    const g=G.gorillas[0]; if(!g) return;
+    g.belly=kind==="gold"?["y","r","b"]:["y"]; g.previewKind=kind; g.poopT=0;
+    g.squat=kind==="big"?CFG.realtimeBigStrain:CFG.realtimeStrain; g.squatMax=g.squat;
+  }
+};
+
+newGame();
+let last = performance.now();
+const SPEED = /[#&?]fast(\d*)/.test(location.hash) ? (parseInt(RegExp.$1)||6) : 1;  // #fast で早送り（動作確認用）
+function frame(now){
+  const dt = Math.min(0.05, (now-last)/1000) * SPEED; last = now;
+  if(G.running) step(dt);
+  ctx.clearRect(0,0,W,H);
+  draw();
+  hud(dt); dockTick(dt); inspTick(dt);
+  requestAnimationFrame(frame);
+}
+fit();
+requestAnimationFrame(frame);
+document.addEventListener("visibilitychange", ()=>{ last = performance.now(); });
+
+})();
+</script>

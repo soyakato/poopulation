@@ -1,0 +1,1762 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>POOPULATION TACTICS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Silkscreen:wght@400;700&display=swap">
+<script src="poop-config.js"></script>
+
+<style>
+  :root{
+    --soil:#14100b; --soil-2:#1f1811; --soil-3:#2b2117; --line:#4a3823;
+    --ink:#f2e6cf; --dim:#a49070; --gold:#e8b23c; --rot:#7fae2f; --blood:#c9452e;
+    --sky:#68d0e0;
+    --jp:"DotGothic16","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+    --px:"Silkscreen","Courier New",monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;min-height:100dvh}
+  body{
+    background:var(--soil);color:var(--ink);font-family:var(--jp);
+    display:flex;align-items:center;justify-content:center;overflow:hidden;
+    -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:none;
+  }
+  #cab{display:flex;flex-direction:column;width:100%;height:100dvh;max-height:100%;max-width:1180px;padding:6px;gap:5px}
+
+  /* rail */
+  #rail{display:flex;align-items:stretch;gap:6px;background:var(--soil-2);border:2px solid var(--line);padding:5px 7px;flex:0 0 auto}
+  .stat{display:flex;flex-direction:column;gap:1px;min-width:56px}
+  .stat b{font-family:var(--px);font-size:14px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+  .stat span{font-size:9px;color:var(--dim);letter-spacing:.08em}
+  #order{flex:1 1 auto;display:flex;align-items:center;gap:3px;overflow:hidden;min-width:0}
+  #order .olab{font-size:9px;color:var(--dim);flex:0 0 auto;margin-right:2px}
+  .oc{width:26px;height:26px;border:2px solid var(--line);background:#0f0b07;flex:0 0 auto;position:relative}
+  .oc canvas{width:100%;height:100%;image-rendering:pixelated;display:block}
+  .oc.now{border-color:var(--gold)}
+  .oc.foe{border-color:var(--blood)}
+  .btn{font-family:var(--jp);font-size:11px;color:var(--ink);background:var(--soil-3);border:2px solid var(--line);padding:3px 8px;cursor:pointer}
+  .btn:hover{background:var(--line)}
+  .btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .mode-nav{display:flex;align-items:center;gap:3px;margin-left:auto}
+  .mode-nav a{font-family:var(--px);font-size:9px;color:var(--dim);text-decoration:none;padding:5px 6px;border:1px solid var(--line)}
+  .mode-nav a:hover,.mode-nav a:focus-visible{color:var(--gold);border-color:var(--gold)}
+
+  /* stage */
+  #stage{flex:1 1 auto;position:relative;display:flex;align-items:center;justify-content:center;min-height:0}
+  #frame{position:relative;line-height:0}
+  canvas#cv{image-rendering:pixelated;border:2px solid var(--line);background:#241a11;display:block}
+
+  #log{position:absolute;left:6px;top:6px;display:flex;flex-direction:column;gap:2px;pointer-events:none;max-width:62%}
+  .lg{background:#0d0906e0;border:2px solid var(--line);padding:2px 6px;font-size:11px;line-height:1.5}
+  .lg i{display:inline-block;width:7px;height:7px;margin-right:4px}
+
+  /* unit card */
+  #card{position:absolute;left:calc(100% + 8px);top:0;width:158px;background:#100c07f2;border:2px solid var(--line);padding:6px 7px;display:flex;flex-direction:column;gap:5px;line-height:1.35;z-index:3}
+  #card[hidden]{display:none}
+  #cClose{position:absolute;right:2px;top:2px;border:0;background:none;color:var(--dim);font:14px var(--px);padding:3px 5px;cursor:pointer}
+  #cClose:hover{color:var(--ink)}
+  .c-head{display:flex;gap:6px;align-items:center}
+  .c-head canvas{width:30px;height:30px;image-rendering:pixelated;flex:0 0 auto}
+  .c-nm{font-size:12px}
+  .c-ty{font-size:9px;color:var(--dim)}
+  .c-bars{display:grid;grid-template-columns:auto 1fr auto;gap:2px 5px;align-items:center;font-size:9px}
+  .c-bars span{color:var(--dim)}
+  .c-bars b{font-family:var(--px);font-size:9px;font-weight:400;font-variant-numeric:tabular-nums}
+  .pb{height:6px;background:#0b0805;border:1px solid var(--line)}
+  .pb i{display:block;height:100%}
+  .c-ab{font-size:9px;border-left:3px solid var(--gold);padding-left:5px}
+  .c-ab b{color:var(--gold);font-weight:400}
+  .c-tr{font-size:9px;color:var(--dim);border-top:1px solid var(--line);padding-top:4px}
+  .c-tr em{font-style:normal;color:var(--ink)}
+
+  /* action bar */
+  #acts{flex:0 0 auto;display:flex;gap:4px;align-items:center;background:var(--soil-2);border:2px solid var(--line);padding:5px;min-height:44px;flex-wrap:wrap}
+  .act{
+    font-family:var(--jp);font-size:12px;color:var(--ink);background:var(--soil-3);
+    border:2px solid var(--line);padding:5px 12px;cursor:pointer;position:relative;
+  }
+  .act:hover:not(:disabled){background:var(--line)}
+  .act:disabled{opacity:.32;cursor:default}
+  .act.on{background:var(--gold);color:#22160a;border-color:var(--gold)}
+  .act small{font-family:var(--px);font-size:9px;color:var(--sky);margin-left:5px}
+  .act.on small{color:#22160a}
+  .act:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  #birthHud{display:flex;gap:3px;align-items:center;margin-left:auto;font-family:var(--px);font-size:8px;color:var(--dim)}
+  #birthHud>b{font-weight:400;color:var(--ink);margin-right:1px}
+  .birth-chip{display:flex;align-items:center;gap:2px;padding:3px 4px;background:#0b080580;border:1px solid var(--line);white-space:nowrap}
+  .birth-chip i{display:block;width:5px;height:5px}
+  .birth-chip.ready{border-color:var(--gold);color:var(--ink)}
+  #hint{font-size:11px;color:var(--dim);padding-right:4px;text-align:right;line-height:1.4}
+
+  /* screens */
+  .screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#0b0805f5;text-align:center;padding:14px;z-index:6;overflow:auto;line-height:normal}
+  .screen[hidden]{display:none}
+  .logo{font-family:var(--px);font-weight:700;font-size:clamp(20px,5vw,40px);letter-spacing:.05em;color:var(--gold);text-shadow:3px 3px 0 #6b3f14,6px 6px 0 #00000080;line-height:1.05}
+  .tag{font-family:var(--px);font-size:11px;letter-spacing:.22em;color:var(--dim)}
+  .sub{font-size:12px;line-height:1.8;max-width:44ch;text-wrap:balance}
+  .sub em{font-style:normal;color:var(--gold)}
+  .rules{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:46ch}
+  .rule{width:104px;border:2px solid var(--line);background:var(--soil-2);padding:7px 5px;font-size:9px;line-height:1.55}
+  .rule canvas{width:34px;height:34px;margin:0 auto 3px;display:block;image-rendering:pixelated}
+  .rule b{display:block;font-size:11px;color:var(--gold);font-weight:400;margin-bottom:2px}
+  .start{font-family:var(--px);font-size:15px;font-weight:700;letter-spacing:.08em;background:var(--gold);color:#22160a;border:0;padding:9px 24px;cursor:pointer;box-shadow:4px 4px 0 #6b3f14}
+  .start:active{transform:translate(2px,2px);box-shadow:2px 2px 0 #6b3f14}
+  .big{font-family:var(--px);font-size:clamp(18px,4.5vw,30px);font-weight:700;letter-spacing:.04em}
+  .win{color:var(--rot)}.lose{color:var(--blood)}
+  .tally{display:grid;grid-template-columns:auto auto;gap:2px 16px;font-size:11px;border:2px solid var(--line);padding:8px 12px;background:var(--soil-2)}
+  .tally b{font-family:var(--px);font-weight:400;text-align:right;font-variant-numeric:tabular-nums}
+  .tally span{color:var(--dim)}
+  .obit{font-size:10px;color:var(--dim);max-width:40ch;line-height:1.7}
+  .camp-head{display:flex;align-items:end;justify-content:space-between;width:min(600px,100%);gap:12px;text-align:left}
+  .camp-head .big{color:var(--gold)}
+  .camp-summary{font:10px/1.6 var(--px);color:var(--dim);text-align:right}
+  .rewards{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;width:min(600px,100%)}
+  .reward{min-height:128px;border:2px solid var(--line);background:var(--soil-2);color:var(--ink);padding:9px;text-align:left;cursor:pointer;font-family:var(--jp)}
+  .reward:hover,.reward:focus-visible{border-color:var(--gold);background:var(--soil-3);outline:0}
+  .reward i{display:block;font:9px var(--px);color:var(--gold);font-style:normal;letter-spacing:.12em}
+  .reward b{display:block;margin:7px 0 5px;font-size:13px;font-weight:400}
+  .reward span{display:block;font-size:10px;line-height:1.6;color:var(--dim)}
+  .inventory{width:min(600px,100%);border:2px solid var(--line);background:#0b080580;padding:7px;text-align:left}
+  .inventory>span{display:block;font:9px var(--px);color:var(--dim);margin-bottom:5px}
+  .inv-row{display:flex;gap:4px;flex-wrap:wrap}
+  .inv-chip{font-size:9px;border:1px solid var(--line);padding:3px 5px;color:var(--dim)}
+  .inv-chip.on{color:var(--ink);border-color:var(--rot)}
+
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  @media (max-width:560px){
+    .stat{min-width:44px}.stat b{font-size:12px}
+    .act{padding:5px 9px;font-size:11px}
+    #card{width:132px}
+    #hint{display:none}
+    .rewards{grid-template-columns:1fr}.reward{min-height:0}.camp-head{align-items:start}.camp-summary{font-size:8px}
+  }
+  @media (max-width:720px){#card{left:auto;right:6px;top:6px}}
+</style>
+
+<div id="cab">
+  <div id="rail">
+    <div class="stat"><b id="tStage">1/1</b><span>ステージ</span></div>
+    <div class="stat"><b id="tRound">1</b><span>ラウンド</span></div>
+    <div class="stat"><b id="tApes">3</b><span>ゴリラ</span></div>
+    <div class="stat"><b id="tFoes">0</b><span>人族</span></div>
+    <div id="order"><span class="olab">行動順</span></div>
+    <nav class="mode-nav" aria-label="モード"><a href="realtime.html">REALTIME</a><a href="tactics.html">TACTICS</a><a href="studio.html">STUDIO</a></nav>
+    <button class="btn" id="bSound">♪ ON</button>
+    <button class="btn" id="bReset">やり直す</button>
+  </div>
+
+  <div id="stage"><div id="frame">
+    <canvas id="cv" width="336" height="292" aria-label="戦場"></canvas>
+    <div id="log"></div>
+    <div id="card" hidden>
+      <button id="cClose" aria-label="詳細を閉じる">×</button>
+      <div class="c-head">
+        <canvas id="cPic" width="24" height="26"></canvas>
+        <div><div class="c-nm" id="cName">—</div><div class="c-ty" id="cType">—</div></div>
+      </div>
+      <div class="c-bars" id="cBars"></div>
+      <div class="c-ab" id="cAb"></div>
+      <div class="c-tr" id="cTr"></div>
+    </div>
+
+    <div class="screen" id="scTitle">
+      <div>
+        <div class="logo">POOPULATION</div>
+        <div class="tag">T A C T I C S</div>
+      </div>
+      <p class="sub">神であるあなたは、ゴリラに<em>命令できない</em>。<br>できるのは「<em>どこでうんちをさせるか</em>」だけだ。<br>うんちが森になり、森が次の世代を決める。</p>
+      <div class="rules" id="ruleBox"></div>
+      <p class="sub" style="font-size:11px;color:var(--dim)">高いところから殴ると強い／背後から殴るともっと強い<br>火は坂を駆け上がる。湿地は燃えない</p>
+      <button class="start" id="bStart">はじめる</button>
+    </div>
+
+    <div class="screen" id="scEnd" hidden>
+      <div class="big" id="endTitle">—</div>
+      <p class="sub" id="endSub">—</p>
+      <div class="tally" id="endTally"></div>
+      <p class="obit" id="endObit"></p>
+      <button class="start" id="bAgain">もういちど</button>
+    </div>
+
+    <div class="screen" id="scCamp" hidden>
+      <div class="camp-head">
+        <div><div class="tag">STAGE CLEAR</div><div class="big" id="campTitle">森のキャンプ</div></div>
+        <div class="camp-summary" id="campSummary"></div>
+      </div>
+      <p class="sub">戦果をひとつ選んで、群れを次のステージへ。</p>
+      <div class="rewards" id="rewardBox"></div>
+      <div class="inventory"><span>RUN INVENTORY</span><div class="inv-row" id="inventory"></div></div>
+    </div>
+  </div></div>
+
+  <div id="acts">
+    <button class="act" id="aAttack" aria-keyshortcuts="1">[1] こうげき</button>
+    <button class="act" id="aSkill" aria-keyshortcuts="2">[2] とくぎ<small></small></button>
+    <button class="act" id="aEat" aria-keyshortcuts="3">[3] たべる</button>
+    <button class="act" id="aPoop" aria-keyshortcuts="4">[4] うんち</button>
+    <button class="act" id="aWait" aria-keyshortcuts="5">[5] まつ</button>
+    <button class="act" id="aCancel" hidden>やめる</button>
+    <div id="birthHud" aria-label="出生予報"></div>
+    <div id="hint">—</div>
+  </div>
+</div>
+
+<script>
+(() => {
+"use strict";
+
+/* ══════════ 盤面 ══════════ */
+const TS=24, COLS=14, ROWS=10, HSTEP=7, YOFF=30;
+const CW=COLS*TS, CH=ROWS*TS+YOFF+22;
+const CFG=window.POOPULATION_CONFIG.animation;
+const MASTER=window.POOPULATION_CONFIG.tactics;
+
+const rnd=(a=1,b=0)=>b+Math.random()*(a-b); // 見た目の粒子・揺れだけ。ゲーム結果には使わない
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+function hash(x,y){let h=x*374761393+y*668265263;h=(h^(h>>13))*1274126177;return((h^(h>>16))>>>0)/4294967296;}
+function sprite(w,h,rects){const c=document.createElement("canvas");c.width=w;c.height=h;const g=c.getContext("2d");for(const r of rects){g.fillStyle=r[4];g.fillRect(r[0],r[1],r[2],r[3]);}return c;}
+
+/* ══════════ データ ══════════ */
+const BIOME={
+  y:{jp:"草原",  rate:2.0, cap:3, flam:0.95, ground:"#5a4a20", wall:"#3d3214",
+     grass:["#8f9a2c","#aab63a","#6f7a22"], trunk:"#6b5322", leaf:["#93a02e","#b0bd42"], berry:"#e8c33a"},
+  r:{jp:"硬木林",rate:1.4, cap:2, flam:0.28, ground:"#43301f", wall:"#2c1f14",
+     grass:["#4a6b2c","#5c7f36","#3a5522"], trunk:"#5a3421", leaf:["#2f5b31","#3f7340"], berry:"#d94436"},
+  b:{jp:"湿地",  rate:0.9, cap:2, flam:0.00, ground:"#2c4247", wall:"#1d2c30",
+     grass:["#3f7d7a","#57a0a2","#2f6165"], trunk:"#3d5a52", leaf:["#3e7f83","#59a8a4"], berry:"#68d0e0"},
+};
+const COLORS=["y","r","b"];
+const GROW_GRASS=2, GROW_SAP=5, GROW_TREE=9;
+const FRUIT_BUFF={
+  r:{jp:"こうげき",gain:2},
+  b:{jp:"最大MP",gain:2},
+  y:{jp:"すばやさ",gain:2},
+};
+const FRUIT_STAT_MAX=99;
+
+const TRAITS={
+  glut  :{jp:"おおぐらい",  d:"たべると 満腹2つぶん。うんちも大きい"},
+  timid :{jp:"こわがり",    d:"火のマスから真っ先に逃げる。こうげき −25%"},
+  rash  :{jp:"けんかっぱやい",d:"敵が射程にいると、勝手にこうげきしてしまう"},
+  mimic :{jp:"ものまね",    d:"隣の仲間の特性をコピーする"},
+  consti:{jp:"べんぴ",      d:"満腹3つぶん溜めてから、でかうんちを出す"},
+  filial:{jp:"おやおもい",  d:"仲間が死ぬと激怒。こうげき +50%"},
+};
+const TKEY=Object.keys(TRAITS);
+const NAMES=["ゴロ","バナ","ドン","キバ","モモ","タロ","ウホ","ボン","ガル","ズン","ペコ","ノコ","ムク","ゲン","ラム","ポポ","デカ","チビ","ヌシ","マメ"];
+
+// move=移動力 / jump=登れる段差 / rng=射程 / def=被ダメ倍率
+const APE={
+  normal  :{jp:"普通のゴリラ",     from:"草原",  ...MASTER.allies.normal,
+            sk:{n:"つよいうんち", c:5, d:"その場に でかうんち を落とす（肥料6）"}, ab:"はこぶ"},
+  monkey  :{jp:"モンキー",         from:"草原",  ...MASTER.allies.monkey,
+            sk:{n:"かけぬけ",     c:3, d:"もう一度 移動できる"}, ab:"すばしっこい"},
+  guardian:{jp:"ガーディアンゴリラ",from:"硬木林",...MASTER.allies.guardian,
+            sk:{n:"ふみけし",     c:4, d:"まわり3x3の火を消す。自分は焼けない"}, ab:"ひをけす"},
+  silver  :{jp:"シルバーバック",   from:"硬木林",...MASTER.allies.silver,
+            sk:{n:"じだんだ",     c:6, d:"隣接する敵ぜんぶに大ダメージ＋ノックバック"}, ab:"びくともしない"},
+  wizard  :{jp:"ウィザードゴリラ", from:"湿地",  ...MASTER.allies.wizard,
+            sk:{n:"めぐみの雨",   c:8, d:"指定3x3すべてに雨。消火し、草木は1段成長、成木は実+1"}, ab:"めぐみの雨"},
+  chimp   :{jp:"チンパンジー",     from:"湿地",  ...MASTER.allies.chimp,
+            sk:{n:"いしつぶて",   c:4, d:"射程4に強い一撃。高さの不利を無視する"}, ab:"石を投げる"},
+};
+const FOE={
+  killer :{jp:"ゴリラを殺す人",  ...MASTER.enemies.killer,  act:"ゴリラを狙う"},
+  bald   :{jp:"ゴリラを殺すハゲ",...MASTER.enemies.bald,    act:"木を伐り倒す"},
+  fireman:{jp:"ファイアーメン",  ...MASTER.enemies.fireman, act:"森を焼き払う"},
+  jikon  :{jp:"ゴリラジコン",    ...MASTER.enemies.jikon,   act:"殺したゴリラを仲間にする"},
+};
+const BORN={y:[["normal",7],["monkey",3]], r:[["guardian",9],["silver",1]], b:[["wizard",7],["chimp",3]]};
+const UNLOCK_ORDER=["guardian","wizard","silver","chimp","monkey","normal"];
+const ABILITY_ORDER=[
+  {key:"digestion",jp:"強い胃袋",d:"実を食べた時の回復が HP24・MP4 になる"},
+  {key:"flow",jp:"森の呼吸",d:"自分のターン開始時、地形から得るMPがさらに+1"},
+  {key:"focus",jp:"奥義集中",d:"すべてのゴリラの、とくぎ消費MPが1減る"},
+];
+const STAGE_NAMES=["芽吹きの森","伐採前線","火の尾根","支配の森","最後の楽園"];
+
+const WAVES=MASTER.waves
+  .filter(w=>FOE[w.kind]&&Number.isFinite(w.r)&&Number.isFinite(w.n))
+  .map(w=>({r:clamp(Math.round(w.r),1,99),kind:w.kind,n:clamp(Math.round(w.n),1,20)}))
+  .sort((a,b)=>a.r-b.r);
+const LAST_ROUND=clamp(Math.round(MASTER.lastRound),1,99);
+const STAGE_COUNT=clamp(Math.round(MASTER.stageCount||1),1,20);
+const WORLD_TICKS=clamp(Math.round(MASTER.worldTicks),4,100); // 大きいほどゆっくり進む
+const ENEMY_HP_GROWTH=clamp(Number(MASTER.enemyHpGrowth??15),0,100)/100;
+const ENEMY_ATK_GROWTH=clamp(Number(MASTER.enemyAtkGrowth??8),0,100)/100;
+const BIRTH_TREE_TURNS=clamp(Math.round(MASTER.birthTreeTurns||5),1,30);
+const MAX_APES=clamp(Math.round(MASTER.maxApes||10),1,30);
+
+const POOP={
+  normal:{jp:"ふつうのうんち",fert:3, size:1.0, splash:0, shake:0},
+  pellet:{jp:"ころころうんち",fert:2, size:0.8, splash:0, shake:0},
+  big   :{jp:"でかうんち",    fert:6, size:1.7, splash:6, shake:5},
+  gold  :{jp:"きんのうんち",  fert:9, size:1.2, splash:1, shake:3, boost:5},
+};
+const PCOL={
+  y:{d:"#6e6420",m:"#8a7d2c",l:"#b3a63f"}, r:{d:"#5e2c1f",m:"#7a3d2b",l:"#a3583c"},
+  b:{d:"#264c55",m:"#33616b",l:"#4a8792"}, gold:{d:"#9a6c14",m:"#e8b23c",l:"#ffe08a"},
+};
+
+/* ══════════ スプライト（提供SVGの忠実変換） ══════════ */
+const GW=24, GH=26;
+const ape=rects=>sprite(GW,GH,rects.map(r=>[r[0],r[1]+2,r[2],r[3],r[4]]));
+const ARMOR=[[2,20,5,2],[10,10,4,4],[13,11,3,3],[10,16,3,3],[1,20,2,1],[14,20,2,1],[21,19,2,1],[10,21,6,2],[1,21,5,2],[17,20,6,2]];
+function gorilla(p){
+  const r=[[2,7,5,5,p.P],[17,9,6,13,p.A],[2,9,6,13,p.A],[12,1,9,8,p.KH||p.K],[4,8,18,11,p.K],
+           [1,11,5,12,p.G],[15,6,5,3,p.F],[14,3,6,3,p.F],[11,5,3,4,p.F]];
+  if(p.BIGEYE) r.push([19,4,1,2,p.E],[17,5,1,1,p.E],[17,6,3,1,p.M],[16,4,2,2,p.E]);
+  else         r.push([19,5,1,1,p.E],[17,6,3,1,p.M],[16,5,1,1,p.E]);
+  r.push([10,10,6,13,p.G],[1,8,5,5,p.P]);
+  if(p.ARM) for(const a of ARMOR) r.push([a[0],a[1],a[2],a[3],p.ARM]);
+  if(p.GEM) r.push([15,2,2,1,p.GEM],[16,1,1,1,p.GEM]);
+  if(p.ANT) r.push([16,1,1,3,"#000"],[16,-1,1,2,"#000"],[16,-2,1,1,"#f52f2f"]);
+  return r;
+}
+const GPAL={
+  normal  :{K:"#000000",A:"#343434",G:"#494949",F:"#d9d9d9",E:"#000000",M:"#000000",P:"#fae1e1"},
+  guardian:{K:"#49a013",A:"#27752f",G:"#72b24d",F:"#d9d9d9",E:"#ff3434",M:"#49a013",P:"#fae1e1",ARM:"#d9d9d9"},
+  wizard  :{K:"#3f47a8",A:"#2c3178",G:"#6f80e0",F:"#d9d9d9",E:"#68d0e0",M:"#3f47a8",P:"#fae1e1",GEM:"#68d0e0"},
+  silver  :{KH:"#adadad",K:"#b4b4b4",A:"#343434",G:"#494949",F:"#d9d9d9",E:"#000000",M:"#000000",P:"#fae1e1"},
+  jikon   :{K:"#000000",A:"#343434",G:"#494949",F:"#d9d9d9",E:"#000000",M:"#000000",P:"#fae1e1",ANT:true,BIGEYE:true},
+};
+const CHIMP=(()=>{const K="#000",A="#343434",G="#494949",F="#d9d9d9",P="#fae1e1";
+  return [[2,11,4,4,P],[17,9,2,14,A],[12,1,7,7,K],[3,10,4,4,K],[6,8,4,4,K],[9,7,4,4,K],[12,5,4,4,K],[14,4,5,4,K],
+          [9,12,3,11,K],[6,13,3,10,K],[13,5,6,3,F],[13,3,5,2,F],[10,4,2,3,F],
+          [17,3,1,1,K],[15,3,1,1,K],[16,6,3,1,K],[11,9,3,14,G],[1,11,4,4,P]];})();
+const MONKEY=(()=>{const B="#c8881a",D="#86590a",L="#e0a43c",F="#ffe7d2",P="#fae1e1",E="#000";
+  return [[8,13,2,2,P],[16,17,2,6,D],[9,17,2,6,D],[13,10,5,5,B],[7,14,10,6,B],
+          [1,20,2,2,B],[2,18,2,2,B],[3,17,2,2,B],[4,16,2,2,B],[5,15,2,2,B],[6,14,2,1,B],
+          [15,13,4,3,F],[15,11,3,1,F],[12,12,1,1,F],[17,12,1,1,E],[16,13,2,1,E],[14,12,1,1,E],
+          [13,17,3,6,L],[7,17,3,6,L],[7,14,2,2,P]];})();
+
+const SKIN="#f4cc6e", TIE="#ff0000";
+function human(suit,head,eye,extra){
+  const r=[[6,4,6,4,suit],[5,4,1,7,suit],[11,4,1,7,suit],[7,8,4,1,suit],[7,8,2,8,suit],[10,8,2,8,suit],
+           [7,0,4,4,SKIN],...head,[7,2,3,1,eye],[7,4,4,4,"#fff"],[8,4,2,1,TIE],[8,5,1,3,TIE]];
+  return extra? r.concat(extra) : r;
+}
+const SPR={};
+for(const k in GPAL) SPR["u_"+k]=ape(gorilla(GPAL[k]));
+SPR.u_chimp=ape(CHIMP); SPR.u_monkey=ape(MONKEY);
+SPR.u_killer =sprite(16,16, human("#343434",[[7,0,4,1,"#000"]],"#000"));
+SPR.u_bald   =sprite(16,16, human("#343434",[[7,0,1,1,"#000"],[10,0,1,1,"#000"]],"#000",
+                     [[4,7,1,6,"#7a5a33"],[2,6,3,2,"#b9c0c6"],[2,6,1,2,"#8b939a"]]));
+SPR.u_fireman=sprite(16,16, human("#ff1616",[[7,0,4,1,"#ff1616"]],"#ff1616",
+                     [[0,8,6,1,"#343434"],[2,8,3,3,"#343434"],[5,9,1,2,"#343434"],[0,8,1,1,"#f2802b"]]));
+
+/* ══════════ 音 ══════════ */
+let AC=null, snd=true;
+function beep(f,dur,type="square",vol=.06,slide=0){
+  if(!snd) return;
+  try{
+    AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+    const o=AC.createOscillator(),g=AC.createGain();
+    o.type=type;o.frequency.setValueAtTime(f,AC.currentTime);
+    if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(40,f+slide),AC.currentTime+dur);
+    g.gain.setValueAtTime(vol,AC.currentTime);
+    g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+dur);
+    o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+dur);
+  }catch(e){}
+}
+const SFX={
+  step:()=>beep(300,.04,"square",.03), hit:()=>beep(130,.09,"square",.07,-50),
+  crit:()=>{beep(200,.07,"square",.08);setTimeout(()=>beep(320,.12,"square",.08),70);},
+  eat :()=>beep(520,.07,"square",.05,120), strain:()=>beep(180,.5,"sawtooth",.035,140),
+  plop:()=>beep(260,.16,"triangle",.08,-190), fire:()=>beep(170,.22,"sawtooth",.05,-70),
+  grow:()=>beep(680,.1,"sine",.05,300), rain:()=>beep(900,.25,"sine",.05,-380),
+  die :()=>beep(150,.45,"sawtooth",.09,-100),
+  born:()=>{beep(500,.09,"square",.06);setTimeout(()=>beep(660,.09,"square",.06),90);setTimeout(()=>beep(880,.15,"square",.06),180);},
+  wave:()=>{beep(220,.16,"square",.07);setTimeout(()=>beep(180,.28,"square",.07),170);},
+  gold:()=>{[660,880,1100,1320].forEach((f,i)=>setTimeout(()=>beep(f,.12,"square",.06),i*70));},
+};
+
+/* ══════════ 状態 ══════════ */
+const cv=document.getElementById("cv"), ctx=cv.getContext("2d");
+ctx.imageSmoothingEnabled=false;
+let G, vt=0;
+
+const idx=(x,y)=>y*COLS+x;
+const at=(x,y)=>(x<0||y<0||x>=COLS||y>=ROWS)?null:G.map[idx(x,y)];
+const unitAt=(x,y)=>G.units.find(u=>u.alive&&u.tx===x&&u.ty===y);
+const hasAbility=key=>!!G?.progress?.abilities.includes(key);
+const skillCost=u=>Math.max(1,APE[u.type].sk.c-(hasAbility("focus")?1:0));
+function enemyStageStats(st){
+  const n=Math.max(0,(G?.stage||1)-1);
+  return {...st,hp:Math.round(st.hp*(1+n*ENEMY_HP_GROWTH)),atk:Math.round(st.atk*(1+n*ENEMY_ATK_GROWTH))};
+}
+const S=u=>{
+  const st=u.side==="ape"?APE[u.type]:FOE[u.type];
+  if(u.side!=="ape"||!u.buffs) return enemyStageStats(st);
+  const b=G.progress?.bonus||{atk:0,spd:0};
+  return {...st,atk:Math.min(FRUIT_STAT_MAX,st.atk+u.buffs.r+b.atk),spd:Math.min(FRUIT_STAT_MAX,st.spd+u.buffs.y+b.spd)};
+};
+function fruitStat(u,c){ return c==="r"?S(u).atk:c==="y"?S(u).spd:u.maxmp; }
+
+function newMap(){
+  const m=[];
+  for(let i=0;i<COLS*ROWS;i++) m.push({h:0,water:false,c:null,v:0,grow:0,fruit:0,fert:0,fire:0,ash:0,treeAge:0});
+  // 固定シード相当の座標ハッシュで、毎回同じ地形を作る
+  for(let k=0;k<clamp(Math.round(MASTER.terrain.hillCount),0,8);k++){
+    const cx=2+Math.floor(hash(k+31,7)*(COLS-4));
+    const cy=2+Math.floor(hash(k+71,13)*(ROWS-4));
+    const rad=1+Math.floor(hash(k+101,19)*clamp(Math.round(MASTER.terrain.hillRadiusMax),1,3));
+    for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+      const d=Math.max(Math.abs(x-cx),Math.abs(y-cy));
+      if(d<=rad) m[idx(x,y)].h=Math.max(m[idx(x,y)].h, d===rad?1:2);
+      else if(d===rad+1 && hash(x+k*17,y+k*23)<.5) m[idx(x,y)].h=Math.max(m[idx(x,y)].h,1);
+    }
+  }
+  // 川（湿地）＝ 天然の防火帯
+  let rx=1+Math.floor(hash(47,89)*(COLS-2));
+  for(let y=0;y<ROWS;y++){
+    for(let w=0;w<1+(hash(y,131)<clamp(MASTER.terrain.riverExtraWidthChance,0,.9)?1:0);w++){
+      const t=rx+w<COLS?m[idx(rx+w,y)]:null; if(t){ t.water=true; t.h=0; t.c="b"; t.v=1; t.grow=GROW_GRASS; }
+    }
+    rx=clamp(rx+Math.floor(hash(y,197)*3)-1,1,COLS-2);
+  }
+  return m;
+}
+function plantGroves(){
+  const used=[];
+  for(const [ci,c] of COLORS.entries()){
+    const candidates=[];
+    for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++) if(!at(x,y).water) candidates.push([x,y]);
+    candidates.sort((a,b)=>hash(a[0]+ci*41,a[1]+ci*67)-hash(b[0]+ci*41,b[1]+ci*67));
+    const [x,y]=candidates.find(([x,y])=>used.every(s=>Math.abs(s.x-x)+Math.abs(s.y-y)>4))||candidates[0];
+    used.push({x,y});
+    const cells=[[0,0],[1,0],[0,1],[-1,0],[0,-1],[1,1]];
+    cells.forEach(([dx,dy],i)=>{
+      const t=at(x+dx,y+dy); if(!t||t.water) return;
+      t.c=c;
+      if(i<clamp(Math.round(MASTER.terrain.groveTrees),1,cells.length)){ t.v=3; t.grow=GROW_TREE; t.fruit=BIOME[c].cap; }
+      else { t.v=1; t.grow=GROW_GRASS; }
+    });
+  }
+}
+
+let nextId=1;
+function makeUnit(side,type,tx,ty){
+  const stats=side==="ape"?APE[type]:FOE[type];
+  const st=side==="ape"?stats:enemyStageStats(stats);
+  const bonus=G.progress?.bonus||{hp:0,mp:0};
+  const maxhp=st.hp+(side==="ape"?bonus.hp:0), maxmp=(st.mp||0)+(side==="ape"?bonus.mp:0);
+  const used=new Set(G.units.map(u=>u.name));
+  const serial=nextId++;
+  const base=NAMES[(serial-1)%NAMES.length];
+  const nm=side==="ape"?(used.has(base)?base+(1+Math.floor((serial-1)/NAMES.length)):base):st.jp;
+  const tr=side==="ape"?[TKEY[(serial*2-2)%TKEY.length],TKEY[(serial*2-1)%TKEY.length]]:[];
+  const u={
+    id:serial, side, type, name:nm, tx, ty, hp:maxhp, maxhp,
+    mp:side==="ape"?Math.round(maxmp*.4):0, maxmp,
+    ct:(serial*13)%45, dir:side==="ape"?1:-1, traits:tr,
+    belly:[], buffs:{y:0,r:0,b:0}, alive:true, squat:0, squatMax:1, relief:0, anim:0, rage:0, extraMove:false,
+    px:tx*TS+TS/2, py:0,
+  };
+  u.py=unitY(u);
+  G.units.push(u);
+  return u;
+}
+function unitY(u){ const t=at(u.tx,u.ty); return u.ty*TS+YOFF-(t?t.h:0)*HSTEP+TS; }
+function unitX(u){ return u.tx*TS+TS/2; }
+
+function newGame(run=true){
+  const roster=MASTER.startRoster.filter(type=>APE[type]).slice(0,8);
+  const starters=roster.length?roster:["normal"];
+  G={ map:[], units:[], stage:1, round:1, acts:0, active:null, phase:"idle", mode:null,
+      moveSet:null, rangeSet:null, targetSet:null, over:null, anim:null, queue:[], fx:[], poops:[], floats:[],
+      shake:0, sel:null, waveIx:0, born:0, dead:0, kills:0, obits:[], log:[], startPos:null,
+      seenPoop:false, pooCount:0, goldCount:0,
+      bornByColor:{y:0,r:0,b:0}, intermission:false, finalRound:false, rewardOptions:[],
+      progress:{unlocked:[...new Set(starters)],abilities:[],bonus:{atk:0,hp:0,mp:0,spd:0},picks:[]} };
+  nextId=1;
+  G.map=newMap();
+  plantGroves();
+  // 最初の3匹
+  const spots=[];
+  for(let y=1;y<ROWS-1;y++)for(let x=1;x<COLS-1;x++){ const t=at(x,y); if(t&&!t.water) spots.push([x,y]); }
+  for(const type of starters){
+    const available=spots.filter(([x,y])=>!unitAt(x,y));
+    available.sort((a,b)=>(Math.abs(a[0]-COLS/2)+Math.abs(a[1]-ROWS/2))-(Math.abs(b[0]-COLS/2)+Math.abs(b[1]-ROWS/2)) || idx(a[0],a[1])-idx(b[0],b[1]));
+    const s=available[0];
+    makeUnit("ape",type,s[0],s[1]);
+  }
+  syncOrder(); logMsg("#e8b23c","森を育てて、人族の襲撃をしのげ");
+  if(run) nextTurn();
+}
+
+/* ══════════ 経路・射程 ══════════ */
+function passable(t,u){ return t && !(t.fire>0 && u.side==="ape" && u.type!=="guardian"); }
+function moveCost(t){ return t.water?2:1; }
+function reachable(u){
+  const st=S(u), maxc=st.move, set=new Map();
+  const start=idx(u.tx,u.ty);
+  set.set(start,{c:0,from:null});
+  const q=[[u.tx,u.ty,0]];
+  while(q.length){
+    const [x,y,c]=q.shift();
+    const here=at(x,y);
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+      const nx=x+dx, ny=y+dy, t=at(nx,ny);
+      if(!t) continue;
+      if(Math.abs(t.h-here.h)>st.jump) continue;
+      if(t.fire>0 && !(u.side==="ape"&&u.type==="guardian")) continue;
+      const occ=unitAt(nx,ny);
+      if(occ && occ!==u) continue;
+      const nc=c+moveCost(t);
+      if(nc>maxc) continue;
+      const k=idx(nx,ny);
+      if(!set.has(k) || set.get(k).c>nc){ set.set(k,{c:nc,from:idx(x,y)}); q.push([nx,ny,nc]); }
+    }
+  }
+  set.delete(start);
+  return set;
+}
+function pathTo(u,set,tx,ty){
+  const out=[]; let k=idx(tx,ty);
+  while(k!=null && k!==idx(u.tx,u.ty)){ out.unshift([k%COLS,(k/COLS)|0]); k=set.get(k)?.from; if(k==null) break; }
+  return out;
+}
+function inRange(ax,ay,bx,by,r){ return Math.abs(ax-bx)+Math.abs(ay-by)<=r; }
+function tilesInRange(x,y,r){
+  const out=[];
+  for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
+    if(Math.abs(dx)+Math.abs(dy)>r || (!dx&&!dy)) continue;
+    const t=at(x+dx,y+dy); if(t) out.push([x+dx,y+dy]);
+  }
+  return out;
+}
+function attackRangeText(r){
+  return r===1 ? "前後左右 4マス" : `ひし形 ${2*r*(r+1)}マス（距離${r}）`;
+}
+
+/* ══════════ 戦闘 ══════════ */
+function damage(a,d){
+  const sa=S(a), sd=S(d);
+  const ha=at(a.tx,a.ty).h, hd=at(d.tx,d.ty).h;
+  let m=1;
+  if(!(a.side==="ape"&&a.type==="chimp"&&a.usingSkill))
+    m *= clamp(1+0.25*(ha-hd), 0.5, 1.5);                 // 高さの有利／不利
+  const back = (d.dir>0 && a.tx>d.tx) || (d.dir<0 && a.tx<d.tx);
+  const side = a.ty!==d.ty && a.tx===d.tx;
+  const fm = back?1.5 : side?1.2 : 1.0;                   // 背面／側面
+  m *= fm;
+  if(a.traits?.includes("timid")) m*=0.75;
+  if(a.rage>0) m*=1.5;
+  const dmg = Math.round(sa.atk * m * (sd.def??1));
+  return {dmg, back, high:ha>hd, low:ha<hd};
+}
+function hitUnit(a,d,mult=1,label){
+  const r=damage(a,d);
+  const dmg=Math.max(1,Math.round(r.dmg*mult));
+  d.hp-=dmg;
+  const col = r.back?"#e8b23c" : r.high?"#fff2c9" : "#ffffff";
+  float(unitX(d), unitY(d)-30, (label?label+" ":"")+dmg, col, 1.3);
+  if(r.back) float(unitX(d), unitY(d)-42, "背面！", "#e8b23c", 1.4);
+  else if(r.high) float(unitX(d), unitY(d)-42, "高所！", "#9fd8e0", 1.2);
+  puff(unitX(d),unitY(d)-12,"#ffd34d",5);
+  G.shake=Math.max(G.shake,r.back?4:2);
+  r.back?SFX.crit():SFX.hit();
+  if(d.hp<=0) killUnit(d,a);
+  return dmg;
+}
+function killUnit(d,killer){
+  d.alive=false; d.hp=0;
+  puff(unitX(d),unitY(d)-12,"#c9452e",14);
+  SFX.die();
+  if(d.side==="ape"){
+    G.dead++;
+    G.obits.push({name:d.name,type:d.type,traits:d.traits.slice(),
+      cause:killer?`${killer.side==="ape"?"":""}${S(killer).jp}にやられた`:"力尽きた"});
+    logMsg("#c9452e",`${d.name} が死んだ`);
+    for(const u of G.units) if(u.alive&&u.side==="ape"&&u.traits.includes("filial")) u.rage=3;
+    // ゴリラジコンに殺されると、寄生されて敵になる
+    if(killer && killer.type==="jikon" && G.units.filter(u=>u.alive&&u.type==="jikon").length<6){
+      const nu=makeUnit("human","jikon",d.tx,d.ty);
+      nu.name=d.name+"（ジコン）";
+      nu.ct=0;
+      G.shake=8; beep(70,.55,"sawtooth",.09,190);
+      float(unitX(nu),unitY(nu)-34,"ゴリラジコン化","#f52f2f",2.4);
+      logMsg("#f52f2f",`${d.name} が ゴリラジコン にされた`);
+    }
+  } else {
+    G.kills++;
+    logMsg("#7fae2f",`${S(d).jp} を倒した`);
+  }
+  syncOrder();
+}
+
+/* ══════════ うんち ══════════ */
+function poopKind(u){
+  if(new Set(u.belly).size>=3) return "gold";
+  if(u.traits.includes("consti")) return "big";
+  if(u.type==="silver") return "big";
+  if(u.type==="monkey") return "pellet";
+  if(u.traits.includes("glut")) return "big";
+  return "normal";
+}
+function dropPoop(u,kind,c){
+  const K=POOP[kind];
+  G.poops.push({x:unitX(u)-u.dir*10, y:unitY(u)-6, dir:u.dir, tx:u.tx, ty:u.ty, c, kind, t:0, land:.34, life:5});
+  G.shake=Math.max(G.shake,1.5*CFG.impactShake);
+  puff(unitX(u)-u.dir*8,unitY(u)-8,PCOL[kind==="gold"?"gold":c].l,8);
+  SFX.plop();
+  float(unitX(u), unitY(u)-34, K.jp, PCOL[kind==="gold"?"gold":c].l, 1.8);
+  G.pooCount++;
+  if(kind==="gold"){ G.goldCount++; SFX.gold(); logMsg(PCOL.gold.m,"きんのうんち！ 土が一気に育つ"); }
+  if(!G.seenPoop){ G.seenPoop=true; logMsg(PCOL[c].m,"うんちの色が、生える森の色になる"); }
+  // 土に効かせる
+  soak(u.tx,u.ty,c,K.fert,K);
+  if(K.splash>0) for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]) soak(u.tx+dx,u.ty+dy,c,K.splash,K);
+}
+function soak(x,y,c,amt,K){
+  const t=at(x,y); if(!t||t.fire>0) return;
+  if(t.v===0||t.c===c) t.c=c;
+  else if(t.v===1){ t.c=c; t.grow=GROW_GRASS; }
+  else if(t.v>=2) return;
+  t.fert=Math.min(12,t.fert+amt);
+  if(t.ash>0) t.ash=0;
+  if(K&&K.boost){ t.grow+=K.boost; for(let i=0;i<8;i++) G.fx.push({x:x*TS+12+rnd(8,-8),y:tileTop(x,y)+12,vx:rnd(20,-20),vy:rnd(-24,-52),col:PCOL.gold.l,life:rnd(1,.5)}); }
+}
+
+/* ══════════ 行動 ══════════ */
+function tileTop(x,y){ const t=at(x,y); return y*TS+YOFF-(t?t.h:0)*HSTEP; }
+
+function beginAct(u){
+  // ターン開始：マナ、状態、火
+  const t=at(u.tx,u.ty);
+  if(u.side==="ape"){
+    let gain=0;
+    if(t.fert>0) gain=3;                                  // 肥えた土 ＝ うんちの上
+    else if(t.v>=2) gain=2;
+    else if(t.v>=1) gain=1;
+    if(hasAbility("flow")) gain++;
+    if(gain){ u.mp=Math.min(u.maxmp,u.mp+gain); float(unitX(u),unitY(u)-34,"MP+"+gain,"#68d0e0",1.1); }
+    if(u.rage>0) u.rage--;
+    if(u.traits.includes("mimic")){
+      const nb=G.units.find(o=>o.alive&&o!==u&&o.side==="ape"&&Math.abs(o.tx-u.tx)+Math.abs(o.ty-u.ty)<=1);
+      if(nb){ const cand=nb.traits.find(k=>!u.traits.includes(k)); if(cand){ u.traits[1]=cand; } }
+    }
+  }
+  if(t.fire>0 && !(u.side==="ape"&&u.type==="guardian")){
+    const dmg=Math.round(22*(S(u).def??1));
+    u.hp-=dmg; float(unitX(u),unitY(u)-30,dmg+"","#f2802b",1.2);
+    if(u.hp<=0){ killUnit(u,null); return false; }
+  }
+  return true;
+}
+
+function doMove(u,path,after){
+  if(!path.length){ after&&after(); return; }
+  G.anim={kind:"walk",u,path,i:0,t:0,dur:.13,after};
+}
+function finishMove(u){
+  u.tx=u.pathEndX ?? u.tx; u.ty=u.pathEndY ?? u.ty;
+}
+
+function actionAttack(u,tx,ty){
+  const d=unitAt(tx,ty); if(!d) return;
+  u.dir = tx>u.tx?1:tx<u.tx?-1:u.dir;
+  G.anim={kind:"strike",u,d,t:0,dur:.42,after:()=>{
+    hitUnit(u,d);
+    endAct(u);
+  }};
+}
+function actionEat(u){
+  const t=at(u.tx,u.ty);
+  if(!(t&&t.v===3&&t.fruit>=1)) return;
+  const glut=u.traits.includes("glut");
+  let eaten=1, boost=0;
+  t.fruit-=1; u.belly.push(t.c);
+  if(glut&&t.fruit>=1){ t.fruit-=1; u.belly.push(t.c); eaten++; }
+  for(let i=0;i<eaten;i++){
+    const add=Math.min(FRUIT_BUFF[t.c].gain,Math.max(0,FRUIT_STAT_MAX-fruitStat(u,t.c)));
+    u.buffs[t.c]+=add; boost+=add;
+    if(t.c==="b") u.maxmp+=add;
+  }
+  u.hp=Math.min(u.maxhp,u.hp+(hasAbility("digestion")?24:12));
+  u.mp=Math.min(u.maxmp,u.mp+(hasAbility("digestion")?4:2));
+  SFX.eat(); puff(unitX(u),unitY(u)-20,BIOME[t.c].berry,6);
+  const F=FRUIT_BUFF[t.c];
+  float(unitX(u),unitY(u)-34,`${F.jp} ${boost?"+"+boost:"上限"}`,BIOME[t.c].berry,1.6);
+  logMsg(BIOME[t.c].berry,`${u.name}が${BIOME[t.c].jp}の実を食べた — ${F.jp} ${boost?"+"+boost:"は上限"}`);
+  endAct(u);
+}
+function poopNeed(u){ return u.traits.includes("consti")?3:1; }
+function actionPoop(u,forced){
+  const consti=u.traits.includes("consti");
+  const kind = forced || poopKind(u);
+  const c = u.belly.length?u.belly[0]:(at(u.tx,u.ty).c||"y");
+  const dur=consti||kind==="big"?CFG.tacticsBigStrain:CFG.tacticsStrain;
+  u.squatMax=dur;
+  G.anim={kind:"squat",u,t:0,dur,fired:false,pk:kind,pc:c,after:()=>{
+    if(u.belly.length){ if(consti) u.belly.length=0; else u.belly.shift(); }
+    endAct(u);
+  }};
+  SFX.strain();
+}
+function actionSkill(u,tx,ty){
+  const sk=APE[u.type].sk;
+  const cost=skillCost(u);
+  const T=u.type;
+  if(u.mp<cost) return false;
+  if(T==="normal"&&u.belly.length<poopNeed(u)){
+    hint(`つよいうんちには実が ${poopNeed(u)} 個ひつよう`);
+    return false;
+  }
+  u.mp-=cost;
+  if(T==="normal"){
+    actionPoop(u,"big");
+    return;
+  }
+  if(T==="monkey"){
+    float(unitX(u),unitY(u)-34,"かけぬけ！","#e8b23c",1.4);
+    u.extraMove=true; beep(880,.1,"square",.05,220);
+    startMovePhase(u); return;
+  }
+  if(T==="guardian"){
+    let n=0;
+    for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+      const t=at(u.tx+dx,u.ty+dy);
+      if(t&&t.fire>0){ t.fire=0; t.v=Math.max(1,t.v-1); n++; puff((u.tx+dx)*TS+12,tileTop(u.tx+dx,u.ty+dy)+12,"#9fb0bd",6); }
+    }
+    float(unitX(u),unitY(u)-34,n?`火を ${n} 消した`:"ふみけし","#9fd8e0",1.6);
+    SFX.grow(); endAct(u); return;
+  }
+  if(T==="silver"){
+    G.anim={kind:"stomp",u,t:0,dur:.5,after:()=>{
+      G.shake=9;
+      for(const d of G.units.filter(o=>o.alive&&o.side!=="ape"&&Math.abs(o.tx-u.tx)+Math.abs(o.ty-u.ty)<=1)){
+        hitUnit(u,d,1.25,"");
+        if(d.alive){ // ノックバック
+          const dx=Math.sign(d.tx-u.tx), dy=Math.sign(d.ty-u.ty);
+          const nt=at(d.tx+dx,d.ty+dy);
+          if(nt && !unitAt(d.tx+dx,d.ty+dy) && Math.abs(nt.h-at(d.tx,d.ty).h)<=2){ d.tx+=dx; d.ty+=dy; d.px=unitX(d); d.py=unitY(d); }
+        }
+      }
+      endAct(u);
+    }};
+    return;
+  }
+  if(T==="wizard"){
+    G.anim={kind:"rain",u,tx,ty,t:0,dur:1.4,after:()=>{
+      let grown=0, fruited=0, quenched=0, full=0;
+      for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+        const t=at(tx+dx,ty+dy); if(!t) continue;
+        const px=(tx+dx)*TS+12, py=tileTop(tx+dx,ty+dy)+8;
+        puff(px,py,"#68d0e0",3);
+        if(t.fire>0){ t.fire=0; quenched++; puff(px,py,"#d8f5f7",6); }
+        if(t.ash>0) t.ash=0;
+        if(!t.c) continue;
+        t.fert=Math.max(t.fert,1);
+        if(t.v<3){
+          t.v++;
+          t.grow=Math.max(t.grow,[0,GROW_GRASS,GROW_SAP,GROW_TREE][t.v]);
+          grown++; puff((tx+dx)*TS+12,tileTop(tx+dx,ty+dy)+8,BIOME[t.c].berry,7);
+        }else if(t.fruit<BIOME[t.c].cap){ t.fruit++; fruited++; puff((tx+dx)*TS+12,tileTop(tx+dx,ty+dy)+4,BIOME[t.c].berry,5); }
+        else full++;
+      }
+      float(tx*TS+12,tileTop(tx,ty)-8,`成長${grown} 実+${fruited} 消火${quenched}`,"#9fd8e0",2);
+      logMsg("#68d0e0",`${u.name}の雨 — 草木${grown}マス成長、成木${fruited}本に実、${quenched}マス消火${full?`、満杯${full}`:""}`);
+      SFX.rain(); endAct(u);
+    }};
+    return;
+  }
+  if(T==="chimp"){
+    const d=unitAt(tx,ty);
+    u.dir=tx>u.tx?1:-1;
+    u.usingSkill=true;
+    G.anim={kind:"throw",u,tx,ty,t:0,dur:.5,after:()=>{
+      if(d&&d.alive) hitUnit(u,d,1.4,"");
+      u.usingSkill=false; endAct(u);
+    }};
+    return;
+  }
+  endAct(u);
+}
+
+function endAct(u){
+  G.mode=null; G.moveSet=null; G.rangeSet=null; G.targetSet=null;
+  u.acted=true;
+  G.phase="idle";
+  setTimeout(()=>{ if(!G.over&&!G.intermission) nextTurn(); }, 120);
+}
+
+/* ══════════ ターン ══════════ */
+function tickCT(){
+  // 誰かが 100 に達するまで時計を進める
+  let guard=0;
+  while(guard++<4000){
+    const ready=G.units.filter(u=>u.alive&&u.ct>=100);
+    if(ready.length) return ready.sort((a,b)=>b.ct-a.ct)[0];
+    for(const u of G.units) if(u.alive) u.ct += S(u).spd/4;
+    G.clockTicks=(G.clockTicks||0)+1;
+    if(G.clockTicks%WORLD_TICKS===0) advanceWorld();
+    if(G.over||G.intermission) return null;
+  }
+  return null;
+}
+function nextTurn(){
+  if(G.over||G.intermission) return;
+  if(!G.units.some(u=>u.alive&&u.side==="ape")) return finish(false,"ゴリラ全滅","神は、群れを絶やした。");
+  if(clearStageIfReady()) return;
+  const u=tickCT();
+  if(!u||G.over) return;
+  u.ct-=100;
+  G.active=u; G.sel=u.id;
+  if(!beginAct(u)){ G.active=null; setTimeout(nextTurn,150); return; }
+  syncOrder(); showCard(u,matchMedia("(min-width:721px)").matches);
+  if(u.side==="ape"){ startMovePhase(u); }
+  else { G.phase="foe"; setTimeout(()=>foeTurn(u),380); }
+}
+function startMovePhase(u){
+  G.phase="move"; G.mode=null; G.rangeSet=null; G.targetSet=null;
+  G.moveSet=reachable(u);
+  G.startPos={x:u.tx,y:u.ty};
+  syncActs(); hint(`${u.name} — ドラッグで移動、そのあと行動をえらぶ`);
+}
+
+function stageName(n){ return STAGE_NAMES[n-1]||`第${n}森域`; }
+function freeApeSpot(){
+  const spots=[];
+  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+    const t=at(x,y); if(t&&!t.water&&t.fire<=0&&!unitAt(x,y)) spots.push([x,y]);
+  }
+  spots.sort((a,b)=>(Math.abs(a[0]-COLS/2)+Math.abs(a[1]-ROWS/2))-(Math.abs(b[0]-COLS/2)+Math.abs(b[1]-ROWS/2))||idx(a[0],a[1])-idx(b[0],b[1]));
+  return spots[0];
+}
+function addRunBonus(key,amount){
+  G.progress.bonus[key]+=amount;
+  if(key==="hp") for(const u of G.units.filter(u=>u.alive&&u.side==="ape")){ u.maxhp+=amount; u.hp+=amount; }
+  if(key==="mp") for(const u of G.units.filter(u=>u.alive&&u.side==="ape")){ u.maxmp+=amount; u.mp=Math.min(u.maxmp,u.mp+amount); }
+}
+function stageRewards(){
+  const locked=UNLOCK_ORDER.find(type=>!G.progress.unlocked.includes(type));
+  const ability=ABILITY_ORDER.find(a=>!G.progress.abilities.includes(a.key));
+  const upgrades=[
+    {key:"atk",amount:4,title:"群れの腕力",desc:"全員と、これから生まれる仲間の攻撃+4"},
+    {key:"hp",amount:18,title:"群れの生命",desc:"全員と、これから生まれる仲間の最大HP+18。現在HPも+18"},
+    {key:"mp",amount:3,title:"群れの魔力",desc:"全員と、これから生まれる仲間の最大MP+3"},
+    {key:"spd",amount:3,title:"群れの俊敏",desc:"全員と、これから生まれる仲間の素早さ+3"},
+  ];
+  const up=upgrades[(G.stage-1)%upgrades.length];
+  return [
+    locked?{kind:"GORILLA",title:`${APE[locked].jp} 解放`,desc:`出生候補に追加。空きがあれば今すぐ1匹加入`,apply:()=>{
+      G.progress.unlocked.push(locked);
+      const s=G.units.filter(u=>u.alive&&u.side==="ape").length<MAX_APES&&freeApeSpot();
+      if(s) makeUnit("ape",locked,s[0],s[1]);
+    }}:{kind:"GORILLA",title:"群れの生命",desc:"全員と未来の仲間の最大HP+12",apply:()=>addRunBonus("hp",12)},
+    ability?{kind:"ABILITY",title:`${ability.jp} 解放`,desc:ability.d,apply:()=>G.progress.abilities.push(ability.key)}
+      :{kind:"ABILITY",title:"奥義鍛錬",desc:"全員と未来の仲間の最大MP+2",apply:()=>addRunBonus("mp",2)},
+    {kind:"UPGRADE",title:up.title,desc:up.desc,apply:()=>addRunBonus(up.key,up.amount)},
+  ];
+}
+function renderInventory(){
+  const p=G.progress, chips=[];
+  for(const type of Object.keys(APE)) chips.push(`<span class="inv-chip${p.unlocked.includes(type)?" on":""}">${APE[type].jp}</span>`);
+  for(const a of ABILITY_ORDER.filter(a=>p.abilities.includes(a.key))) chips.push(`<span class="inv-chip on">${a.jp}</span>`);
+  const b=p.bonus;
+  if(b.atk||b.hp||b.mp||b.spd) chips.push(`<span class="inv-chip on">攻+${b.atk} HP+${b.hp} MP+${b.mp} 速+${b.spd}</span>`);
+  $("inventory").innerHTML=chips.join("");
+}
+function openCamp(){
+  G.intermission=true; G.active=null; G.phase="camp"; G.mode=null; G.moveSet=null; G.rangeSet=null; G.targetSet=null;
+  G.rewardOptions=stageRewards();
+  $("campTitle").textContent=`${stageName(G.stage)} 制圧`;
+  $("campSummary").innerHTML=`STAGE ${G.stage}/${STAGE_COUNT}<br>生存 ${G.units.filter(u=>u.alive&&u.side==="ape").length}匹　森 ${Math.round(forestValue())}<br>次の敵 HP+${Math.round(G.stage*ENEMY_HP_GROWTH*100)}% / 攻撃+${Math.round(G.stage*ENEMY_ATK_GROWTH*100)}%`;
+  const box=$("rewardBox"); box.innerHTML="";
+  G.rewardOptions.forEach((r,i)=>{
+    const b=document.createElement("button"); b.className="reward";
+    b.innerHTML=`<i>${r.kind}</i><b>${r.title}</b><span>${r.desc}</span>`;
+    b.onclick=()=>chooseReward(i); box.appendChild(b);
+  });
+  renderInventory(); $("scCamp").hidden=false; syncActs(); SFX.born();
+}
+function chooseReward(i){
+  if(!G.intermission) return;
+  const r=G.rewardOptions[i]; r.apply(); G.progress.picks.push(r.title);
+  G.intermission=false; $("scCamp").hidden=true;
+  nextStage(); syncOrder(); setTimeout(nextTurn,250);
+}
+function clearStageIfReady(){
+  if(!G.finalRound||G.over||G.intermission||G.units.some(u=>u.alive&&u.side!=="ape")) return false;
+  if(G.stage<STAGE_COUNT) openCamp();
+  else finish(true,"森は残った",`${STAGE_COUNT}ステージの襲撃をしのぎ、森は次の世代へ渡った。`);
+  return true;
+}
+function nextStage(){
+  G.stage++; G.round=1; G.waveIx=0; G.clockTicks=0; G.finalRound=false;
+  G.units=G.units.filter(u=>u.alive);
+  G.active=null; G.mode=null; G.moveSet=null; G.rangeSet=null; G.targetSet=null;
+  G.shake=7; SFX.born();
+  logMsg("#e8b23c",`ステージ ${G.stage}「${stageName(G.stage)}」— 森・仲間・強化を引き継いだ`);
+  float(CW/2,CH/2-18,`STAGE ${G.stage} ${stageName(G.stage)}`,"#ffe08a",2.5);
+}
+
+function advanceWorld(){
+  G.round=Math.min(LAST_ROUND,G.round+1);
+  if(G.round>=LAST_ROUND) G.finalRound=true;
+  // 火
+  const lit=[];
+  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){ const t=at(x,y); if(t.fire>0) lit.push([x,y]); }
+  for(const [x,y] of lit){
+    const t=at(x,y);
+    t.fire--;
+    if(t.fire<=0){ t.v=0; t.grow=0; t.fruit=0; t.fert=0; t.treeAge=0; t.ash=3; puff(x*TS+12,tileTop(x,y)+12,"#463c31",5); }
+  }
+  for(const [x,y] of lit){
+    const here=at(x,y);
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+      const n=at(x+dx,y+dy);
+      if(!n||n.water||n.v<1||n.fire>0||!n.c) continue;
+      const up = n.h>here.h, down = n.h<here.h;
+      const p = BIOME[n.c].flam * (up?1.7:down?0.35:1);    // 火は坂を駆け上がる
+      if(hash(x+dx+G.round*17,y+dy+G.stage*101)<p){ n.fire=2; n.treeAge=0; puff((x+dx)*TS+12,tileTop(x+dx,y+dy)+12,"#f2802b",4); }
+    }
+  }
+  // 成長
+  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+    const t=at(x,y);
+    if(t.fire>0) continue;
+    if(t.ash>0){ t.ash--; if(t.ash<=0&&t.c) t.fert=Math.max(t.fert,1); continue; }
+    if(!t.c) continue;
+    const B=BIOME[t.c];
+    if(t.v<3){
+      if(t.fert>0){
+        t.grow += B.rate;
+        t.fert = Math.max(0,t.fert-1);
+        const was=t.v;
+        t.v = t.grow>=GROW_TREE?3 : t.grow>=GROW_SAP?2 : t.grow>=GROW_GRASS?1 : 0;
+        if(t.v>was){ SFX.grow(); if(t.v===3) puff(x*TS+12,tileTop(x,y)+8,B.berry,6); }
+      }
+    } else {
+      if(t.fruit<B.cap && (t.fert>0 || G.round%2===0)){ t.fruit++; if(t.fert>0) t.fert=Math.max(0,t.fert-1); }
+    }
+  }
+  // 成木として無事に残ったターン数が、そのまま出生条件になる
+  for(const t of G.map){
+    if(t.v===3&&t.fire<=0) t.treeAge++;
+    else t.treeAge=0;
+  }
+  tryBirth();
+  // 襲撃
+  while(G.waveIx<WAVES.length && WAVES[G.waveIx].r<=G.round){
+    const w=WAVES[G.waveIx++];
+    const step=Math.max(1,MASTER.forestPerExtraEnemy||20);
+    const extra=Math.min(clamp(Math.round(MASTER.maxExtraEnemies),0,10),Math.floor(forestValue()/step));
+    const n=w.n+(w.kind==="jikon"?0:extra);
+    for(let i=0;i<n;i++) spawnFoe(w.kind);
+    SFX.wave();
+    logMsg("#c9452e",`第${G.waveIx}波 ${FOE[w.kind].jp} ×${n} — ${FOE[w.kind].act}`);
+  }
+  if(clearStageIfReady()){ syncRail(); return; }
+  const veg=forestValue();
+  if(G.round>4 && veg<1) finish(false,"森が焼き尽くされた","うんちの記憶まで灰になった。");
+  syncRail();
+}
+function forestValue(){
+  let v=0;
+  for(const t of G.map){ if(t.fire>0) continue; v += t.v===3?3 : t.v===2?1.2 : t.v===1?0.3 : 0; }
+  return v;
+}
+function matureTrees(c){ return G.map.filter(t=>t.v===3&&t.c===c&&t.fire<=0); }
+function nextBirthType(c){
+  const table=BORN[c].filter(([type])=>G.progress.unlocked.includes(type));
+  if(!table.length) return null;
+  const total=table.reduce((sum,row)=>sum+row[1],0);
+  let cursor=G.bornByColor[c]%total;
+  for(const [type,count] of table){
+    if(cursor<count) return type;
+    cursor-=count;
+  }
+  return table[0][0];
+}
+function tryBirth(){
+  const apes=G.units.filter(u=>u.alive&&u.side==="ape").length;
+  if(apes>=MAX_APES) return;
+  const ready=[];
+  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+    const t=at(x,y);
+    if(t.v===3&&t.c&&t.fire<=0&&t.treeAge>=BIRTH_TREE_TURNS) ready.push({x,y,t});
+  }
+  ready.sort((a,b)=>b.t.treeAge-a.t.treeAge||idx(a.x,a.y)-idx(b.x,b.y));
+  const parent=ready.find(({x,y,t:tree})=>nextBirthType(tree.c)&&[[0,0],[1,0],[-1,0],[0,1],[0,-1]].some(([dx,dy])=>{
+    const t=at(x+dx,y+dy); return t&&!t.water&&t.fire<=0&&!unitAt(x+dx,y+dy);
+  }));
+  if(!parent) return;
+  const c=parent.t.c, spots=[];
+  for(const [dx,dy] of [[0,0],[1,0],[-1,0],[0,1],[0,-1]]){
+    const t=at(parent.x+dx,parent.y+dy);
+    if(t&&!t.water&&t.fire<=0&&!unitAt(parent.x+dx,parent.y+dy)) spots.push([parent.x+dx,parent.y+dy]);
+  }
+  const type=nextBirthType(c);
+  spots.sort((a,b)=>idx(a[0],a[1])-idx(b[0],b[1]));
+  const s=spots[G.bornByColor[c]%spots.length];
+  const u=makeUnit("ape",type,s[0],s[1]);
+  parent.t.treeAge=0;
+  G.bornByColor[c]++;
+  G.born++; SFX.born();
+  float(unitX(u),unitY(u)-34,APE[type].jp,BIOME[c].berry,2.4);
+  logMsg(BIOME[c].berry,`${BIOME[c].jp}から ${u.name}（${APE[type].jp}）が生まれた`);
+  for(let i=0;i<12;i++) G.fx.push({x:unitX(u)+rnd(9,-9),y:unitY(u),vx:rnd(22,-22),vy:rnd(-20,-52),col:BIOME[c].berry,life:rnd(1,.5)});
+  syncOrder();
+}
+function spawnFoe(kind){
+  const cands=[];
+  for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+    if(x>1&&x<COLS-2&&y>1&&y<ROWS-2) continue;
+    const t=at(x,y);
+    if(t&&!t.water&&t.fire<=0&&!unitAt(x,y)) cands.push([x,y]);
+  }
+  if(!cands.length) return;
+  const s=cands[(G.stage*31+G.waveIx*7+nextId)%cands.length];
+  makeUnit("human",kind,s[0],s[1]);
+  syncOrder();
+}
+
+/* ══════════ 敵AI ══════════ */
+function foeTurn(u){
+  const st=S(u);
+  const set=reachable(u);
+  const apes=G.units.filter(o=>o.alive&&o.side==="ape");
+  let goal=null, want="attack";
+
+  if(u.type==="bald" && apes.length){
+    // 隣にゴリラがいなければ木を伐る
+    const near=apes.find(o=>inRange(u.tx,u.ty,o.tx,o.ty,1));
+    if(!near){
+      let best=null,bd=99;
+      for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+        const t=at(x,y); if(t.v<2) continue;
+        const d=Math.abs(x-u.tx)+Math.abs(y-u.ty);
+        if(d<bd){bd=d;best=[x,y];}
+      }
+      if(best){ goal=best; want="chop"; }
+    }
+  }
+  if(u.type==="fireman"){
+    let best=null,bd=99;
+    for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+      const t=at(x,y); if(t.v<1||t.water||!t.c||BIOME[t.c].flam<=0||t.fire>0) continue;
+      let v=0;
+      for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){ const n=at(x+dx,y+dy); if(n) v+=n.v; }
+      const d=Math.abs(x-u.tx)+Math.abs(y-u.ty) - v;
+      if(d<bd){bd=d;best=[x,y];}
+    }
+    if(best){ goal=best; want="burn"; }
+  }
+  if(!goal && apes.length){
+    let best=null,bd=1e9;
+    for(const o of apes){ const d=Math.abs(o.tx-u.tx)+Math.abs(o.ty-u.ty); if(d<bd){bd=d;best=o;} }
+    goal=[best.tx,best.ty]; want="attack";
+  }
+  if(!goal){ endAct(u); return; }
+
+  // 目標に一番近づける到達マスへ
+  let bestK=null, bestScore=1e9;
+  const consider=(k,c)=>{
+    const x=k%COLS, y=(k/COLS)|0;
+    const d=Math.abs(x-goal[0])+Math.abs(y-goal[1]);
+    const h=at(x,y).h;
+    const score=d*10 - h*2 + c*0.4;                  // 高いところを好む
+    if(score<bestScore){ bestScore=score; bestK=k; }
+  };
+  consider(idx(u.tx,u.ty),0);
+  for(const [k,v] of set) consider(k,v.c);
+  const path = bestK===idx(u.tx,u.ty) ? [] : pathTo(u,set,bestK%COLS,(bestK/COLS)|0);
+
+  doMove(u,path,()=>{
+    const target = want==="attack" ? G.units.find(o=>o.alive&&o.side==="ape"&&inRange(u.tx,u.ty,o.tx,o.ty,st.rng)) : null;
+    if(target){ actionAttack(u,target.tx,target.ty); return; }
+    if(want==="chop"){
+      const t=at(goal[0],goal[1]);
+      if(inRange(u.tx,u.ty,goal[0],goal[1],1)&&t&&t.v>=2){
+        G.anim={kind:"strike",u,d:null,t:0,dur:.4,after:()=>{
+          t.v=0;t.grow=0;t.fruit=0;t.treeAge=0;t.fert=Math.max(0,t.fert-2);
+          puff(goal[0]*TS+12,tileTop(goal[0],goal[1])+12,"#6b5322",8);
+          float(goal[0]*TS+12,tileTop(goal[0],goal[1]),"木が倒された","#c9452e",1.5);
+          beep(90,.12,"square",.05,-30); endAct(u);
+        }};
+        return;
+      }
+    }
+    if(want==="burn"){
+      const cand=[[goal[0],goal[1]],...tilesInRange(u.tx,u.ty,st.rng)];
+      const spot=cand.find(([x,y])=>{ const t=at(x,y); return t&&t.v>=1&&t.c&&BIOME[t.c].flam>0&&t.fire<=0&&inRange(u.tx,u.ty,x,y,st.rng); });
+      if(spot){
+        u.dir=spot[0]>u.tx?1:-1;
+        G.anim={kind:"flame",u,tx:spot[0],ty:spot[1],t:0,dur:.6,after:()=>{
+          const t=at(spot[0],spot[1]);
+          if(t&&t.v>=1&&BIOME[t.c].flam>0){ t.fire=2; t.treeAge=0; SFX.fire(); float(spot[0]*TS+12,tileTop(spot[0],spot[1]),"着火","#f2802b",1.4); }
+          endAct(u);
+        }};
+        return;
+      }
+    }
+    endAct(u);
+  });
+}
+
+/* ══════════ 演出 ══════════ */
+function puff(x,y,col,n){ for(let i=0;i<n;i++) G.fx.push({x,y,vx:rnd(26,-26),vy:rnd(-8,-36),col,life:rnd(.7,.3)}); }
+function float(x,y,text,col,life){ G.floats.push({x,y,text,col,life,max:life}); }
+function logMsg(col,msg){
+  G.log.push({col,msg,life:5});
+  if(G.log.length>4) G.log.shift();
+  renderLog();
+}
+
+/* ══════════ 描画 ══════════ */
+function drawTile(x,y){
+  const t=at(x,y), sx=x*TS, top=tileTop(x,y), h=hash(x,y);
+  const B=t.c?BIOME[t.c]:null;
+  // 側面
+  const wallH=t.h*HSTEP+6;
+  if(wallH>0){
+    ctx.fillStyle = t.water?"#20343a" : (B?B.wall:"#33261a");
+    ctx.fillRect(sx,top+TS,TS,wallH);
+    ctx.fillStyle="#00000040";
+    ctx.fillRect(sx,top+TS+wallH-2,TS,2);
+    for(let i=0;i<3;i++){ if(hash(x*3+i,y*5)>.6){ ctx.fillStyle="#ffffff10"; ctx.fillRect(sx+2+i*7,top+TS+2,2,Math.max(1,wallH-4)); } }
+  }
+  // 上面
+  let g = t.water?"#3c6b70" : (B&&(t.v>0||t.fert>0)?B.ground:"#4a3623");
+  if(t.ash>0) g="#2f2820";
+  ctx.fillStyle=g; ctx.fillRect(sx,top,TS,TS);
+  // 高さの陰影
+  ctx.fillStyle = t.h>=2?"#ffffff12" : t.h===1?"#ffffff08" : "#00000010";
+  ctx.fillRect(sx,top,TS,TS);
+  ctx.fillStyle="#00000022"; ctx.fillRect(sx,top,TS,1); ctx.fillRect(sx,top,1,TS);
+  // ディザ
+  if(h<.35){ ctx.fillStyle="#00000022"; ctx.fillRect(sx+((h*29)|0)%18,top+((h*13)|0)%18,3,2); }
+  if(h>.75){ ctx.fillStyle="#ffffff10"; ctx.fillRect(sx+((h*17)|0)%18,top+((h*7)|0)%18,2,2); }
+  if(t.water){
+    ctx.fillStyle="#68d0e033";
+    const w=Math.sin(vt*2+x*.8+y*.5)>0?1:0;
+    ctx.fillRect(sx+2+w,top+6,8,1); ctx.fillRect(sx+12-w,top+14,8,1);
+  }
+  if(t.ash>0){ ctx.fillStyle="#1c1712"; ctx.fillRect(sx+4,top+6,4,3); ctx.fillRect(sx+13,top+13,3,3); }
+  if(t.fert>0&&t.v===0&&t.ash<=0&&t.c){
+    ctx.fillStyle=PCOL[t.c].m;
+    ctx.fillRect(sx+7,top+9,3,3); ctx.fillRect(sx+13,top+13,2,2);
+  }
+  // 植生
+  if(t.v>0&&B) drawVeg(x,y,t,B,sx,top);
+}
+function drawVeg(x,y,t,B,sx,top){
+  const h=hash(x,y), sway=Math.sin(vt*1.4+x*.7+y*.4)>0?1:0;
+  if(t.v===1){
+    ctx.fillStyle=B.grass[0];
+    ctx.fillRect(sx+4+((h*7)|0)%3,top+13,3,6); ctx.fillRect(sx+11,top+16,3,4);
+    ctx.fillStyle=B.grass[1]; ctx.fillRect(sx+16,top+12+((h*5)|0)%2,3,7);
+  } else if(t.v===2){
+    ctx.fillStyle=B.trunk; ctx.fillRect(sx+11,top+12,3,8);
+    ctx.fillStyle=B.leaf[0]; ctx.fillRect(sx+6+sway,top+7,12,6);
+    ctx.fillStyle=B.leaf[1]; ctx.fillRect(sx+9,top+4,6,4);
+  } else {
+    ctx.fillStyle="#00000038"; ctx.fillRect(sx+4,top+18,16,3);
+    ctx.fillStyle=B.trunk; ctx.fillRect(sx+10,top+11,4,10);
+    ctx.fillStyle=B.leaf[0]; ctx.fillRect(sx+2+sway,top+1,20,11);
+    ctx.fillStyle=B.leaf[1]; ctx.fillRect(sx+6+sway,top-2,12,6);
+    ctx.fillStyle="#00000030"; ctx.fillRect(sx+2+sway,top+10,20,2);
+    for(let i=0;i<(t.fruit|0);i++){
+      ctx.fillStyle=B.berry;
+      ctx.fillRect(sx+5+sway+i*6,top+4+((i*5+((h*9)|0))%4),3,3);
+      ctx.fillStyle="#ffffff70"; ctx.fillRect(sx+5+sway+i*6,top+4+((i*5+((h*9)|0))%4),1,1);
+    }
+  }
+}
+function drawFire(x,y){
+  const t=at(x,y); if(t.fire<=0) return;
+  const sx=x*TS, top=tileTop(x,y), k=Math.floor(vt*12);
+  for(let i=0;i<8;i++){
+    const h2=hash(x*7+i+k,y*3+k);
+    ctx.fillStyle=h2>.66?"#ffd34d":h2>.3?"#f2802b":"#c33a1e";
+    ctx.fillRect(sx+2+((h2*18)|0),top+2+((h2*17)|0),3,4);
+  }
+  ctx.fillStyle="#ffd34d30"; ctx.fillRect(sx+2,top+2,20,20);
+}
+function drawUnit(u){
+  const st=S(u);
+  const s=SPR["u_"+u.type];
+  const squat=u.squat>0;
+  const strain=squat?clamp(1-u.squat/Math.max(.01,u.squatMax),0,1):0;
+  const A=G.anim;
+  let ox=0, oy=0;
+  if(A&&A.u===u){
+    if(A.kind==="strike"){ const k=Math.sin(Math.min(1,A.t/A.dur)*Math.PI); ox=u.dir*k*9; }
+    if(A.kind==="stomp"){ oy=-Math.sin(Math.min(1,A.t/A.dur)*Math.PI)*7; }
+  }
+  const shake = squat?Math.round(Math.sin(vt*(28+strain*24))*(.5+strain*1.5)):0;
+  const drop  = squat?Math.round(Math.sin(strain*Math.PI)*4):0;
+  oy += u.relief>0 ? -Math.round(Math.sin((u.relief/.5)*Math.PI)*7) : 0;
+  const x=Math.round(u.px-s.width/2+ox+shake), y=Math.round(u.py-s.height+1+oy+drop);
+  // 影
+  ctx.fillStyle="#00000048";
+  ctx.fillRect(Math.round(u.px-6),Math.round(u.py-2),12,3);
+  // 選択・行動中リング
+  if(G.active===u&&u.alive){
+    const col=u.side==="ape"?"#ffe08a":"#ff6047";
+    ctx.fillStyle=col;
+    const bob=Math.sin(vt*5)>0?0:1;
+    ctx.fillRect(Math.round(u.px)-3,Math.round(u.py-s.height-6-bob),6,2);
+    ctx.fillRect(Math.round(u.px)-1,Math.round(u.py-s.height-4-bob),2,2);
+    const label=u.side==="ape"?`▶ ${u.name} 行動中`:`敵 ▶ ${u.name}`;
+    ctx.font='8px "DotGothic16", monospace';
+    const tw=Math.ceil(ctx.measureText(label).width)+6;
+    const lx=clamp(Math.round(u.px-tw/2),1,CW-tw-1), ly=Math.max(1,Math.round(u.py-s.height-29-bob));
+    ctx.fillStyle="#0b0805e8"; ctx.fillRect(lx,ly,tw,11);
+    ctx.fillStyle=col; ctx.fillRect(lx,ly,2,11); ctx.fillText(label,lx+4,ly+8);
+  }
+  if(u.rage>0&&Math.sin(vt*13)>0){ ctx.fillStyle="#c9452e55"; ctx.fillRect(x,y,s.width,s.height); }
+  ctx.save();
+  if(u.dir<0){ ctx.translate(x+s.width,y); ctx.scale(-1,1); ctx.drawImage(s,0,0); }
+  else ctx.drawImage(s,x,y);
+  ctx.restore();
+  // 力み
+  if(squat){
+    const k=Math.sin(vt*26)>0?1:0;
+    ctx.fillStyle="#ffffffcc"; ctx.fillRect(x+s.width-3+k,y-4,2,2);
+    ctx.fillStyle="#e8b23c"; ctx.fillRect(x+2-k,y-3,3,1); ctx.fillRect(x+s.width-8+k,y-6,3,1);
+    if(strain>.72){ // 出かかっている
+      const gsz=Math.max(1,Math.round((strain-.72)*12));
+      ctx.fillStyle=PCOL[G.anim?.pk==="gold"?"gold":(u.belly[0]||"y")].m;
+      ctx.fillRect(Math.round(u.px-u.dir*10-gsz/2), Math.round(u.py-6-gsz/2), gsz, Math.max(1,Math.round(gsz*.7)));
+    }
+  }
+  // HP / MP
+  const bw=s.width-4;
+  {
+    ctx.fillStyle="#0b0805"; ctx.fillRect(x+2,y-3,bw,2);
+    ctx.fillStyle=u.side==="ape"?(u.hp>u.maxhp*.4?"#7fae2f":"#c9452e"):"#c9452e";
+    ctx.fillRect(x+2,y-3,Math.max(1,Math.round(bw*u.hp/u.maxhp)),2);
+  }
+  if(u.side==="ape"&&u.maxmp){
+    ctx.fillStyle="#0b0805"; ctx.fillRect(x+2,y-6,bw,2);
+    ctx.fillStyle="#68d0e0"; ctx.fillRect(x+2,y-6,Math.max(0,Math.round(bw*u.mp/u.maxmp)),2);
+  }
+  // お腹の中の実：3枠を盤面上に常時表示（左から、次に出る順）
+  if(u.side==="ape") for(let i=0;i<3;i++){
+    const sx=x+2+i*5, sy=y-11;
+    ctx.fillStyle="#0b0805"; ctx.fillRect(sx,sy,4,4);
+    ctx.fillStyle="#4a3823"; ctx.fillRect(sx,sy,4,1); ctx.fillRect(sx,sy,1,4);
+    const c=u.belly[i]; if(!c) continue;
+    ctx.fillStyle=BIOME[c].berry; ctx.fillRect(sx+1,sy+1,3,3);
+    ctx.fillStyle="#ffffff90"; ctx.fillRect(sx+1,sy+1,1,1);
+  }
+}
+function drawPoop(p){
+  const K=POOP[p.kind], C=PCOL[p.kind==="gold"?"gold":p.c];
+  const air=clamp(1-p.t/p.land,0,1), fall=air*CFG.arc, s=K.size;
+  let sq=1; const since=p.t-p.land;
+  if(since>=0&&since<.22) sq=1-CFG.squash*Math.sin((1-since/.22)*Math.PI*.5);
+  const x=(p.x+p.dir*air*7)|0, y=(p.y-fall)|0;
+  const R=(w,h,col,ox,oy)=>{ctx.fillStyle=col;ctx.fillRect((x+ox*s)|0,(y+oy*s*sq)|0,Math.max(1,Math.round(w*s)),Math.max(1,Math.round(h*sq*s)));};
+  if(p.kind==="pellet"){ R(2,2,C.m,-3,-2);R(2,2,C.d,0,-3);R(2,2,C.m,1,-1);R(1,1,C.l,-3,-2); }
+  else if(p.kind==="big"){ R(8,2,C.d,-4,-1);R(6,2,C.m,-3,-3);R(4,2,C.m,-2,-5);R(2,1,C.l,-1,-6);R(3,1,C.l,-3,-3); }
+  else if(p.kind==="gold"){
+    R(6,2,C.d,-3,-1);R(4,2,C.m,-2,-3);R(2,1,C.l,-1,-4);
+    if(Math.sin(vt*9)>0){ R(1,1,"#fff9d6",-4,-5); R(1,1,"#fff9d6",3,-3); }
+  } else { R(6,2,C.d,-3,-1);R(4,2,C.m,-2,-3);R(2,1,C.l,-1,-4); }
+  if(since>=0&&since<.45){
+    const q=since/.45, rad=Math.round(5+q*(12+K.size*5)), rh=Math.max(2,Math.round(rad*.45));
+    ctx.globalAlpha=(1-q)*.9; ctx.fillStyle=C.l;
+    ctx.fillRect(x-rad,y-rh,rad*2,2); ctx.fillRect(x-rad,y+rh-2,rad*2,2);
+    ctx.fillRect(x-rad,y-rh,2,rh*2); ctx.fillRect(x+rad-2,y-rh,2,rh*2);
+    ctx.globalAlpha=1;
+  }
+  if(since>0&&since<CFG.steam){
+    ctx.fillStyle="#ffffff33";
+    const k=since*7;
+    ctx.fillRect((x-2+Math.sin(k)*2)|0,(y-6-since*5)|0,1,2);
+    ctx.fillRect((x+2+Math.sin(k+2)*2)|0,(y-8-since*4)|0,1,2);
+  }
+}
+
+function draw(){
+  ctx.clearRect(0,0,CW,CH);
+  ctx.save();
+  if(G.shake>.2) ctx.translate(Math.round(rnd(G.shake,-G.shake)),Math.round(rnd(G.shake,-G.shake)));
+
+  // 移動範囲 / 射程のハイライト（地面の上）
+  for(let y=0;y<ROWS;y++){
+    for(let x=0;x<COLS;x++) drawTile(x,y);
+    // ハイライト
+    for(let x=0;x<COLS;x++){
+      const k=idx(x,y), top=tileTop(x,y);
+      if(G.phase==="move"&&!G.mode&&G.moveSet&&G.moveSet.has(k)){
+        ctx.fillStyle="#68d0e030"; ctx.fillRect(x*TS,top,TS,TS);
+        ctx.fillStyle="#68d0e090";
+        ctx.fillRect(x*TS,top,TS,1); ctx.fillRect(x*TS,top+TS-1,TS,1);
+        ctx.fillRect(x*TS,top,1,TS); ctx.fillRect(x*TS+TS-1,top,1,TS);
+      }
+      if(G.rangeSet&&G.rangeSet.has(k)){
+        ctx.fillStyle="#c9452e2d"; ctx.fillRect(x*TS,top,TS,TS);
+        ctx.fillStyle="#c9452eaa";
+        ctx.fillRect(x*TS,top,TS,1); ctx.fillRect(x*TS,top+TS-1,TS,1);
+        ctx.fillRect(x*TS,top,1,TS); ctx.fillRect(x*TS+TS-1,top,1,TS);
+      }
+      if(G.targetSet&&G.targetSet.has(k)){
+        const pulse=Math.sin(vt*6)>0?"#e8b23c55":"#e8b23c33";
+        ctx.fillStyle=pulse; ctx.fillRect(x*TS,top,TS,TS);
+        ctx.fillStyle="#e8b23c"; ctx.fillRect(x*TS,top,TS,1); ctx.fillRect(x*TS,top+TS-1,TS,1);
+      }
+      if(G.active?.alive&&G.active.tx===x&&G.active.ty===y){
+        const col=G.active.side==="ape"?"#ffe08a":"#ff6047";
+        const p=Math.sin(vt*7)>0?1:0, sx=x*TS+p, sy=top+p, n=7;
+        ctx.fillStyle=G.active.side==="ape"?"#e8b23c22":"#c9452e22";
+        ctx.fillRect(x*TS,top,TS,TS);
+        ctx.fillStyle=col;
+        ctx.fillRect(sx,sy,n,2); ctx.fillRect(sx,sy,2,n);
+        ctx.fillRect(sx+TS-n-2,sy,n,2); ctx.fillRect(sx+TS-4,sy,2,n);
+        ctx.fillRect(sx,sy+TS-4,n,2); ctx.fillRect(sx,sy+TS-n-2,2,n);
+        ctx.fillRect(sx+TS-n-2,sy+TS-4,n,2); ctx.fillRect(sx+TS-4,sy+TS-n-2,2,n);
+      }
+    }
+    // この行に立つユニット・うんち
+    for(const p of G.poops) if(p.ty===y) drawPoop(p);
+    for(const u of G.units) if(u.alive&&u.ty===y&&u!==G.dragging) drawUnit(u);
+    for(let x=0;x<COLS;x++) drawFire(x,y);
+  }
+  // ユニットが立っている射程マスも、枠線だけは手前に出して見失わせない
+  if(G.rangeSet){
+    for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
+      const k=idx(x,y); if(!G.rangeSet.has(k)) continue;
+      const top=tileTop(x,y), col=G.targetSet?.has(k)?"#e8b23c":"#c9452e";
+      ctx.fillStyle=col;
+      ctx.fillRect(x*TS,top,TS,2); ctx.fillRect(x*TS,top+TS-2,TS,2);
+      ctx.fillRect(x*TS,top,2,TS); ctx.fillRect(x*TS+TS-2,top,2,TS);
+    }
+  }
+  if(G.dragging) drawUnit(G.dragging);
+
+  // 雨・投擲
+  const A=G.anim;
+  if(A&&A.kind==="rain"){
+    const k=A.t/A.dur;
+    ctx.globalAlpha=.6*(k<.2?k/.2:k>.8?(1-k)/.2:1);
+    for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+      const t=at(A.tx+dx,A.ty+dy); if(!t) continue;
+      const sx=(A.tx+dx)*TS, top=tileTop(A.tx+dx,A.ty+dy);
+      ctx.fillStyle="#68d0e022"; ctx.fillRect(sx,top,TS,TS);
+      ctx.fillStyle="#68d0e0";
+      for(let i=0;i<4;i++){
+        const h2=hash((A.tx+dx)*17+i*13+((A.t*9)|0),(A.ty+dy)*19+i*7);
+        const x=sx+2+h2*(TS-4), y=top-12+((h2*100+A.t*150+i*9)%(TS+18));
+        ctx.fillRect(x|0,y|0,1,4);
+      }
+    }
+    ctx.globalAlpha=1;
+  }
+  if(A&&(A.kind==="throw"||A.kind==="flame")){
+    const k=Math.min(1,A.t/A.dur);
+    const x0=A.u.px, y0=A.u.py-14, x1=A.tx*TS+12, y1=tileTop(A.tx,A.ty)+12;
+    if(A.kind==="throw"){
+      const x=x0+(x1-x0)*k, y=y0+(y1-y0)*k-Math.sin(k*Math.PI)*22;
+      ctx.fillStyle="#9a9a9a"; ctx.fillRect(x|0,y|0,4,4);
+      ctx.fillStyle="#cfcfcf"; ctx.fillRect(x|0,y|0,2,2);
+    } else {
+      for(let i=0;i<8;i++){
+        const q=k*(.3+i*.1); if(q>1) continue;
+        const x=x0+(x1-x0)*q+rnd(3,-3), y=y0+(y1-y0)*q+rnd(3,-3);
+        ctx.fillStyle=i>5?"#c33a1e":i>3?"#f2802b":"#ffd34d";
+        ctx.fillRect(x|0,y|0,4,4);
+      }
+    }
+  }
+  // 粒子・数字
+  for(const f of G.fx){ ctx.fillStyle=f.col; ctx.fillRect(f.x|0,f.y|0,2,2); }
+  ctx.font='8px "DotGothic16", monospace';
+  ctx.textAlign="center";
+  for(const f of G.floats){
+    const k=1-f.life/f.max;
+    ctx.globalAlpha=f.life<.4?f.life/.4:1;
+    ctx.fillStyle="#000000c0"; ctx.fillText(f.text,(f.x)|0,(f.y-k*16+1)|0);
+    ctx.fillStyle=f.col;       ctx.fillText(f.text,(f.x)|0,(f.y-k*16)|0);
+    ctx.globalAlpha=1;
+  }
+  ctx.textAlign="left";
+  ctx.restore();
+}
+
+/* ══════════ 更新 ══════════ */
+function update(dt){
+  vt+=dt;
+  G.shake=Math.max(0,G.shake-dt*14);
+  G.fx=G.fx.filter(f=>(f.life-=dt)>0);
+  for(const f of G.fx){ f.x+=f.vx*dt; f.y+=f.vy*dt; f.vy+=42*dt; }
+  G.floats=G.floats.filter(f=>(f.life-=dt)>0);
+  G.poops=G.poops.filter(p=>{
+    const wasAir=p.t<p.land;
+    p.t+=dt; p.life-=dt;
+    if(wasAir&&p.t>=p.land){
+      const K=POOP[p.kind], col=PCOL[p.kind==="gold"?"gold":p.c].l;
+      puff(p.x,p.y+2,col,12+Math.round(K.size*6));
+      puff(p.x,p.y,"#f2e6cf",4);
+      G.shake=Math.max(G.shake,(2+K.shake)*CFG.impactShake);
+      beep(p.kind==="big"?75:120,.12,"triangle",.07,-70);
+    }
+    return p.life>0;
+  });
+  for(const u of G.units){
+    if(!u.alive) continue;
+    u.anim+=dt*6;
+    if(u!==G.dragging && !(G.anim&&G.anim.kind==="walk"&&G.anim.u===u)){
+      u.px += (unitX(u)-u.px)*Math.min(1,dt*12);
+      u.py += (unitY(u)-u.py)*Math.min(1,dt*12);
+    }
+    if(u.squat>0) u.squat-=dt;
+    u.relief=Math.max(0,u.relief-dt);
+  }
+  const A=G.anim;
+  if(A){
+    A.t+=dt;
+    if(A.kind==="walk"){
+      const seg=A.t/A.dur;
+      if(seg>=1){
+        A.t=0; const [nx,ny]=A.path[A.i];
+        A.u.dir = nx>A.u.tx?1: nx<A.u.tx?-1: A.u.dir;
+        A.u.tx=nx; A.u.ty=ny; A.u.px=unitX(A.u); A.u.py=unitY(A.u);
+        SFX.step(); A.i++;
+        if(A.i>=A.path.length){ const f=A.after; G.anim=null; f&&f(); return; }
+      } else {
+        const [nx,ny]=A.path[A.i];
+        const sx=A.u.tx*TS+TS/2, sy=unitY(A.u);
+        const ex=nx*TS+TS/2, ey=ny*TS+YOFF-at(nx,ny).h*HSTEP+TS;
+        A.u.px=sx+(ex-sx)*seg; A.u.py=sy+(ey-sy)*seg-Math.sin(seg*Math.PI)*4;
+      }
+    } else if(A.kind==="squat"){
+      A.u.squat=Math.max(A.u.squat,.5);
+      A.u.squat=A.dur-A.t;
+      G.shake=Math.max(G.shake,Math.max(0,A.t/A.dur-.5)*3);
+      if(!A.fired && A.t>=A.dur-0.25){ A.fired=true; dropPoop(A.u,A.pk,A.pc); A.u.relief=.5; }
+      if(A.t>=A.dur){ A.u.squat=0; const f=A.after; G.anim=null; f&&f(); return; }
+    } else if(A.t>=A.dur){
+      const f=A.after; G.anim=null; f&&f(); return;
+    }
+  }
+}
+
+/* ══════════ 入力 ══════════ */
+function toWorld(ev){
+  const r=cv.getBoundingClientRect();
+  return {x:(ev.clientX-r.left)/r.width*CW, y:(ev.clientY-r.top)/r.height*CH};
+}
+function tileFromPoint(p){
+  // 高さを考慮：下の行から見て、点が乗っている上面を探す
+  for(let y=ROWS-1;y>=0;y--){
+    for(let x=0;x<COLS;x++){
+      const top=tileTop(x,y);
+      if(p.x>=x*TS&&p.x<x*TS+TS&&p.y>=top&&p.y<top+TS) return [x,y];
+    }
+  }
+  const gx=clamp(Math.floor(p.x/TS),0,COLS-1), gy=clamp(Math.floor((p.y-YOFF)/TS),0,ROWS-1);
+  return [gx,gy];
+}
+cv.addEventListener("pointerdown",ev=>{
+  if(G.over) return;
+  cv.setPointerCapture(ev.pointerId);
+  const p=toWorld(ev), [x,y]=tileFromPoint(p);
+  if(G.mode&&G.targetSet){          // 対象を選ぶ
+    if(G.targetSet.has(idx(x,y))) confirmTarget(x,y);
+    return;
+  }
+  if(G.phase==="move"&&G.active&&G.moveSet?.has(idx(x,y))&&!unitAt(x,y)){
+    const u=G.active, path=pathTo(u,G.moveSet,x,y);
+    G.phase="idle";
+    doMove(u,path,()=>{ G.phase="act"; G.moveSet=null; syncActs(); hint("行動をえらぶ"); });
+    return;
+  }
+  const u=unitAt(x,y);
+  if(G.phase==="move"&&u===G.active){ G.dragging=u; G.dragFrom=[u.tx,u.ty]; return; }
+  if(u){ showCard(u); G.sel=u.id; }
+});
+cv.addEventListener("pointermove",ev=>{
+  if(!G.dragging) return;
+  const p=toWorld(ev);
+  G.dragging.px=clamp(p.x,8,CW-8); G.dragging.py=clamp(p.y,14,CH-4);
+});
+function dropUnit(){
+  const u=G.dragging; if(!u) return;
+  G.dragging=null;
+  const p={x:u.px,y:u.py-8};
+  const [x,y]=tileFromPoint(p);
+  const k=idx(x,y);
+  if(G.moveSet&&G.moveSet.has(k)&&!unitAt(x,y)){
+    const path=pathTo(u,G.moveSet,x,y);
+    G.phase="idle";
+    doMove(u,path,()=>{ G.phase="act"; G.moveSet=null; syncActs(); hint("行動をえらぶ"); });
+  } else {
+    u.px=unitX(u); u.py=unitY(u);
+    if(k!==idx(u.tx,u.ty)) beep(120,.08,"square",.04,-40);
+  }
+}
+cv.addEventListener("pointerup",dropUnit);
+cv.addEventListener("pointercancel",dropUnit);
+
+/* ══════════ 行動ボタン ══════════ */
+const $=id=>document.getElementById(id);
+const bAtk=$("aAttack"), bSk=$("aSkill"), bEat=$("aEat"), bPoop=$("aPoop"), bWait=$("aWait"), bCancel=$("aCancel");
+function hint(s){ $("hint").textContent=s; }
+function canAct(){ return G.active && G.active.side==="ape" && (G.phase==="move"||G.phase==="act"); }
+function syncActs(){
+  const u=G.active, ok=canAct();
+  const st=ok?APE[u.type]:null;
+  bAtk.disabled=!ok; bSk.disabled=!ok; bEat.disabled=!ok; bPoop.disabled=!ok; bWait.disabled=!ok;
+  bCancel.hidden=!G.mode;
+  [bAtk,bSk,bEat,bPoop].forEach(b=>b.classList.remove("on"));
+  if(!ok){ bSk.querySelector("small").textContent=""; bEat.textContent="[3] たべる"; return; }
+  bAtk.title = `攻撃範囲：${attackRangeText(st.rng)}`;
+  const cost=skillCost(u);
+  bSk.querySelector("small").textContent = `MP${cost}`;
+  const skillNeedsFruit=u.type==="normal"&&u.belly.length<poopNeed(u);
+  bSk.disabled = u.mp<cost||skillNeedsFruit;
+  bSk.title = skillNeedsFruit ? `${st.sk.n} — 実が ${poopNeed(u)} 個ひつよう` : `${st.sk.n} — ${st.sk.d}`;
+  const t=at(u.tx,u.ty);
+  bEat.disabled = !(t.v===3&&t.fruit>=1);
+  bEat.textContent = bEat.disabled ? "[3] たべる" : `[3] ${t.c==="r"?"赤":t.c==="b"?"青":"黄"}実→${FRUIT_BUFF[t.c].jp}`;
+  if(bEat.disabled) bEat.title="実のある成木の上で使う";
+  else {
+    const add=Math.min(FRUIT_BUFF[t.c].gain,Math.max(0,FRUIT_STAT_MAX-fruitStat(u,t.c)));
+    bEat.title=add?`${FRUIT_BUFF[t.c].jp}+${add}（現在 ${fruitStat(u,t.c)}/${FRUIT_STAT_MAX}）`:`${FRUIT_BUFF[t.c].jp}は最大（実はおなかに入る）`;
+  }
+  const need=poopNeed(u);
+  bPoop.disabled = u.belly.length<need;
+  bPoop.title = u.belly.length<need ? `おなかに実が ${need} 個ひつよう` : "その場にうんちをする";
+  if(G.mode==="attack") bAtk.classList.add("on");
+  if(G.mode==="skill") bSk.classList.add("on");
+}
+function setTargets(list){
+  G.targetSet=new Set(list.map(([x,y])=>idx(x,y)));
+}
+function setRange(list){
+  G.rangeSet=new Set(list.map(([x,y])=>idx(x,y)));
+}
+bAtk.onclick=()=>{
+  const u=G.active; if(!canAct()) return;
+  G.mode="attack";
+  const st=APE[u.type];
+  const range=tilesInRange(u.tx,u.ty,st.rng);
+  setRange(range);
+  setTargets(range.filter(([x,y])=>{const o=unitAt(x,y);return o&&o.side!==u.side;}));
+  syncActs();
+  hint(`攻撃範囲：${attackRangeText(st.rng)}${G.targetSet.size?" — 金色の敵をえらぶ":" — 今は敵なし"}`);
+};
+bSk.onclick=()=>{
+  const u=G.active; if(!canAct()) return;
+  const st=APE[u.type];
+  if(["normal","monkey","guardian","silver"].includes(u.type)){
+    G.mode=null; G.rangeSet=null; G.targetSet=null; G.phase="idle"; actionSkill(u); return;
+  }
+  G.mode="skill";
+  if(u.type==="wizard"){
+    const range=tilesInRange(u.tx,u.ty,3).concat([[u.tx,u.ty]]);
+    setRange(range); setTargets(range);
+  }
+  if(u.type==="chimp"){
+    const range=tilesInRange(u.tx,u.ty,4);
+    setRange(range);
+    setTargets(range.filter(([x,y])=>{const o=unitAt(x,y);return o&&o.side!==u.side;}));
+  }
+  syncActs(); hint(st.sk.n+" — "+st.sk.d);
+};
+bEat.onclick=()=>{ if(!canAct())return; G.phase="idle"; G.mode=null; G.rangeSet=null; G.targetSet=null; actionEat(G.active); };
+bPoop.onclick=()=>{ if(!canAct())return; G.phase="idle"; G.mode=null; G.rangeSet=null; G.targetSet=null; syncActs(); actionPoop(G.active); };
+bWait.onclick=()=>{ if(!canAct())return; G.phase="idle"; endAct(G.active); };
+bCancel.onclick=()=>{ G.mode=null; G.rangeSet=null; G.targetSet=null; syncActs(); hint("行動をえらぶ"); };
+function confirmTarget(x,y){
+  const u=G.active, m=G.mode;
+  G.mode=null; G.rangeSet=null; G.targetSet=null; G.phase="idle"; syncActs();
+  if(m==="attack") actionAttack(u,x,y);
+  else if(m==="skill") actionSkill(u,x,y);
+}
+addEventListener("keydown",e=>{
+  if(!canAct()) return;
+  const hot={"1":bAtk,"2":bSk,"3":bEat,"4":bPoop,"5":bWait}[e.key];
+  if(hot&&!hot.disabled){ e.preventDefault(); hot.click(); return; }
+  if(e.key==="Enter"||e.key===" "){ e.preventDefault(); bWait.click(); }
+  if(e.key==="Escape") bCancel.click();
+});
+
+/* ══════════ HUD ══════════ */
+function syncRail(){
+  $("tStage").textContent=G.stage+"/"+STAGE_COUNT;
+  $("tStage").title=stageName(G.stage);
+  $("tRound").textContent=Math.min(G.round,LAST_ROUND)+"/"+LAST_ROUND;
+  $("tApes").textContent=G.units.filter(u=>u.alive&&u.side==="ape").length;
+  $("tFoes").textContent=G.units.filter(u=>u.alive&&u.side!=="ape").length;
+  syncBirth();
+}
+function syncBirth(){
+  const apes=G.units.filter(u=>u.alive&&u.side==="ape").length;
+  const short={y:"黄",r:"赤",b:"青"};
+  const typeShort={normal:"普通",monkey:"モンキー",guardian:"ガーディアン",silver:"シルバー",wizard:"ウィザード",chimp:"チンパンジー"};
+  $("birthHud").innerHTML='<b>出生</b>'+COLORS.map(c=>{
+    const trees=matureTrees(c), age=Math.max(0,...trees.map(t=>t.treeAge));
+    const nextType=nextBirthType(c), next=nextType?APE[nextType].jp:"未解放";
+    const stopped=!nextType?"（キャンプで同色種を解放）":apes>=MAX_APES?`（仲間上限${MAX_APES}匹）`:!trees.length?"（成木が必要）":"";
+    const title=`${BIOME[c].jp}：成木 ${trees.length}本／最長生存 ${age}/${BIRTH_TREE_TURNS}ターン／次は ${next}${stopped}`;
+    const ready=nextType&&age>=BIRTH_TREE_TURNS&&apes<MAX_APES?" ready":"";
+    return `<span class="birth-chip${ready}" title="${title}"><i style="background:${BIOME[c].berry}"></i>${short[c]} ${trees.length}本 ${Math.min(age,BIRTH_TREE_TURNS)}/${BIRTH_TREE_TURNS} → ${nextType?typeShort[nextType]:"未解放"}</span>`;
+  }).join("");
+}
+function syncOrder(){
+  const box=$("order");
+  box.innerHTML='<span class="olab">行動順</span>';
+  // 先読み
+  const sim=G.units.filter(u=>u.alive).map(u=>({u,ct:u.ct}));
+  const out=[];
+  for(let g=0;g<600&&out.length<7;g++){
+    const rdy=sim.filter(s=>s.ct>=100).sort((a,b)=>b.ct-a.ct);
+    if(rdy.length){ out.push(rdy[0].u); rdy[0].ct-=100; }
+    else for(const s of sim) s.ct+=S(s.u).spd/4;
+  }
+  out.forEach((u,i)=>{
+    const d=document.createElement("div");
+    d.className="oc"+(i===0?" now":"")+(u.side!=="ape"?" foe":"");
+    const c=document.createElement("canvas"); c.width=24;c.height=26;
+    const g=c.getContext("2d"); g.imageSmoothingEnabled=false;
+    const s=SPR["u_"+u.type];
+    g.drawImage(s,((24-s.width)/2)|0,((26-s.height)/2)|0);
+    d.appendChild(c); d.title=u.name;
+    d.onclick=()=>showCard(u);
+    box.appendChild(d);
+  });
+  syncRail();
+}
+function pb(v,col){ return `<span class="pb"><i style="width:${Math.round(clamp(v,0,1)*100)}%;background:${col}"></i></span>`; }
+function showCard(u,open=true){
+  const card=$("card"); card.hidden=!open;
+  const st=S(u);
+  const pic=$("cPic"), g=pic.getContext("2d");
+  g.imageSmoothingEnabled=false; g.clearRect(0,0,24,26);
+  const s=SPR["u_"+u.type]; g.drawImage(s,((24-s.width)/2)|0,((26-s.height)/2)|0);
+  $("cName").textContent=u.name;
+  $("cType").textContent = u.side==="ape" ? `${st.jp}／${st.from}生まれ` : `人族 — ${st.act}`;
+  const t=at(u.tx,u.ty);
+  const atkBonus=u.side==="ape"?u.buffs.r:0;
+  const spdBonus=u.side==="ape"?u.buffs.y:0;
+  $("cBars").innerHTML =
+    `<span>HP</span>${pb(u.hp/u.maxhp,"#7fae2f")}<b>${Math.max(0,Math.ceil(u.hp))}</b>` +
+    (u.side==="ape"?`<span>MP</span>${pb(u.mp/u.maxmp,"#68d0e0")}<b>${u.mp}/${u.maxmp}</b>`:``) +
+    `<span>こうげき</span>${pb(st.atk/56,"#c9452e")}<b>${st.atk}${atkBonus?` (+${atkBonus})`:""}</b>` +
+    `<span>すばやさ</span>${pb(st.spd/58,"#e8b23c")}<b>${st.spd}${spdBonus?` (+${spdBonus})`:""}</b>` +
+    `<span>いどう</span>${pb(st.move/7,"#a49070")}<b>${st.move}</b>` +
+    `<span>ジャンプ</span>${pb(st.jump/3,"#a49070")}<b>${st.jump}</b>` +
+    `<span>いま の 高さ</span>${pb(t.h/3,"#9fd8e0")}<b>${t.h}</b>`;
+  $("cAb").innerHTML = u.side==="ape"
+    ? `<b>★${st.sk.n}</b>（MP${skillCost(u)}）<br>${st.sk.d}`
+    : `<b>★${st.act}</b>`;
+  $("cTr").innerHTML = u.side==="ape"
+    ? `<em>攻撃範囲</em> — ${attackRangeText(st.rng)}<br>`
+      + u.traits.map(k=>`<em>${TRAITS[k].jp}</em> — ${TRAITS[k].d}`).join("<br>")
+      + `<br><em>実の強化</em> — <span style="color:${BIOME.r.berry}">赤 攻撃+${u.buffs.r}</span> ／ <span style="color:${BIOME.b.berry}">青 最大MP+${u.buffs.b}</span> ／ <span style="color:${BIOME.y.berry}">黄 素早さ+${u.buffs.y}</span>（上限${FRUIT_STAT_MAX}）`
+      + `<br><em>おなか</em> — ${u.belly.length?u.belly.map(c=>`<span style="color:${BIOME[c].berry}">● ${BIOME[c].jp}</span>`).join(" → "):"からっぽ"}`
+    : `<em>攻撃範囲</em> — ${attackRangeText(st.rng)}<br>倒すと森が守られる`;
+}
+function renderLog(){
+  const box=$("log"); box.innerHTML="";
+  for(const l of G.log){
+    const d=document.createElement("div"); d.className="lg";
+    d.innerHTML=`<i style="background:${l.col}"></i>`;
+    d.appendChild(document.createTextNode(l.msg));
+    box.appendChild(d);
+  }
+}
+
+/* ══════════ 終了 ══════════ */
+function finish(win,title,sub){
+  if(G.over) return;
+  G.over=win?"win":"lose";
+  const et=$("endTitle");
+  et.textContent=win?"CLEAR":"GAME OVER";
+  et.className="big "+(win?"win":"lose");
+  $("endSub").innerHTML=`<em>${title}</em><br>${sub}`;
+  $("endTally").innerHTML=`
+    <span>到達ステージ</span><b>${G.stage}/${STAGE_COUNT}</b>
+    <span>最終ラウンド</span><b>${Math.min(G.round,LAST_ROUND)}</b>
+    <span>育てた森</span><b>${Math.round(forestValue())}</b>
+    <span>したうんち</span><b>${G.pooCount}</b>
+    <span>きんのうんち</span><b>${G.goldCount}</b>
+    <span>生まれた仲間</span><b>${G.born}</b>
+    <span>死んだ仲間</span><b>${G.dead}</b>
+    <span>倒した人族</span><b>${G.kills}</b>`;
+  $("endTally").innerHTML+=`<span>獲得した戦果</span><b>${G.progress.picks.length}</b>`;
+  $("endObit").textContent = G.obits.length
+    ? "訃報 — " + G.obits.slice(-3).map(o=>`${o.name}（${TRAITS[o.traits[0]].jp}）${o.cause}`).join(" ／ ")
+    : "";
+  $("scEnd").hidden=false;
+  win?SFX.born():SFX.die();
+}
+
+/* ══════════ 起動 ══════════ */
+(function rules(){
+  const box=$("ruleBox");
+  const list=[
+    {spr:"u_normal", b:"実で強化", t:"赤:攻撃　青:最大MP<br>黄:素早さ／3色で金"},
+    {spr:"u_guardian",b:"成木が命をつなぐ", t:`成木が${BIRTH_TREE_TURNS}ターン残ると<br>同色の仲間が生まれる`},
+    {spr:"u_jikon",  b:"ゴリラジコン", t:"殺されたゴリラは<br>敵になる"},
+  ];
+  for(const r of list){
+    const d=document.createElement("div"); d.className="rule";
+    const c=document.createElement("canvas"); c.width=24;c.height=26;
+    const g=c.getContext("2d"); g.imageSmoothingEnabled=false;
+    const s=SPR[r.spr]; g.drawImage(s,((24-s.width)/2)|0,((26-s.height)/2)|0);
+    const p=document.createElement("div"); p.innerHTML=`<b>${r.b}</b>${r.t}`;
+    d.append(c,p); box.appendChild(d);
+  }
+})();
+function fit(){
+  const st=$("stage"), fr=$("frame");
+  const side=st.clientWidth>720?170:0;
+  const s=Math.min((st.clientWidth-side-8)/CW,(st.clientHeight-4)/CH);
+  const w=Math.round(CW*s), h=Math.round(CH*s);
+  cv.style.width=w+"px"; cv.style.height=h+"px";
+  fr.style.width=w+"px"; fr.style.height=h+"px";
+  fr.style.transform=side?`translateX(${-side/2}px)`:"none";
+}
+addEventListener("resize",fit);
+function start(){
+  $("scTitle").hidden=true; $("scEnd").hidden=true; $("scCamp").hidden=true;
+  newGame(); syncActs(); fit();
+}
+$("bStart").onclick=start; $("bAgain").onclick=start; $("bReset").onclick=start;
+$("cClose").onclick=()=>$("card").hidden=true;
+$("bSound").onclick=ev=>{ snd=!snd; ev.currentTarget.textContent=snd?"♪ ON":"♪ OFF"; if(snd)beep(660,.06); };
+
+window.POOPTACT={ get state(){return G;}, start, SPR, APE, FOE, nextTurn,
+  previewCamp(){ if($("scTitle").hidden===false) start(); openCamp(); },
+  previewPoop(kind="normal"){
+    if($("scTitle").hidden===false) start();
+    const u=G.units.find(v=>v.alive&&v.side==="ape"); if(!u)return;
+    G.active=u; G.phase="idle"; u.belly=kind==="gold"?["y","r","b"]:["y"]; actionPoop(u,kind);
+  },
+  auto(n){ // 動作確認：n手ぶん、味方も自動で動かす
+    for(let k=0;k<n&&!G.over;k++){
+      const u=G.active;
+      if(!u){ nextTurn(); continue; }
+      if(u.side!=="ape"){ return "foe-turn"; }
+      const st=APE[u.type], t=at(u.tx,u.ty);
+      const foe=G.units.find(o=>o.alive&&o.side!=="ape"&&inRange(u.tx,u.ty,o.tx,o.ty,st.rng));
+      if(foe) actionAttack(u,foe.tx,foe.ty);
+      else if(t.v===3&&t.fruit>=1) actionEat(u);
+      else if(u.belly.length>=(u.traits.includes("consti")?3:1)) actionPoop(u);
+      else endAct(u);
+      return "acted";
+    }
+    return "done";
+  }
+};
+
+newGame(false);
+let last=performance.now();
+function frame(now){
+  const dt=Math.min(.05,(now-last)/1000); last=now;
+  update(dt); draw();
+  requestAnimationFrame(frame);
+}
+fit(); requestAnimationFrame(frame);
+document.addEventListener("visibilitychange",()=>{ last=performance.now(); });
+})();
+</script>

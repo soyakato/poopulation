@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>POOPULATION STUDIO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Silkscreen:wght@400;700&display=swap">
+<script src="poop-config.js"></script>
+<style>
+  :root{--soil:#17120c;--panel:#221a11;--line:#4a3823;--ink:#f2e6cf;--dim:#a49070;--gold:#e8b23c;--sky:#68d0e0;--jp:"DotGothic16",sans-serif;--px:"Silkscreen",monospace}
+  *{box-sizing:border-box} body{margin:0;min-height:100vh;background:var(--soil);color:var(--ink);font-family:var(--jp)}
+  header{height:52px;display:flex;align-items:center;gap:14px;padding:8px 14px;border-bottom:2px solid var(--line);background:#100c07}
+  h1{font:700 16px var(--px);color:var(--gold);letter-spacing:.08em;margin:0}
+  nav{margin-left:auto;display:flex;gap:5px} nav a{font:10px var(--px);color:var(--dim);text-decoration:none;border:1px solid var(--line);padding:6px 8px} nav a:hover{color:var(--gold);border-color:var(--gold)}
+  main{display:grid;grid-template-columns:minmax(420px,470px) 1fr;min-height:calc(100vh - 52px)}
+  aside{padding:14px;border-right:2px solid var(--line);background:var(--panel);overflow:auto}
+  h2{font-size:14px;margin:0 0 4px;color:var(--gold)} h3{font-size:12px;color:var(--gold);margin:14px 0 6px}.lead{font-size:11px;color:var(--dim);line-height:1.6;margin:0 0 14px}
+  label{display:grid;grid-template-columns:1fr 72px;gap:8px;align-items:center;font-size:11px;margin:9px 0}
+  input,select,button{font:12px var(--jp);color:var(--ink);background:#120d08;border:2px solid var(--line);padding:6px}
+  input[type=number]{width:72px} button{cursor:pointer} button:hover{border-color:var(--gold)}
+  .group{border-top:1px solid var(--line);padding-top:8px;margin-top:12px}.actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:14px}.primary{background:var(--gold);color:#24170a;border-color:var(--gold)}
+  .tabs{display:flex;gap:5px;margin:12px 0}.tabs button{flex:1}.tabs button.on{background:var(--gold);color:#24170a;border-color:var(--gold)}.pane[hidden]{display:none}
+  .table-wrap{overflow-x:auto;border:1px solid var(--line)}table{width:100%;border-collapse:collapse;font-size:10px}th,td{padding:3px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}th{color:var(--dim);font-weight:400;background:#140f0a}td:first-child{text-align:left;color:var(--ink)}table input[type=number]{width:50px;padding:4px}table select{padding:4px;min-width:104px}.mini{padding:3px 7px;font-size:10px}.row-actions{display:flex;justify-content:flex-end;margin-top:5px}.note{font-size:10px;color:var(--dim);line-height:1.5;margin:5px 0}
+  .status{min-height:18px;margin-top:8px;font-size:10px;color:var(--sky)}
+  .preview{display:flex;flex-direction:column;min-width:0}.preview-bar{padding:8px 12px;display:flex;align-items:center;gap:8px;border-bottom:2px solid var(--line);font-size:11px;color:var(--dim)}
+  iframe{border:0;width:100%;flex:1;min-height:560px;background:var(--soil)}
+  @media(max-width:900px){header{height:auto;flex-wrap:wrap}nav{width:100%;margin:0}main{grid-template-columns:1fr}aside{border-right:0;border-bottom:2px solid var(--line)}iframe{min-height:520px}}
+</style>
+</head>
+<body>
+<header><h1>POOPULATION STUDIO</h1><nav><a href="realtime.html">REALTIME</a><a href="tactics.html">TACTICS</a></nav></header>
+<main>
+  <aside>
+    <h2>ゲームエディタ</h2>
+    <p class="lead">数値を変えて「保存＆反映」。保存値はこのブラウザだけに反映されます。チーム共有は設定ファイルを書き出してください。</p>
+    <label>プレビューモード<select id="mode"><option value="realtime">リアルタイム</option><option value="tactics">タクティクス</option></select></label>
+    <div class="tabs"><button class="on" data-pane="animationPane">うんち演出</button><button data-pane="masterPane">TACTICS マスタ</button></div>
+    <section class="pane" id="animationPane">
+      <label>うんち<select id="kind"><option value="normal">ふつう</option><option value="pellet">ころころ</option><option value="big">でか</option><option value="gold">きん（3色）</option></select></label>
+      <div class="group">
+        <label>力み（リアルタイム）<input id="realtimeStrain" type="number" min="0.3" max="3" step="0.05"></label>
+        <label>巨大うんちの力み<input id="realtimeBigStrain" type="number" min="0.5" max="4" step="0.05"></label>
+        <label>力み（タクティクス）<input id="tacticsStrain" type="number" min="0.5" max="4" step="0.05"></label>
+        <label>巨大うんちの力み<input id="tacticsBigStrain" type="number" min="0.5" max="5" step="0.05"></label>
+        <label>放物線の高さ<input id="arc" type="number" min="2" max="40" step="1"></label>
+        <label>着地のつぶれ<input id="squash" type="number" min="0" max="0.8" step="0.05"></label>
+        <label>湯気の秒数<input id="steam" type="number" min="0" max="4" step="0.1"></label>
+        <label>着地の画面揺れ<input id="impactShake" type="number" min="0" max="2" step="0.1"></label>
+      </div>
+    </section>
+    <section class="pane" id="masterPane" hidden>
+      <p class="note">タクティクス版の次回開始時に反映されます。初期マップと全判定は固定され、同じ操作なら同じ結果になります。</p>
+      <div class="group">
+        <label>ステージ数<input id="stageCount" type="number" min="1" max="20" step="1"></label>
+        <label>1ステージのラウンド数<input id="lastRound" type="number" min="1" max="99" step="1"></label>
+        <label>進行の遅さ<input id="worldTicks" type="number" min="4" max="100" step="1"></label>
+        <label>ステージ毎の敵HP上昇％<input id="enemyHpGrowth" type="number" min="0" max="100" step="1"></label>
+        <label>ステージ毎の敵攻撃上昇％<input id="enemyAtkGrowth" type="number" min="0" max="100" step="1"></label>
+        <label>追加敵1体の森規模<input id="forestPerExtraEnemy" type="number" min="1" max="100" step="1"></label>
+        <label>追加敵の上限<input id="maxExtraEnemies" type="number" min="0" max="10" step="1"></label>
+        <label>出生に必要な成木の生存ターン<input id="birthTreeTurns" type="number" min="1" max="30" step="1"></label>
+        <label>味方ゴリラ上限<input id="maxApes" type="number" min="1" max="30" step="1"></label>
+      </div>
+      <h3>地形生成</h3>
+      <div class="table-wrap"><table><tbody>
+        <tr><td>高台の数</td><td><input id="hillCount" type="number" min="0" max="8" step="1"></td></tr>
+        <tr><td>高台の最大半径</td><td><input id="hillRadiusMax" type="number" min="1" max="3" step="1"></td></tr>
+        <tr><td>太い川マスの割合</td><td><input id="riverExtraWidthChance" type="number" min="0" max="0.9" step="0.05"></td></tr>
+        <tr><td>天然林の木の数</td><td><input id="groveTrees" type="number" min="1" max="6" step="1"></td></tr>
+      </tbody></table></div>
+      <h3>味方キャラクター</h3>
+      <div class="table-wrap"><table><thead><tr><th>種類</th><th>HP</th><th>攻</th><th>速</th><th>移</th><th>跳</th><th>射</th><th>防</th><th>MP</th></tr></thead><tbody id="allyRows"></tbody></table></div>
+      <h3>敵キャラクター</h3>
+      <div class="table-wrap"><table><thead><tr><th>種類</th><th>HP</th><th>攻</th><th>速</th><th>移</th><th>跳</th><th>射</th><th>防</th></tr></thead><tbody id="enemyRows"></tbody></table></div>
+      <h3>初期メンバー</h3>
+      <div class="table-wrap"><table><tbody id="rosterRows"></tbody></table></div><div class="row-actions"><button class="mini" id="addRoster">＋ 味方を追加</button></div>
+      <h3>襲撃ウェーブ</h3>
+      <div class="table-wrap"><table><thead><tr><th>ラウンド</th><th>敵</th><th>数</th><th></th></tr></thead><tbody id="waveRows"></tbody></table></div><div class="row-actions"><button class="mini" id="addWave">＋ ウェーブを追加</button></div>
+    </section>
+    <div class="actions">
+      <button class="primary" id="apply">保存＆反映</button><button id="again">もう一度</button>
+      <button id="campPreview">キャンプ画面を確認</button>
+      <button id="export">設定ファイルを書き出す</button><button id="reset">初期値に戻す</button>
+    </div>
+    <div class="status" id="status" role="status"></div>
+  </aside>
+  <section class="preview">
+    <div class="preview-bar">ゲーム本体をそのまま埋め込んだ実動プレビューです。</div>
+    <iframe id="game" title="ゲームプレビュー" src="realtime.html"></iframe>
+  </section>
+</main>
+<script>
+(() => {
+  const C=window.POOPULATION_CONFIG;
+  const animationIds=["realtimeStrain","realtimeBigStrain","tacticsStrain","tacticsBigStrain","arc","squash","steam","impactShake"];
+  const masterIds=["stageCount","lastRound","worldTicks","enemyHpGrowth","enemyAtkGrowth","forestPerExtraEnemy","maxExtraEnemies","birthTreeTurns","maxApes"];
+  const terrainIds=["hillCount","hillRadiusMax","riverExtraWidthChance","groveTrees"];
+  const fields=["hp","atk","spd","move","jump","rng","def","mp"];
+  const allyNames={normal:"普通",monkey:"モンキー",guardian:"ガーディアン",silver:"シルバー",wizard:"ウィザード",chimp:"チンパンジー"};
+  const enemyNames={killer:"殺す人",bald:"ハゲ",fireman:"ファイアーメン",jikon:"ジコン"};
+  const $=id=>document.getElementById(id), frame=$("game"), status=$("status");
+  const num=(id,fallback=0)=>Number.isFinite($(id).valueAsNumber)?$(id).valueAsNumber:fallback;
+  let activePane="animationPane";
+
+  function unitRow(group,key,name,stats,withMp){
+    const row=document.createElement("tr");
+    row.innerHTML=`<td>${name}</td>`+fields.filter(k=>withMp||k!=="mp").map(k=>
+      `<td><input type="number" min="${k==="def"?0.1:0}" max="${k==="hp"?999:k==="def"?2:99}" step="${k==="def"?0.05:1}" value="${stats[k]}" data-unit="${group}" data-key="${key}" data-stat="${k}"></td>`
+    ).join("");
+    return row;
+  }
+  function options(names,selected){ return Object.entries(names).map(([k,n])=>`<option value="${k}"${k===selected?" selected":""}>${n}</option>`).join(""); }
+  function addRoster(type="normal"){
+    if($("rosterRows").children.length>=8) return;
+    const row=document.createElement("tr");
+    row.innerHTML=`<td><select data-roster>${options(allyNames,type)}</select></td><td><button class="mini" data-remove aria-label="削除">×</button></td>`;
+    $("rosterRows").appendChild(row);
+  }
+  function addWave(w={r:3,kind:"killer",n:1}){
+    const row=document.createElement("tr");
+    row.innerHTML=`<td><input type="number" min="1" max="99" step="1" value="${w.r}" data-wave="r"></td><td><select data-wave="kind">${options(enemyNames,w.kind)}</select></td><td><input type="number" min="1" max="20" step="1" value="${w.n}" data-wave="n"></td><td><button class="mini" data-remove aria-label="削除">×</button></td>`;
+    $("waveRows").appendChild(row);
+  }
+  function fill(){
+    animationIds.forEach(id=>$(id).value=C.animation[id]);
+    masterIds.forEach(id=>$(id).value=C.tactics[id]);
+    terrainIds.forEach(id=>$(id).value=C.tactics.terrain[id]);
+    for(const [key,name] of Object.entries(allyNames)) $("allyRows").appendChild(unitRow("allies",key,name,C.tactics.allies[key],true));
+    for(const [key,name] of Object.entries(enemyNames)) $("enemyRows").appendChild(unitRow("enemies",key,name,C.tactics.enemies[key],false));
+    C.tactics.startRoster.forEach(addRoster);
+    C.tactics.waves.forEach(addWave);
+  }
+  function readUnits(group){
+    const out={};
+    document.querySelectorAll(`[data-unit="${group}"]`).forEach(input=>{
+      const fallback=C.tactics[group][input.dataset.key][input.dataset.stat];
+      (out[input.dataset.key]??={})[input.dataset.stat]=Number.isFinite(input.valueAsNumber)?input.valueAsNumber:fallback;
+    });
+    return out;
+  }
+  function values(){
+    return {
+      version:5,
+      animation:Object.fromEntries(animationIds.map(id=>[id,num(id,C.animation[id])])),
+      tactics:{
+        ...Object.fromEntries(masterIds.map(id=>[id,num(id,C.tactics[id])])),
+        terrain:Object.fromEntries(terrainIds.map(id=>[id,num(id,C.tactics.terrain[id])])),
+        allies:readUnits("allies"), enemies:readUnits("enemies"),
+        startRoster:[...document.querySelectorAll("[data-roster]")].map(s=>s.value),
+        waves:[...$("waveRows").children].map(row=>({
+          r:Number.isFinite(row.querySelector('[data-wave="r"]').valueAsNumber)?row.querySelector('[data-wave="r"]').valueAsNumber:1,
+          kind:row.querySelector('[data-wave="kind"]').value,
+          n:Number.isFinite(row.querySelector('[data-wave="n"]').valueAsNumber)?row.querySelector('[data-wave="n"]').valueAsNumber:1
+        })).sort((a,b)=>a.r-b.r)
+      }
+    };
+  }
+  function preview(){
+    const api=$("mode").value==="tactics"?frame.contentWindow.POOPTACT:frame.contentWindow.POOPULATION;
+    if(!api){ status.textContent="ゲームを読み込み中…"; return setTimeout(preview,200); }
+    api.previewPoop($("kind").value); status.textContent="プレビューを再生しました";
+  }
+  function reload(action="plain"){
+    frame.onload=()=>{ frame.onload=null; setTimeout(()=>{
+      if(action==="animation") preview();
+      else if(action==="master"){ frame.contentWindow.POOPTACT?.start(); status.textContent="マスタを反映して新しいゲームを開始しました"; }
+    },250); };
+    frame.src=$("mode").value+".html?studio="+Date.now();
+  }
+  $("apply").onclick=()=>{
+    if(!$("rosterRows").children.length) return status.textContent="初期メンバーを1体以上にしてください";
+    if(!$("waveRows").children.length) return status.textContent="ウェーブを1つ以上にしてください";
+    localStorage.setItem("poopulation-config",JSON.stringify(values()));
+    if(activePane==="masterPane") $("mode").value="tactics";
+    reload(activePane==="masterPane"?"master":"animation");
+  };
+  $("again").onclick=()=>activePane==="masterPane"?reload("master"):preview();
+  $("campPreview").onclick=()=>{
+    $("mode").value="tactics";
+    frame.onload=()=>{ frame.onload=null; setTimeout(()=>{ frame.contentWindow.POOPTACT?.previewCamp(); status.textContent="ステージ報酬画面を表示しました"; },250); };
+    frame.src="tactics.html?studio="+Date.now();
+  };
+  $("mode").onchange=()=>reload();
+  $("addRoster").onclick=()=>addRoster();
+  $("addWave").onclick=()=>addWave({r:Math.min(99,num("lastRound",20)),kind:"killer",n:1});
+  document.addEventListener("click",e=>{ if(e.target.matches("[data-remove]")) e.target.closest("tr").remove(); });
+  document.querySelectorAll("[data-pane]").forEach(button=>button.onclick=()=>{
+    activePane=button.dataset.pane;
+    document.querySelectorAll("[data-pane]").forEach(b=>b.classList.toggle("on",b===button));
+    document.querySelectorAll(".pane").forEach(p=>p.hidden=p.id!==activePane);
+    if(activePane==="masterPane"){ $("mode").value="tactics"; reload(); }
+  });
+  $("reset").onclick=()=>{ localStorage.removeItem("poopulation-config"); location.reload(); };
+  $("export").onclick=()=>{
+    const cfg=values();
+    const source=`/* Generated by POOPULATION STUDIO */\n(() => {\n  const defaults = ${JSON.stringify(cfg,null,2)};\n  let saved = {};\n  try { saved = JSON.parse(localStorage.getItem("poopulation-config") || "{}"); } catch {}\n  if((saved.version||0)<5) saved={...saved,version:5,tactics:{...(saved.tactics||{}),stageCount:Math.max(4,Number(saved.tactics?.stageCount)||0)}};\n  const tactics = saved.tactics || {};\n  const mergeUnits = (base, overrides={}) => Object.fromEntries(Object.entries(base).map(([key, stats]) => [key, { ...stats, ...(overrides[key] || {}) }]));\n  window.POOPULATION_CONFIG = { ...defaults, ...saved, animation: { ...defaults.animation, ...(saved.animation || {}) }, tactics: { ...defaults.tactics, ...tactics, terrain: { ...defaults.tactics.terrain, ...(tactics.terrain || {}) }, allies: mergeUnits(defaults.tactics.allies, tactics.allies), enemies: mergeUnits(defaults.tactics.enemies, tactics.enemies), startRoster: Array.isArray(tactics.startRoster) && tactics.startRoster.length ? tactics.startRoster : defaults.tactics.startRoster, waves: Array.isArray(tactics.waves) && tactics.waves.length ? tactics.waves : defaults.tactics.waves } };\n})();\n`;
+    const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([source],{type:"text/javascript"})); a.download="poop-config.js"; a.click(); URL.revokeObjectURL(a.href);
+    status.textContent="poop-config.js を書き出しました。リポジトリの同名ファイルと差し替えて共有できます";
+  };
+  fill();
+})();
+</script>
+</body>
+</html>
