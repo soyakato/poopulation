@@ -1,5 +1,5 @@
 {
-  "_readme": "新キャラクターは既存の sprite / skill.behavior / ai を再利用すれば、エンジン変更なしで追加できます。詳しくは STAGES.md。",
+  "_readme": "新キャラクターは sprites.json のsprite IDと、既存の skill.behavior / ai を組み合わせて追加できます。詳しくは STAGES.md。",
   "version": 1,
   "allies": [
     { "id": "normal", "name": { "ja": "普通のゴリラ", "en": "Gorilla" }, "from": { "ja": "草原", "en": "Grassland" }, "sprite": "normal", "stats": { "atk": 26, "hp": 100, "spd": 24, "move": 4, "jump": 2, "rng": 1, "def": 1, "mp": 10 }, "skill": { "behavior": "rocket", "name": { "ja": "ロケットうんち", "en": "Rocket Poop" }, "cost": 5, "description": { "ja": "射程3の指定マスへ、十字5マスを育てる でかうんち を飛ばす", "en": "Launch big poop up to range 3; grow a 5-tile cross" } }, "ability": "はこぶ", "birth": { "color": "y", "weight": 7 }, "unlockOrder": 6 },

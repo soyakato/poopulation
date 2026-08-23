@@ -210,6 +210,14 @@ SPR.u_bald   =sprite(16,16, human("#343434",[[7,0,1,1,"#000"],[10,0,1,1,"#000"]]
                      [[4,7,1,6,"#7a5a33"],[2,6,3,2,"#b9c0c6"],[2,6,1,2,"#8b939a"]]));
 SPR.u_fireman=sprite(16,16, human("#ff1616",[[7,0,4,1,"#ff1616"]],"#ff1616",
                      [[0,8,6,1,"#343434"],[2,8,3,3,"#343434"],[5,9,1,2,"#343434"],[0,8,1,1,"#f2802b"]]));
+for(const [id,s] of Object.entries(window.POOPULATION_SPRITES?.sprites||{})){
+  const c=document.createElement("canvas"),g=c.getContext("2d");c.width=s.width;c.height=s.height;g.imageSmoothingEnabled=false;
+  for(let y=0;y<s.height;y++)for(let x=0;x<s.width;x++){
+    const col=s.palette[parseInt(s.pixels[y][x],16)];
+    if(!col.endsWith("00")){g.fillStyle=col;g.fillRect(x,y,1,1);}
+  }
+  SPR["u_"+id]=c;
+}
 
 /* ══════════ 音 ══════════ */
 let AC=null, snd=true, musicTimer=null, musicStep=0;

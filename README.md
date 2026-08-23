@@ -9,6 +9,7 @@
 - `stages.html` — ステージ・難易度のフォーム編集、検証、JSON書き出し
 - `stages.json` — 全24ステージ・4難易度のキャンペーン正本
 - `characters.html` / `characters.json` — キャラクターの追加・検証・JSON書き出しと正本
+- `sprites.html` / `sprites.json` — キャラクタースプライトのピクセル編集・複製・上書きデータ
 - `stage-loader.js` — ステージJSONの検証と難易度反映
 - `poop-config.js` — 排便演出と既存キャラクター能力の調整値（JSONが読めない場合の予備設定も保持）
 
@@ -16,7 +17,7 @@
 
 ローカルHTTPサーバーでフォルダーを公開し、`index.html`を開いてください。ファイルを直接開くより、モード間リンクとスタジオのプレビューが安定します。
 
-担当者は`studio.html`で演出を、`stages.html`でステージ・難易度を、`characters.html`でキャラクターを調整します。書き出したJSONをリポジトリの同名ファイルと差し替えると、チーム共通の既定値になります。詳細は`STAGES.md`を参照してください。
+担当者は`studio.html`で演出を、`stages.html`でステージ・難易度を、`characters.html`でキャラクターを、`sprites.html`で見た目を調整します。書き出したJSONをリポジトリの同名ファイルと差し替えると、チーム共通の既定値になります。詳細は`STAGES.md`を参照してください。
 
 ## 操作
 

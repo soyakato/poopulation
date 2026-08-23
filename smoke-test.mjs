@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import vm from "node:vm";
 
-for (const file of ["index.html", "realtime.html", "tactics.html", "studio.html", "stages.html", "characters.html"]) {
+for (const file of ["index.html", "realtime.html", "tactics.html", "studio.html", "stages.html", "characters.html", "sprites.html"]) {
   const html = fs.readFileSync(new URL(file, import.meta.url), "utf8");
   assert.match(html, /^<!doctype html>/i, `${file}: standards mode`);
   for (const [, code] of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)) {
@@ -117,6 +117,9 @@ const stageData=JSON.parse(fs.readFileSync(new URL("stages.json",import.meta.url
 const characterData=JSON.parse(fs.readFileSync(new URL("characters.json",import.meta.url),"utf8"));
 const characterReport=stageApi.validateCharacters(characterData);
 assert.equal(characterReport.errors.length,0,"character JSON passes schema validation");
+const spriteData=JSON.parse(fs.readFileSync(new URL("sprites.json",import.meta.url),"utf8"));
+const spriteReport=stageApi.validateSprites(spriteData);
+assert.equal(spriteReport.errors.length,0,"sprite JSON passes schema validation");
 const stageReport=stageApi.validate(stageData,{allyKinds:characterData.allies.map(c=>c.id),enemyKinds:characterData.enemies.map(c=>c.id)});
 assert.equal(stageReport.errors.length,0,"stage JSON passes schema validation");
 const normalCampaign=stageApi.resolve(stageData,"normal"), easyCampaign=stageApi.resolve(stageData,"easy");
@@ -130,4 +133,9 @@ assert.ok(easyCampaign.stages.at(-1).enemyMul.hp<normalCampaign.stages.at(-1).en
 assert.match(tactics,/const CHARACTER_SET=window\.POOPULATION_CHARACTERS/,"tactics loads data-driven characters");
 assert.match(tactics,/behavior:c\.skill\.behavior/,"new allies reuse skill behavior templates");
 assert.match(tactics,/ai:c\.ai/,"new enemies reuse AI templates");
+assert.match(tactics,/POOPULATION_SPRITES\?\.sprites/,"edited sprite JSON overrides built-in character art");
+assert.match(tacticsShell,/API\.loadSprites\("sprites\.json"\)/,"tactics loads editable sprite data");
+const spriteEditor=fs.readFileSync(new URL("sprites.html",import.meta.url),"utf8");
+assert.match(spriteEditor,/id="grid"/,"sprite editor exposes a pixel grid");
+assert.match(spriteEditor,/function encode\(\)/,"sprite editor exports palette-indexed pixels");
 console.log("POOPULATION smoke test: OK");

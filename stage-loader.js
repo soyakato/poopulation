@@ -230,6 +230,27 @@
     return {ok:errors.length===0,errors,warnings};
   }
 
+  function validateSprites(data) {
+    const errors=[], warnings=[];
+    const err=(where,msg)=>errors.push(`${where}: ${msg}`);
+    if(!isObj(data)) return {ok:false,errors:["ルート: JSONオブジェクトではありません"],warnings};
+    if(data.version!==1) err("version","1 である必要があります");
+    if(!isObj(data.sprites)) err("sprites","オブジェクトが必要です");
+    else for(const [id,s] of Object.entries(data.sprites)){
+      const w=`sprites.${id}`;
+      if(!/^[a-z0-9_-]+$/.test(id)) err(w,"IDは半角英小文字・数字・_・-だけにしてください");
+      if(!isObj(s)) {err(w,"オブジェクトではありません");continue;}
+      if(!isInt(s.width)||s.width<1||s.width>64||!isInt(s.height)||s.height<1||s.height>64) err(w,"width / height は1〜64の整数にしてください");
+      if(!Array.isArray(s.palette)||s.palette.length<1||s.palette.length>16||s.palette.some(c=>!/^#[0-9a-fA-F]{8}$/.test(c))) err(w+".palette","#RRGGBBAA形式を1〜16色指定してください");
+      if(!Array.isArray(s.pixels)||s.pixels.length!==s.height) err(w+".pixels",`高さと同じ${s.height}行が必要です`);
+      else s.pixels.forEach((row,y)=>{
+        if(typeof row!=="string"||row.length!==s.width) err(`${w}.pixels[${y}]`,`幅と同じ文字数が必要です`);
+        else for(const ch of row) if(!/[0-9a-f]/i.test(ch)||parseInt(ch,16)>=s.palette.length){err(`${w}.pixels[${y}]`,"paletteに無い色番号があります");break;}
+      });
+    }
+    return {ok:errors.length===0,errors,warnings};
+  }
+
   /* ══════════ 解決（難易度をかけ合わせる） ══════════ */
   function resolve(data, difficultyId) {
     const diffs = data.difficulties || [];
@@ -349,9 +370,17 @@
       return {data,report,source:url,error:null};
     }catch(e){ return {data:null,report:null,source:url,error:String(e&&e.message||e)}; }
   }
+  async function loadSprites(url) {
+    try{
+      const res=await fetch(url,{cache:"no-cache"});
+      if(!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data=await res.json(), report=validateSprites(data);
+      return {data,report,source:url,error:null};
+    }catch(e){ return {data:null,report:null,source:url,error:String(e&&e.message||e)}; }
+  }
 
   const API = { SCHEMA_VERSION, ENEMY_KINDS, ALLY_KINDS, OBJECTIVES, RIVERS,
-                TERRAIN_DEFAULTS, validate, validateCharacters, resolve, fallback, load, loadCharacters };
+                TERRAIN_DEFAULTS, validate, validateCharacters, validateSprites, resolve, fallback, load, loadCharacters, loadSprites };
   if (typeof globalThis !== "undefined") globalThis.POOPULATION_STAGES = API;
   if (typeof module !== "undefined" && module.exports) module.exports = API;
 })();

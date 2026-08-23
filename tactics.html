@@ -245,7 +245,7 @@
           <button class="mbtn" data-act="openControls" style="justify-content:center"><span data-en="CONTROLS">操作</span></button>
           <button class="mbtn" data-act="openSettings" style="justify-content:center"><span data-en="SETTINGS">設定</span></button>
         </div>
-        <div style="display:flex;justify-content:center;gap:18px;font-size:11px"><a href="stages.html" style="color:#7fae2f">ステージエディタ</a><a href="characters.html" style="color:#7fae2f">キャラクターエディタ</a></div>
+        <div style="display:flex;justify-content:center;gap:14px;font-size:11px"><a href="stages.html" style="color:#7fae2f">ステージ</a><a href="characters.html" style="color:#7fae2f">キャラクター</a><a href="sprites.html" style="color:#7fae2f">スプライト</a></div>
       </div>
 
       <div class="rules" id="ruleBox" style="display:flex;gap:8px;width:min(560px,92vw)"></div>
@@ -477,9 +477,12 @@ const App={
 
   async loadCampaign(){
     const API=window.POOPULATION_STAGES;
-    const chars=await API.loadCharacters("characters.json");
+    const noSprites=new URLSearchParams(location.search).has("noSprites");
+    const [chars,sprites]=await Promise.all([API.loadCharacters("characters.json"),noSprites?Promise.resolve({data:{version:1,sprites:{}},report:{ok:true}}):API.loadSprites("sprites.json")]);
     window.POOPULATION_CHARACTERS=chars.report?.ok?chars.data:null;
+    window.POOPULATION_SPRITES=sprites.report?.ok?sprites.data:null;
     if(!window.POOPULATION_CHARACTERS) console.error("characters.json could not be used",chars.error||chars.report?.errors);
+    if(!window.POOPULATION_SPRITES) console.error("sprites.json could not be used",sprites.error||sprites.report?.errors);
     const loaded=await API.load("stages.json",window.POOPULATION_CHARACTERS?{
       allyKinds:window.POOPULATION_CHARACTERS.allies.map(c=>c.id),enemyKinds:window.POOPULATION_CHARACTERS.enemies.map(c=>c.id)
     }:{});
