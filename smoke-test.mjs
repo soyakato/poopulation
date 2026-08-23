@@ -138,4 +138,6 @@ assert.match(tacticsShell,/API\.loadSprites\("sprites\.json"\)/,"tactics loads e
 const spriteEditor=fs.readFileSync(new URL("sprites.html",import.meta.url),"utf8");
 assert.match(spriteEditor,/id="grid"/,"sprite editor exposes a pixel grid");
 assert.match(spriteEditor,/function encode\(\)/,"sprite editor exports palette-indexed pixels");
+assert.match(spriteEditor,/function reduceColors\(rows,preferred=""\)/,"sprite editor keeps output within the 16-color limit");
+assert.match(spriteEditor,/id="palette"/,"sprite editor exposes a predefined clickable palette");
 console.log("POOPULATION smoke test: OK");
