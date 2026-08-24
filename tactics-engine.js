@@ -304,6 +304,62 @@ const S=u=>{
   return {...st,atk:Math.min(FRUIT_STAT_MAX,st.atk+u.buffs.r+b.atk),spd:Math.min(FRUIT_STAT_MAX,st.spd+u.buffs.y+b.spd)};
 };
 const unitSprite=u=>SPR["u_"+u.type]||SPR["u_"+S(u).sprite]||SPR.u_normal;
+let INTENT_ON=true;
+
+/* スプライトを任意のcanvasへ等倍で焼く。拡大はCSS側（image-rendering:pixelated）に任せる */
+function paintSprite(cv,spr){
+  if(!cv||!spr) return;
+  cv.width=spr.width; cv.height=spr.height;
+  const g=cv.getContext("2d"); g.imageSmoothingEnabled=false;
+  g.clearRect(0,0,cv.width,cv.height);
+  g.drawImage(spr,0,0);
+}
+function spriteEl(spr,cssHeight){
+  const c=document.createElement("canvas");
+  paintSprite(c,spr);
+  c.style.height=cssHeight+"px"; c.style.width="auto"; c.style.display="block";
+  return c;
+}
+/* うんちアイコン。盤面の drawPoop と同じ形をUI用に起こしたもの */
+function poopIcon(cv,kind,c){
+  if(!cv) return;
+  const K=POOP[kind]||POOP.normal, C=PCOL[kind==="gold"?"gold":(c||"y")];
+  const sz=K.size, W=20, H=16;
+  cv.width=W; cv.height=H;
+  const g=cv.getContext("2d"); g.imageSmoothingEnabled=false;
+  g.clearRect(0,0,W,H);
+  const ox=W/2, oy=H-2;
+  const R=(w,h,col,dx,dy)=>{ g.fillStyle=col; g.fillRect(Math.round(ox+dx*sz),Math.round(oy+dy*sz),Math.max(1,Math.round(w*sz)),Math.max(1,Math.round(h*sz))); };
+  if(kind==="pellet"){ R(2,2,C.m,-3,-2);R(2,2,C.d,0,-3);R(2,2,C.m,1,-1);R(1,1,C.l,-3,-2); }
+  else if(kind==="big"){ R(8,2,C.d,-4,-1);R(6,2,C.m,-3,-3);R(4,2,C.m,-2,-5);R(2,1,C.l,-1,-6);R(3,1,C.l,-3,-3); }
+  else if(kind==="gold"){ R(6,2,C.d,-3,-1);R(4,2,C.m,-2,-3);R(2,1,C.l,-1,-4);R(1,1,"#fff9d6",-4,-5);R(1,1,"#fff9d6",3,-3); }
+  else { R(6,2,C.d,-3,-1);R(4,2,C.m,-2,-3);R(2,1,C.l,-1,-4); }
+}
+/* 腹の中 → 次に出るうんち。「あと1色できんのうんち」までここで出す */
+function bellyPlan(u){
+  const kind=poopKind(u);
+  const c=u.belly.length?u.belly[0]:(at(u.tx,u.ty)?.c||"y");
+  const K=POOP[kind];
+  const have=new Set(u.belly), missing=COLORS.filter(x=>!have.has(x));
+  let hint="";
+  if(kind==="gold") hint=L("3色そろった → きんのうんち","three colours ready → GOLDEN");
+  else if(missing.length===1&&u.belly.length>=BELLY_MAX-1)
+    hint=L(`${BIOME[missing[0]].jp}であと1つ → きん`,`one more ${missing[0].toUpperCase()} → GOLDEN`);
+  else if(!u.belly.length) hint=L("実を食べると出せる","eat fruit to poop");
+  const name=kind==="gold"?L("きんのうんち","Golden poop"):L(`${BIOME[c].jp}のうんち`,`${c.toUpperCase()} poop`);
+  const desc=kind==="gold"
+    ? L(`肥料+${K.fert}・全能力+${K.boost||0}`,`fertiliser +${K.fert} · all stats +${K.boost||0}`)
+    : L(`足元1マスに 肥料+${K.fert}　${BIOME[c].jp}が育つ`,`fertiliser +${K.fert} underfoot · grows ${BIOME[c].jp}`);
+  return {kind,c,name,desc,hint,fert:K.fert};
+}
+function forestStats(){
+  let mature=0,young=0,burning=0;
+  for(const t of G.map){
+    if(t.fire>0){ burning++; continue; }
+    if(t.v===3) mature++; else if(t.v>=1) young++;
+  }
+  return {mature,young,burning,value:Math.round(forestValue())};
+}
 function fruitStat(u,c){ return c==="r"?S(u).atk:c==="y"?S(u).spd:u.maxmp; }
 
 function newMap(settings=stageDef().terrain){
@@ -765,6 +821,7 @@ function startMovePhase(u){
 }
 
 function stageName(n){ const s=stageDef(n); return s?.name?.[LANG]||s?.name?.ja||L(`第${n}森域`,`Forest Sector ${n}`); }
+function chapterName(n){ const c=stageDef(n)?.chapterName; return c?(c[LANG]||c.ja||""):""; }
 function freeApeSpot(){
   const spots=[];
   for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++){
@@ -782,22 +839,30 @@ function stageRewards(){
   const locked=UNLOCK_ORDER.find(type=>!G.progress.unlocked.includes(type));
   const ability=ABILITY_ORDER.find(a=>!G.progress.abilities.includes(a.key));
   const upgrades=[
-    {key:"atk",amount:4,title:"群れの腕力",desc:"全員と、これから生まれる仲間の攻撃+4"},
-    {key:"hp",amount:18,title:"群れの生命",desc:"全員と、これから生まれる仲間の最大HP+18。現在HPも+18"},
-    {key:"mp",amount:3,title:"群れの魔力",desc:"全員と、これから生まれる仲間の最大MP+3"},
-    {key:"spd",amount:3,title:"群れの俊敏",desc:"全員と、これから生まれる仲間の素早さ+3"},
+    {key:"atk",amount:4,title:"群れの腕力",desc:"全員と、これから生まれる仲間の攻撃+4",unit:"ATK"},
+    {key:"hp",amount:18,title:"群れの生命",desc:"全員と、これから生まれる仲間の最大HP+18。現在HPも+18",unit:"MAX HP"},
+    {key:"mp",amount:3,title:"群れの魔力",desc:"全員と、これから生まれる仲間の最大MP+3",unit:"MAX MP"},
+    {key:"spd",amount:3,title:"群れの俊敏",desc:"全員と、これから生まれる仲間の素早さ+3",unit:"SPD"},
   ];
   const up=upgrades[(G.stage-1)%upgrades.length];
-  return [
-    locked?{kind:"GORILLA",title:`${APE[locked].jp} 解放`,desc:`出生候補に追加。空きがあれば今すぐ1匹加入`,apply:()=>{
-      G.progress.unlocked.push(locked);
-      const s=G.units.filter(u=>u.alive&&u.side==="ape").length<MAX_APES&&freeApeSpot();
-      if(s) makeUnit("ape",locked,s[0],s[1]);
-    }}:{kind:"GORILLA",title:"群れの生命",desc:"全員と未来の仲間の最大HP+12",apply:()=>addRunBonus("hp",12)},
-    ability?{kind:"ABILITY",title:`${ability.jp} 解放`,desc:ability.d,apply:()=>G.progress.abilities.push(ability.key)}
-      :{kind:"ABILITY",title:"奥義鍛錬",desc:"全員と未来の仲間の最大MP+2",apply:()=>addRunBonus("mp",2)},
-    {kind:"UPGRADE",title:up.title,desc:up.desc,apply:()=>addRunBonus(up.key,up.amount)},
-  ];
+  const gorilla = locked
+    ? {kind:"NEW GORILLA",type:"gorilla",ape:locked,title:`${APE[locked].jp} 解放`,name:APE[locked].jp,
+       sub:"解放＋この場で1匹加入",desc:`とくぎ ${APE[locked].sk.n}（MP${APE[locked].sk.c}）　${APE[locked].sk.d}`,
+       apply:()=>{
+         G.progress.unlocked.push(locked);
+         const s=G.units.filter(u=>u.alive&&u.side==="ape").length<MAX_APES&&freeApeSpot();
+         if(s) makeUnit("ape",locked,s[0],s[1]);
+       }}
+    : {kind:"NEW GORILLA",type:"upgrade",amount:12,unit:"MAX HP",title:"群れの生命",name:"群れの生命",
+       sub:"現在の全員＋今後生まれる仲間",desc:"全員と未来の仲間の最大HP+12",apply:()=>addRunBonus("hp",12)};
+  const herd = ability
+    ? {kind:"HERD ABILITY",type:"ability",key:ability.key,title:`${ability.jp} 解放`,name:ability.jp,
+       sub:"群れ全体・永続",desc:ability.d,apply:()=>G.progress.abilities.push(ability.key)}
+    : {kind:"HERD ABILITY",type:"upgrade",amount:2,unit:"MAX MP",title:"奥義鍛錬",name:"奥義鍛錬",
+       sub:"現在の全員＋今後生まれる仲間",desc:"全員と未来の仲間の最大MP+2",apply:()=>addRunBonus("mp",2)};
+  return [gorilla,herd,
+    {kind:"PERMANENT BUFF",type:"upgrade",amount:up.amount,unit:up.unit,title:up.title,name:up.title,
+     sub:"現在の全員＋今後生まれる仲間",desc:up.desc,apply:()=>addRunBonus(up.key,up.amount)}];
 }
 function renderInventory(){
   const p=G.progress, chips=[];
@@ -809,20 +874,142 @@ function renderInventory(){
 }
 function openCamp(){
   G.intermission=true; G.active=null; G.phase="camp"; G.mode=null; G.moveSet=null; G.rangeSet=null; G.targetSet=null;
+  G.intent=new Map();
   G.rewardOptions=stageRewards();
-  $("campTitle").textContent=localize(`${stageName(G.stage)} 制圧`);
-  const csAlive=G.units.filter(u=>u.alive&&u.side==="ape").length, csForest=Math.round(forestValue());
-  const next=stageDef(G.stage+1), csHp=Math.round((next.enemyMul.hp-1)*100), csAtk=Math.round((next.enemyMul.atk-1)*100);
-  $("campSummary").innerHTML=L(`STAGE ${G.stage}/${STAGE_COUNT}<br>生存 ${csAlive}匹　森 ${csForest}<br>次の敵 HP+${csHp}% / 攻撃+${csAtk}%`,
-    `STAGE ${G.stage}/${STAGE_COUNT}<br>${csAlive} ALIVE · FOREST ${csForest}<br>NEXT FOES HP+${csHp}% / ATK+${csAtk}%`);
-  const box=$("rewardBox"); box.innerHTML="";
+  const s=stageDef(), fs=forestStats();
+  const alive=G.units.filter(u=>u.alive&&u.side==="ape");
+  $("campStageId").textContent=s.id||String(G.stage);
+  $("campTitle").textContent=L(`${stageName(G.stage)}　を守りきった`,`${stageName(G.stage)} held`);
+
+  $("campSummary").innerHTML=
+    `<div><span>ROUNDS</span><b>${Math.min(G.round,s.rounds)}</b></div>`+
+    `<div><span>BIRTHS</span><b style="color:#7fae2f">${G.stageBorn||0}</b></div>`+
+    `<div><span>FOREST</span><b>${fs.value}</b></div>`+
+    `<div><span>FALLEN</span><b style="color:#c9452e">${G.dead}</b></div>`;
+
+  const box=$("rewardBox");
+  box.innerHTML="";
+  const letters=["A","B","C"];
+  G.rewardFocus=0;
   G.rewardOptions.forEach((r,i)=>{
-    const b=document.createElement("button"); b.className="reward";
-    b.innerHTML=`<i>${r.kind}</i><b>${localize(r.title)}</b><span>${localize(r.desc)}</span>`;
-    b.onclick=()=>chooseReward(i); box.appendChild(b);
+    const b=document.createElement("button");
+    b.type="button";
+    b.className="reward"+(i===0?" lead":"");
+    const head=document.createElement("div");
+    head.className="rhd";
+    head.innerHTML=`<span>${r.kind}</span><span>${letters[i]}</span>`;
+    const body=document.createElement("div");
+    body.className="rbody";
+    const art=document.createElement("div");
+    art.className="rart";
+    if(r.type==="gorilla"&&SPR["u_"+r.ape]) art.appendChild(spriteEl(SPR["u_"+r.ape],118));
+    else if(r.type==="upgrade") art.innerHTML=`<b>+${r.amount}</b><span>${r.unit}</span>`;
+    else art.innerHTML=`<b style="color:#68d0e0">★</b><span>ABILITY</span>`;
+    const meta=document.createElement("div");
+    meta.innerHTML=`<div class="rname">${localize(r.name)}</div><div class="rsub">${localize(r.sub)}</div>`;
+    body.append(art,meta);
+    b.append(head,body);
+
+    if(r.type==="gorilla"){
+      const st=APE[r.ape], grid=document.createElement("div");
+      grid.className="rstats";
+      grid.innerHTML=`<div><span>HP</span><b>${st.hp}</b></div><div><span>ATK</span><b>${st.atk}</b></div>`+
+                     `<div><span>MOVE</span><b>${st.move}</b></div><div><span>DEF</span><b>×${st.def}</b></div>`;
+      b.appendChild(grid);
+    } else if(r.type==="ability"){
+      const chain=document.createElement("div");
+      chain.className="rchain";
+      chain.innerHTML=ABILITY_ORDER.map(a=>{
+        const done=G.progress.abilities.includes(a.key);
+        const now=a.key===r.key;
+        return `<span class="${done?"done":now?"now":""}">${localize(a.jp)}</span>`;
+      }).join("");
+      b.appendChild(chain);
+    } else {
+      const who=document.createElement("div");
+      who.className="rchain";
+      who.style.alignItems="center";
+      const lab=document.createElement("span");
+      lab.style.border="0"; lab.style.color="#a49070"; lab.style.padding="0";
+      lab.textContent=L("今の群れ全員に適用","applies to the whole herd");
+      who.appendChild(lab);
+      for(const o of alive.slice(0,6)) who.appendChild(spriteEl(unitSprite(o),28));
+      b.appendChild(who);
+    }
+
+    const p=document.createElement("p");
+    p.className="rdesc";
+    p.textContent=localize(r.desc);
+    b.appendChild(p);
+    b.onmouseenter=()=>focusReward(i);
+    b.onfocus=()=>focusReward(i);
+    b.onclick=()=>chooseReward(i);
+    box.appendChild(b);
   });
-  renderInventory(); PTE("camp"); $("scCamp").hidden=false; syncActs(); fit(); SFX.born();
+
+  const herd=$("campHerd");
+  if(herd&&herd.replaceChildren){
+    herd.replaceChildren();
+    for(const o of alive){
+      const chip=document.createElement("div");
+      chip.className="herd-chip";
+      chip.appendChild(spriteEl(unitSprite(o),37));
+      const info=document.createElement("div");
+      const pct=Math.round(clamp(o.hp/o.maxhp,0,1)*100);
+      info.innerHTML=`<div class="hn">${o.name}</div><span class="hb"><i style="width:${pct}%;background:${pct<=40?"#c9452e":pct<=75?"#e8b23c":"#7fae2f"}"></i></span>`;
+      chip.appendChild(info);
+      herd.appendChild(chip);
+    }
+  }
+  $("campHerdLabel").textContent=`HERD — ${alive.length} / ${MAX_APES}`;
+
+  const next=stageDef(G.stage+1);
+  $("campNextTitle").textContent=`NEXT — ${next.id||G.stage+1} ${stageName(G.stage+1)}`;
+  const o=next.objective;
+  const objText=o.type==="wipe"?L("増援をすべて倒す","Defeat every raider")
+    :o.type==="forest"?L(`森を ${o.target} まで育てる`,`Grow the forest to ${o.target}`)
+    :o.type==="births"?L(`仲間を ${o.target} 匹産む`,`Birth ${o.target} allies`)
+    :L(`${next.rounds}ラウンド生存する`,`Survive ${next.rounds} rounds`);
+  const byKind=new Map();
+  for(const w of next.waves) byKind.set(w.kind,(byKind.get(w.kind)||0)+w.n);
+  const waveText=byKind.size
+    ? [...byKind].map(([kind,n])=>`${localize(FOE[kind].jp)} ×${n}`).join(L("／"," / "))
+    : L("襲撃なし","no raids");
+  const hpUp=Math.round((next.enemyMul.hp/stageDef().enemyMul.hp-1)*100);
+  const atkUp=Math.round((next.enemyMul.atk/stageDef().enemyMul.atk-1)*100);
+  $("campNextBody").innerHTML=
+    `<span style="color:#6d5a42">${L("地形","Terrain")}</span><b style="font-weight:400">${next.terrain?L("新しい森域に移る","a new sector"):L("前ステージの森を引き継ぐ","carries this forest forward")}</b>`+
+    `<span style="color:#6d5a42">${L("ラウンド","Rounds")}</span><b style="font-weight:400">${next.rounds}</b>`+
+    `<span style="color:#6d5a42">${L("クリア条件","Objective")}</span><b style="font-weight:400">${objText}</b>`+
+    `<span style="color:#6d5a42">${L("襲撃","Raids")}</span><b style="font-weight:400;color:#c9452e">${waveText}</b>`+
+    `<span style="color:#6d5a42">${L("敵の強化","Foe scaling")}</span><b style="font-weight:400">HP+${hpUp}% / ATK+${atkUp}%</b>`;
+
+  renderInventory(); PTE("camp"); $("scCamp").hidden=false; focusReward(0); syncActs(); fit(); SFX.born();
 }
+/* いま選ばれている戦果を1枚だけ強調する */
+function focusReward(i){
+  if(!G.intermission) return;
+  G.rewardFocus=clamp(i,0,(G.rewardOptions||[]).length-1);
+  const cards=[...$("rewardBox").children];
+  cards.forEach((el,k)=>el.classList.toggle("lead",k===G.rewardFocus));
+  const r=G.rewardOptions[G.rewardFocus];
+  const go=$("bCampGo");
+  if(go&&r) go.textContent=L(`「${localize(r.name)}」で進む　ENT`,`Take "${localize(r.name)}" — ENT`);
+}
+addEventListener("keydown",e=>{
+  if(typeof G==="undefined"||!G||!G.intermission||$("scCamp").hidden) return;
+  const n=(G.rewardOptions||[]).length;
+  if(!n) return;
+  if(e.key==="ArrowLeft"||e.key==="ArrowRight"){
+    e.preventDefault();
+    focusReward(((G.rewardFocus??0)+(e.key==="ArrowRight"?1:-1)+n)%n);
+    beep(520,.03,"square",.02);
+    return;
+  }
+  const direct={"1":0,"2":1,"3":2,a:0,b:1,c:2,A:0,B:1,C:2}[e.key];
+  if(direct!==undefined&&direct<n){ e.preventDefault(); chooseReward(direct); return; }
+  if(e.key==="Enter"||e.key===" "||e.code==="Space"){ e.preventDefault(); chooseReward(G.rewardFocus??0); }
+});
 function chooseReward(i){
   if(!G.intermission) return;
   const r=G.rewardOptions[i]; r.apply(); G.progress.picks.push(r.title);
@@ -986,7 +1173,8 @@ function spawnFoe(kind){
 }
 
 /* ══════════ 敵AI ══════════ */
-function foeTurn(u){
+/* 副作用なしで「この人族が次に何をするか」を出す。盤面テレグラフと実行の両方が使う */
+function foePlan(u){
   const st=S(u);
   const set=reachable(u);
   const apes=G.units.filter(o=>o.alive&&o.side==="ape");
@@ -1021,7 +1209,7 @@ function foeTurn(u){
     for(const o of apes){ const d=Math.abs(o.tx-u.tx)+Math.abs(o.ty-u.ty); if(d<bd){bd=d;best=o;} }
     goal=[best.tx,best.ty]; want="attack";
   }
-  if(!goal){ endAct(u); return; }
+  if(!goal) return null;
 
   // 目標に一番近づける到達マスへ
   let bestK=null, bestScore=1e9;
@@ -1034,6 +1222,44 @@ function foeTurn(u){
   };
   consider(idx(u.tx,u.ty),0);
   for(const [k,v] of set) consider(k,v.c);
+  return {want,goal,set,bestK,dest:[bestK%COLS,(bestK/COLS)|0]};
+}
+/* 予告に出すマス。狙われている場所そのものを返す */
+function foeIntentTiles(u,plan){
+  const st=S(u), [dx,dy]=plan.dest, out=[];
+  if(plan.want==="attack"){
+    for(const o of G.units) if(o.alive&&o.side==="ape"&&inRange(dx,dy,o.tx,o.ty,st.rng)) out.push([o.tx,o.ty,true]);
+    if(!out.length) out.push([plan.goal[0],plan.goal[1],false]);
+  } else if(plan.want==="chop"){
+    out.push([plan.goal[0],plan.goal[1],inRange(dx,dy,plan.goal[0],plan.goal[1],1)]);
+  } else if(plan.want==="burn"){
+    const cand=[plan.goal,...tilesInRange(dx,dy,st.rng)];
+    const spot=cand.find(([x,y])=>{ const t=at(x,y); return t&&t.v>=1&&t.c&&BIOME[t.c].flam>0&&t.fire<=0&&inRange(dx,dy,x,y,st.rng); });
+    out.push(spot?[spot[0],spot[1],true]:[plan.goal[0],plan.goal[1],false]);
+  }
+  return out;
+}
+const INTENT_JA={attack:"ゴリラを狙っている",chop:"木を伐ろうとしている",burn:"火を放とうとしている"};
+const INTENT_EN={attack:"closing on a gorilla",chop:"about to fell a tree",burn:"about to set a fire"};
+function recomputeIntent(){
+  if(typeof G==="undefined"||!G||!G.map) return;
+  const m=new Map();
+  if(INTENT_ON) for(const u of G.units){
+    if(!u.alive||u.side==="ape") continue;
+    let plan=null;
+    try{ plan=foePlan(u); }catch(e){ plan=null; }
+    if(!plan) continue;
+    for(const [x,y,reach] of foeIntentTiles(u,plan)){
+      const k=idx(x,y), prev=m.get(k);
+      if(!prev||(reach&&!prev.reach)) m.set(k,{kind:plan.want,name:u.name,reach});
+    }
+  }
+  G.intent=m;
+}
+function foeTurn(u){
+  const plan=foePlan(u);
+  if(!plan){ endAct(u); return; }
+  const st=S(u), {want,goal,set,bestK}=plan;
   const path = bestK===idx(u.tx,u.ty) ? [] : pathTo(u,set,bestK%COLS,(bestK/COLS)|0);
 
   doMove(u,path,()=>{
@@ -1268,6 +1494,16 @@ function draw(){
         ctx.fillStyle=pulse; ctx.fillRect(x*TS,top,TS,TS);
         ctx.fillStyle="#e8b23c"; ctx.fillRect(x*TS,top,TS,1); ctx.fillRect(x*TS,top+TS-1,TS,1);
       }
+      if(G.intent&&G.intent.has(k)&&!(G.targetSet&&G.targetSet.has(k))){
+        const it=G.intent.get(k), lit=Math.sin(vt*4)>-.35;
+        ctx.fillStyle=it.reach?"#ff604726":"#ff604714"; ctx.fillRect(x*TS,top,TS,TS);
+        ctx.fillStyle=lit?"#ff6047":"#ff604780";
+        const b=Math.max(3,(TS/4)|0);                       // 四隅のかぎかっこ
+        ctx.fillRect(x*TS,top,b,2);           ctx.fillRect(x*TS,top,2,b);
+        ctx.fillRect(x*TS+TS-b,top,b,2);      ctx.fillRect(x*TS+TS-2,top,2,b);
+        ctx.fillRect(x*TS,top+TS-2,b,2);      ctx.fillRect(x*TS,top+TS-b,2,b);
+        ctx.fillRect(x*TS+TS-b,top+TS-2,b,2); ctx.fillRect(x*TS+TS-2,top+TS-b,2,b);
+      }
       if(G.kbPos&&G.kbPos[0]===x&&G.kbPos[1]===y){
         const pulse=Math.sin(vt*8)>0?2:1;
         ctx.fillStyle="#ffe08a";
@@ -1497,35 +1733,57 @@ function hint(s){ $("hint").textContent=localize(s); }
 function canAct(){ return G.active && G.active.side==="ape" && (G.phase==="move"||G.phase==="act"); }
 function syncActs(){
   const u=G.active, ok=canAct();
-  const st=ok?APE[u.type]:null;
-  bAtk.textContent=L("[1] こうげき","[1] ATTACK");
-  bSk.childNodes[0].nodeValue=L("[2] とくぎ","[2] SKILL");
-  bEat.textContent=L("[3] たべる","[3] EAT");
-  bPoop.textContent=L("[4] うんち","[4] POOP");
-  bWait.textContent=L("[5] まつ","[5] WAIT");
-  bCancel.textContent=L("やめる","CANCEL");
+  const st=ok?S(u):null;
+  const setBtn=(b,label,sub)=>{
+    if(!b||!b.querySelector) return;
+    const cl=b.querySelector(".cl"), sm=b.querySelector("small");
+    if(cl) cl.textContent=label;
+    if(sm) sm.textContent=sub;
+  };
+  setBtn(bAtk,L("こうげき","ATTACK"),"1");
+  setBtn(bSk,L("とくぎ","SKILL"),"2");
+  setBtn(bEat,L("たべる","EAT"),"3");
+  setBtn(bPoop,L("うんち","POOP"),"4");
+  setBtn(bWait,L("まつ","WAIT"),"5");
+  setBtn(bCancel,L("やめる","CANCEL"),"ESC");
   bAtk.disabled=!ok; bSk.disabled=!ok; bEat.disabled=!ok; bPoop.disabled=!ok; bWait.disabled=!ok;
   bCancel.hidden=!G.mode;
-  [bAtk,bSk,bEat,bPoop].forEach(b=>b.classList.remove("on"));
-  if(!ok){ bSk.querySelector("small").textContent=""; return; }
+  [bAtk,bSk,bEat,bPoop].forEach(b=>b.classList&&b.classList.remove("on"));
+  const skIcon=bSk.querySelector&&bSk.querySelector(".ico canvas");
+  const poopIco=bPoop.querySelector&&bPoop.querySelector(".ico canvas");
+  if(!ok){
+    if(skIcon) poopIcon(skIcon,"big","y");
+    if(poopIco) poopIcon(poopIco,"normal","y");
+    return;
+  }
+
   bAtk.title = localize(`攻撃範囲：${attackRangeText(st.rng)}`);
+
   const cost=skillCost(u);
-  bSk.querySelector("small").textContent = `MP ${cost}`;
+  setBtn(bSk,localize(st.sk.n),`2 · MP ${cost}`);
+  if(skIcon) poopIcon(skIcon,st.behavior==="rocket"?"big":"pellet",u.belly[0]||"y");
   const skillNeedsFruit=st.behavior==="rocket"&&u.belly.length<poopNeed(u);
   bSk.disabled = u.mp<cost||skillNeedsFruit;
   bSk.title = localize(skillNeedsFruit ? `${st.sk.n} — 実が ${poopNeed(u)} 個ひつよう` : `${st.sk.n} — ${st.sk.d}`);
+
   const t=at(u.tx,u.ty);
   bEat.disabled = !(t.v===3&&t.fruit>=1)||u.belly.length>=BELLY_MAX;
-  bEat.textContent = bEat.disabled ? L("[3] たべる","[3] EAT") : LANG==="en"?`[3] EAT ${t.c.toUpperCase()} → ${localize(FRUIT_BUFF[t.c].jp)}`:`[3] ${t.c==="r"?"赤":t.c==="b"?"青":"黄"}実→${FRUIT_BUFF[t.c].jp}`;
+  const fruitDot=bEat.querySelector&&bEat.querySelector(".sh-fruit");
+  if(fruitDot) fruitDot.style.background=(t.v===3&&t.c)?BIOME[t.c].berry:"#4a3823";
+  if(!bEat.disabled) setBtn(bEat,L("たべる","EAT"),`3 · ${localize(FRUIT_BUFF[t.c].jp)}+${FRUIT_BUFF[t.c].gain}`);
   if(u.belly.length>=BELLY_MAX) bEat.title=L("おなかが満杯。うんちをして空きを作る","Belly full. Poop to free a slot");
   else if(bEat.disabled) bEat.title=localize("実のある成木の上で使う");
   else {
     const add=Math.min(FRUIT_BUFF[t.c].gain,Math.max(0,FRUIT_STAT_MAX-fruitStat(u,t.c)));
     bEat.title=localize(add?`${FRUIT_BUFF[t.c].jp}+${add}（現在 ${fruitStat(u,t.c)}/${FRUIT_STAT_MAX}）`:`${FRUIT_BUFF[t.c].jp}は最大（実はおなかに入る）`);
   }
-  const need=poopNeed(u);
+
+  const need=poopNeed(u), plan=bellyPlan(u);
   bPoop.disabled = u.belly.length<need;
-  bPoop.title = localize(u.belly.length<need ? `おなかに実が ${need} 個ひつよう` : "その場にうんちをする");
+  if(poopIco) poopIcon(poopIco,plan.kind,plan.c);
+  setBtn(bPoop,bPoop.disabled?L("うんち","POOP"):plan.name,bPoop.disabled?"4":`4 · ${L("肥料","FERT")}+${plan.fert}`);
+  bPoop.title = localize(u.belly.length<need ? `おなかに実が ${need} 個ひつよう` : plan.desc);
+
   if(G.mode==="attack") bAtk.classList.add("on");
   if(G.mode==="skill") bSk.classList.add("on");
 }
@@ -1536,9 +1794,12 @@ function applyLanguage(refresh=true){
   $("lApes").textContent=L("ゴリラ","GORILLAS"); $("lFoes").textContent=L("人族","HUMANS"); $("lObjective").textContent=L("クリア条件","OBJECTIVE");
   $("lGrowth").textContent=L("成長・誕生予報","GROWTH & BIRTH"); $("lLog").textContent=L("戦況記録","BATTLE LOG"); $("lCamp").textContent=L("戦線野営","WAR CAMP");
   $("campCopy").innerHTML=L("<b>達成後：</b>実の強化／次代の編成／森の記録","<b>AFTER CLEAR:</b> fruit boosts / roster / forest record");
-  $("scTitle").querySelector(".chapter .tag").textContent=L("第一章　うんちの産声","CHAPTER I — THE FIRST PLOP");
+  const titleMeta=saveMeta(), titleStage=titleMeta?titleMeta.stage:1;
+  $("scTitle").querySelector(".chapter .tag").textContent=chapterName(titleStage)||L("第一章　芽吹きの森","Chapter I — Forest Awakening");
   $("scTitle").querySelector(".maxim").textContent=L("糞は土となり、森は兵を生む。","Poop becomes soil; the forest raises an army.");
-  $("scTitle").querySelector(".title-hint").textContent=L("ヒント：実とうんちで森を育て、成木を5ターン守れば仲間が生まれる。","Hint: Grow the forest with fruit and poop. Protect a mature tree for 5 turns to gain an ally.");
+  $("scTitle").querySelector(".title-hint").textContent=L(
+    `実を食べ、うんちで土を肥やし、成木を${BIRTH_TREE_TURNS}ターン守れば仲間が生まれる。人族は木を伐り、森を焼く。`,
+    `Eat fruit, fertilise the soil with poop, and hold a mature tree for ${BIRTH_TREE_TURNS} turns to gain an ally. The humans fell trees and burn the forest.`);
   $("bStart").textContent=L("あたらしくはじめる","NEW RUN"); $("bStartSilent").textContent=L("音なしではじめる","START SILENTLY");
   $("bAgain").textContent=L("もういちど","TRY AGAIN"); $("bReset").textContent=L("ステージ再開","RESTART STAGE");
   $("scCamp").querySelector(".sub").textContent=L("戦果をひとつ選んで、群れを次のステージへ。","Choose one reward, then lead the troop to the next stage.");
@@ -1665,102 +1926,265 @@ addEventListener("keydown",e=>{
 
 /* ══════════ HUD ══════════ */
 function syncRail(){
-  const s=stageDef(), o=s.objective;
-  $("tStage").textContent=G.stage+"/"+STAGE_COUNT;
-  $("tStage").title=stageName(G.stage);
-  $("tRound").textContent=Math.min(G.round,s.rounds)+"/"+s.rounds;
-  $("tObjective").textContent=o.type==="wipe"?L("敵を全滅","ELIMINATE ALL FOES")
-    :o.type==="forest"?L(`森 ${Math.round(forestValue())}/${o.target}`,`FOREST ${Math.round(forestValue())}/${o.target}`)
-    :o.type==="births"?L(`この面で誕生 ${G.stageBorn}/${o.target}`,`BIRTHS ${G.stageBorn}/${o.target}`)
-    :L(`${s.rounds}ラウンド生存`,`SURVIVE ${s.rounds} ROUNDS`);
+  const s=stageDef(), o=s.objective, fs=forestStats();
+  const idText=s.id||`${G.stage}`;
+  $("tStage").textContent=idText;
+  $("tStageName").textContent=stageName(G.stage);
+  $("tStage").title=`${chapterName(G.stage)} ${stageName(G.stage)}`.trim();
+  const r=Math.min(G.round,s.rounds);
+  $("tRound").textContent=`ROUND ${r} / ${s.rounds}`;
+  const pips=$("roundPips");
+  if(pips&&pips.childElementCount!==s.rounds){
+    pips.innerHTML=""; for(let i=0;i<s.rounds;i++) pips.appendChild(document.createElement("i"));
+  }
+  if(pips) [...pips.children].forEach((el,i)=>el.className=i<r?"on":"");
+  $("tObjective").textContent=o.type==="wipe"?L("人族をすべて倒す","Eliminate every raider")
+    :o.type==="forest"?L(`森を ${o.target} まで育てる（今 ${fs.value}）`,`Grow the forest to ${o.target} (now ${fs.value})`)
+    :o.type==="births"?L(`この面で ${o.target} 匹産む（今 ${G.stageBorn}）`,`Birth ${o.target} allies here (now ${G.stageBorn})`)
+    :L(`${s.rounds}ラウンド生存する`,`Survive ${s.rounds} rounds`);
   $("tApes").textContent=G.units.filter(u=>u.alive&&u.side==="ape").length;
   $("tFoes").textContent=G.units.filter(u=>u.alive&&u.side!=="ape").length;
-  const u=G.active?.alive?G.active:null, turn=$("turnHud");
-  turn.classList.toggle("foe",!!u&&u.side!=="ape");
-  $("turnLabel").textContent=u?(u.side==="ape"?L("現在の手番","CURRENT TURN"):L("敵の手番","ENEMY TURN")):L("次の手番","NEXT TURN");
+  $("tForest").textContent=fs.value;
+
+  const u=G.active?.alive?G.active:null;
   $("turnName").textContent=u?u.name:L("準備中","STAND BY");
-  $("turnHp").textContent=u?`${Math.max(0,Math.ceil(u.hp))}/${u.maxhp}`:"—";
+  $("turnType").textContent=u?(u.side==="ape"?localize(S(u).jp):L(`人族 — ${localize(S(u).act)}`,`HUMAN — ${localize(S(u).act)}`)):"—";
+  paintSprite($("activePic"),u?unitSprite(u):SPR.u_normal);
+  $("activePic").style.opacity=u?"1":".3";
+  $("turnHp").textContent=u?`${Math.max(0,Math.ceil(u.hp))}`:"—";
+  $("turnHp").innerHTML=u?`${Math.max(0,Math.ceil(u.hp))}<span style="color:#6d5a42">/${u.maxhp}</span>`:"—";
   $("turnHpBar").style.cssText=`width:${u?Math.round(clamp(u.hp/u.maxhp,0,1)*100):0}%;background:${u&&u.hp<=u.maxhp*.4?"#c9452e":"#7fae2f"}`;
-  $("turnMp").textContent=u?.side==="ape"?`${u.mp}/${u.maxmp}`:"—";
+  $("turnMp").innerHTML=u?.side==="ape"?`${u.mp}<span style="color:#6d5a42">/${u.maxmp}</span>`:"—";
   $("turnMpBar").style.cssText=`width:${u?.side==="ape"?Math.round(clamp(u.mp/u.maxmp,0,1)*100):0}%;background:#68d0e0`;
+
+  const row=$("bellyRow");
+  if(row){
+    row.innerHTML="";
+    if(u&&u.side==="ape"){
+      for(let i=0;i<BELLY_MAX;i++){
+        const c=u.belly[i], el=document.createElement("i");
+        el.style.background=c?BIOME[c].berry:"#0b0805";
+        el.style.boxShadow=`0 0 0 2px ${i===0&&c?"#e8b23c":"#3a2c1c"}`;
+        row.appendChild(el);
+      }
+    }
+  }
+  $("bellyHint").textContent=u&&u.side==="ape"?bellyPlan(u).hint:"";
+
   $("mapActiveName").textContent=u?L(`${u.name}　行動中`,`${u.name} ACTIVE`):L("準備中","STAND BY");
-  $("mapActiveMeta").textContent=u?L(`${u.side==="ape"?"味方":"敵"}・高さ${at(u.tx,u.ty).h}`,`${u.side==="ape"?"ALLY":"ENEMY"} · HEIGHT ${at(u.tx,u.ty).h}`):"—";
-  $("activeKind").textContent=u?(u.side==="ape"?L("手番","CURRENT"):"ENEMY"):"CURRENT";
-  $("commandUnit").textContent=u?.side==="ape"?L(`${u.name}の行動`,`${u.name} — ACTIONS`):L("敵の行動中","ENEMY TURN");
+  $("activeKind").textContent=u?(u.side==="ape"?L("ユニット詳細","Unit detail"):L("人族","Human")):L("ユニット詳細","Unit detail");
+
+  const banner=$("intentBanner");
+  if(banner&&banner.style){
+    const n=G.intent?G.intent.size:0;
+    // 記法の説明バナー。脅威が現れた直後だけ出して、あとは盤面の赤枠にまかせる
+    if(n&&!G.intentSeen){ G.intentSeen=true; G.intentBannerUntil=performance.now()+6500; }
+    if(!n) G.intentSeen=false;
+    banner.hidden=!(INTENT_ON&&n>0&&!G.over&&!G.intermission&&performance.now()<(G.intentBannerUntil||0));
+    if(n){
+      const kinds=new Set([...G.intent.values()].map(v=>v.kind));
+      const list=[...kinds].map(k=>LANG==="en"?INTENT_EN[k]:INTENT_JA[k]).join(LANG==="en"?" / ":"・");
+      $("intentText").textContent=L(`赤枠のマスが狙われている — ${list}`,`Red frames are targeted — ${list}`);
+    }
+  }
   syncBirth();
 }
 function syncBirth(){
   const apes=G.units.filter(u=>u.alive&&u.side==="ape").length;
-  const short=LANG==="en"?{y:"Y",r:"R",b:"B"}:{y:"黄",r:"赤",b:"青"};
-  const typeShort=LANG==="en"?{normal:"Gorilla",monkey:"Monkey",guardian:"Guardian",silver:"Silverback",wizard:"Wizard",chimp:"Chimp"}:{normal:"普通",monkey:"モンキー",guardian:"ガーディアン",silver:"シルバー",wizard:"ウィザード",chimp:"チンパンジー"};
-  let nearest=BIRTH_TREE_TURNS;
-  $("birthHud").innerHTML='<b>出生</b>'+COLORS.map(c=>{
-    const trees=matureTrees(c), age=Math.max(0,...trees.map(t=>t.treeAge));
-    if(trees.length) nearest=Math.min(nearest,Math.max(0,BIRTH_TREE_TURNS-age));
-    const nextType=nextBirthType(c), next=nextType?localize(APE[nextType].jp):L("未解放","Locked");
-    const stopped=!nextType?L("（キャンプで同色種を解放）"," (unlock this color at camp)"):apes>=MAX_APES?L(`（仲間上限${MAX_APES}匹）`,` (ally cap ${MAX_APES})`):!trees.length?L("（成木が必要）"," (mature tree required)"):"";
-    const title=L(`${BIOME[c].jp}：成木 ${trees.length}本／最長生存 ${age}/${BIRTH_TREE_TURNS}ターン／次は ${next}${stopped}`,`${c.toUpperCase()} biome: ${trees.length} mature trees / longest ${age}/${BIRTH_TREE_TURNS} turns / next ${next}${stopped}`);
-    const ready=nextType&&age>=BIRTH_TREE_TURNS&&apes<MAX_APES?" ready":"";
-    return `<span class="birth-chip${ready}" title="${title}"><i style="background:${BIOME[c].berry}"></i>${short[c]} ${trees.length}${L("本"," trees")} ${Math.min(age,BIRTH_TREE_TURNS)}/${BIRTH_TREE_TURNS} → ${nextType?typeShort[nextType]:L("未解放","Locked")}</span>`;
-  }).join("");
-  const wave=stageDef().waves[G.waveIx];
-  $("nextEventName").textContent=wave&&wave.r===G.round?L("敵の増援","ENEMY WAVE"):nearest<BIRTH_TREE_TURNS?L("森の誕生","FOREST BIRTH"):L("森の成長","FOREST GROWTH");
-  $("nextEventMeta").textContent=wave&&wave.r===G.round?`${localize(FOE[wave.kind].jp)} ×${wave.n}`:nearest<BIRTH_TREE_TURNS?L(`最短あと${nearest}手`,`READY IN ${nearest} TURNS`):L(`成木を${BIRTH_TREE_TURNS}手守る`,`PROTECT TREE ${BIRTH_TREE_TURNS} TURNS`);
+  const rows=[];
+  for(const c of COLORS){
+    const trees=matureTrees(c);
+    const age=trees.length?Math.max(...trees.map(t=>t.treeAge)):0;
+    const type=nextBirthType(c);
+    const left=Math.max(0,BIRTH_TREE_TURNS-age);
+    rows.push({c,trees:trees.length,age,left,type,best:trees.length?trees.reduce((a,b)=>a.treeAge>=b.treeAge?a:b):null});
+  }
+  rows.sort((a,b)=>(a.trees?0:1)-(b.trees?0:1)||a.left-b.left);
+  const box=$("birthHud");
+  if(box&&box.replaceChildren){
+    box.replaceChildren();
+    for(const r of rows.slice(0,2)){
+      const row=document.createElement("div");
+      row.className="birth-row"+(r===rows[0]&&r.trees?"":" dim");
+      const label=document.createElement("span");
+      const where=L(`${BIOME[r.c].jp}の成木`,`${BIOME[r.c].jp} tree`);
+      if(!r.type) label.textContent=`${where} — ${L("未解放","locked")}`;
+      else if(!r.trees) label.textContent=`${where} — ${L("成木が必要","needs a mature tree")}`;
+      else if(apes>=MAX_APES) label.textContent=`${where} — ${L(`仲間上限 ${MAX_APES}匹`,`ally cap ${MAX_APES}`)}`;
+      else if(r.left<=0) label.innerHTML=`${where} <em>${L("次ラウンド","next round")}</em>`;
+      else label.textContent=`${where} ${r.left}${L("ターン"," turns")}`;
+      row.appendChild(label);
+      if(r.type) row.appendChild(spriteEl(SPR["u_"+r.type]||SPR.u_normal,r===rows[0]&&r.trees?34:28));
+      box.appendChild(row);
+    }
+  }
+  const fs=forestStats();
+  const meta=$("herdMeta");
+  if(meta&&meta.replaceChildren){
+    meta.replaceChildren();
+    const a=document.createElement("span"); a.textContent=L(`群れ ${apes}/${MAX_APES}`,`HERD ${apes}/${MAX_APES}`);
+    const sep=document.createElement("span"); sep.style.color="#4a3823"; sep.textContent="|";
+    const b=document.createElement("span");
+    b.textContent=fs.burning?L(`火 ${fs.burning}マス`,`FIRE ${fs.burning}`):L(`成木 ${fs.mature}本`,`${fs.mature} MATURE`);
+    if(fs.burning) b.style.color="#c9452e";
+    meta.append(a,sep,b);
+    const wave=stageDef().waves[G.waveIx];
+    if(wave){
+      const sep2=document.createElement("span"); sep2.style.color="#4a3823"; sep2.textContent="|";
+      const w=document.createElement("span"); w.style.color="#ff8a72";
+      const inRounds=Math.max(0,wave.r-G.round);
+      w.textContent=inRounds
+        ? L(`${inRounds}R後 ${localize(FOE[wave.kind].jp)}×${wave.n}`,`+${inRounds}R ${localize(FOE[wave.kind].jp)}×${wave.n}`)
+        : L(`増援 ${localize(FOE[wave.kind].jp)}×${wave.n}`,`WAVE ${localize(FOE[wave.kind].jp)}×${wave.n}`);
+      meta.append(sep2,w);
+    }
+  }
+  $("nextEventName").textContent=L("森の成長","FOREST GROWTH");
+  $("nextEventMeta").textContent=L(`成木を${BIRTH_TREE_TURNS}手守る`,`PROTECT TREE ${BIRTH_TREE_TURNS} TURNS`);
 }
 function syncOrder(){
+  recomputeIntent();
   const box=$("order");
-  box.innerHTML=`<span class="olab">${L("行動順","TURN ORDER")}</span>`;
-  // 先読み
   const sim=G.units.filter(u=>u.alive).map(u=>({u,ct:u.ct}));
   const out=[];
-  for(let g=0;g<600&&out.length<7;g++){
+  for(let g=0;g<600&&out.length<5;g++){
     const rdy=sim.filter(s=>s.ct>=100).sort((a,b)=>b.ct-a.ct);
     if(rdy.length){ out.push(rdy[0].u); rdy[0].ct-=100; }
     else for(const s of sim) s.ct+=S(s.u).spd/4;
   }
-  out.forEach((u,i)=>{
-    const d=document.createElement("div");
-    d.className="oc"+(i===0?" now":"")+(u.side!=="ape"?" foe":"");
-    const c=document.createElement("canvas"); c.width=24;c.height=26;
-    const g=c.getContext("2d"); g.imageSmoothingEnabled=false;
-    const s=unitSprite(u);
-    g.drawImage(s,((24-s.width)/2)|0,((26-s.height)/2)|0);
-    d.appendChild(c); d.title=u.name;
-    d.onclick=()=>showCard(u);
-    box.appendChild(d);
-  });
+  if(box&&box.replaceChildren){
+    box.replaceChildren();
+    out.forEach((u,i)=>{
+      const b=document.createElement("button");
+      b.type="button";
+      b.className="oc"+(i===0?" now":"")+(u.side!=="ape"?" foe":"");
+      b.style.opacity=String(i===0?1:Math.max(.4,1-i*.16));
+      const nm=document.createElement("span"); nm.textContent=u.name;
+      const cell=document.createElement("div");
+      cell.appendChild(spriteEl(unitSprite(u),i===0?41:26));
+      b.append(nm,cell);
+      b.title=u.name;
+      b.onclick=()=>openCardFor(u);
+      box.appendChild(b);
+    });
+  }
   syncRail();
 }
 function pb(v,col){ return `<span class="pb"><i style="width:${Math.round(clamp(v,0,1)*100)}%;background:${col}"></i></span>`; }
 function showCard(u,open=true){
-  const card=$("card"); card.hidden=!open;
-  const st=S(u);
-  const pic=$("cPic"), g=pic.getContext("2d");
-  g.imageSmoothingEnabled=false; g.clearRect(0,0,24,26);
-  const s=unitSprite(u); g.drawImage(s,((24-s.width)/2)|0,((26-s.height)/2)|0);
+  if(!u||!u.alive) return;
+  G.cardUnit=u.id;
+  paintSprite($("cPic"),unitSprite(u));
+  const st=S(u), t=at(u.tx,u.ty);
   $("cName").textContent=u.name;
-  $("cType").textContent = u.side==="ape" ? L(`${st.jp}／${st.from}生まれ`,`${st.jp} / ${st.from}-born`) : L(`人族 — ${st.act}`,`HUMAN — ${st.act}`);
-  const t=at(u.tx,u.ty);
-  const atkBonus=u.side==="ape"?u.buffs.r:0;
-  const spdBonus=u.side==="ape"?u.buffs.y:0;
-  $("cBars").innerHTML =
-    `<span>HP</span>${pb(u.hp/u.maxhp,"#7fae2f")}<b>${Math.max(0,Math.ceil(u.hp))}</b>` +
-    (u.side==="ape"?`<span>MP</span>${pb(u.mp/u.maxmp,"#68d0e0")}<b>${u.mp}/${u.maxmp}</b>`:``) +
-    `<span>${L("こうげき","ATK")}</span>${pb(st.atk/56,"#c9452e")}<b>${st.atk}${atkBonus?` (+${atkBonus})`:""}</b>` +
-    `<span>${L("すばやさ","SPD")}</span>${pb(st.spd/58,"#e8b23c")}<b>${st.spd}${spdBonus?` (+${spdBonus})`:""}</b>` +
-    `<span>${L("いどう","MOVE")}</span>${pb(st.move/7,"#a49070")}<b>${st.move}</b>` +
-    `<span>${L("ジャンプ","JUMP")}</span>${pb(st.jump/3,"#a49070")}<b>${st.jump}</b>` +
-    `<span>${L("いま の 高さ","HEIGHT")}</span>${pb(t.h/3,"#9fd8e0")}<b>${t.h}</b>`;
-  $("cAb").innerHTML = u.side==="ape"
-    ? `<b>★${localize(st.sk.n)}</b> (${L("MP","MP")} ${skillCost(u)})<br>${localize(st.sk.d)}`
-    : `<b>★${localize(st.act)}</b>`;
-  const traitsHtml = u.side==="ape"
-    ? `<em>攻撃範囲</em> — ${attackRangeText(st.rng)}<br>`
-      + u.traits.map(k=>`<em>${TRAITS[k].jp}</em> — ${TRAITS[k].d}`).join("<br>")
-      + `<br><em>実の強化</em> — <span style="color:${BIOME.r.berry}">赤 攻撃+${u.buffs.r}</span> ／ <span style="color:${BIOME.b.berry}">青 最大MP+${u.buffs.b}</span> ／ <span style="color:${BIOME.y.berry}">黄 素早さ+${u.buffs.y}</span>（上限${FRUIT_STAT_MAX}）`
-      + `<br><em>おなか 3枠</em> — ${[...u.belly,...Array(BELLY_MAX-u.belly.length).fill(null)].map(c=>c?`<span style="color:${BIOME[c].berry}">● ${BIOME[c].jp}</span>`:`<span>□ 空き</span>`).join(" → ")}`
-    : `<em>攻撃範囲</em> — ${attackRangeText(st.rng)}<br>倒すと森が守られる`;
-  $("cTr").innerHTML=localize(traitsHtml);
+  $("cType").textContent = u.side==="ape"
+    ? L(`${localize(st.jp)}／${localize(st.from)}生まれ`,`${localize(st.jp)} / ${localize(st.from)}-born`)
+    : L(`人族 — ${localize(st.act)}`,`Human — ${localize(st.act)}`);
+  $("cHp").innerHTML=`${Math.max(0,Math.ceil(u.hp))}<span style="color:#6d5a42">/${u.maxhp}</span>`;
+  $("cHpBar").style.width=Math.round(clamp(u.hp/u.maxhp,0,1)*100)+"%";
+  const hasMp=u.side==="ape"&&u.maxmp>0;
+  $("cMp").innerHTML=hasMp?`${u.mp}<span style="color:#6d5a42">/${u.maxmp}</span>`:"—";
+  $("cMpBar").style.width=hasMp?Math.round(clamp(u.mp/u.maxmp,0,1)*100)+"%":"0";
+
+  $("cBars").innerHTML=
+    `<div><span>MOVE ${L("移動","MOVE")}</span><b>${st.move}</b></div>`+
+    `<div><span>JUMP ${L("段差","STEP")}</span><b>${st.jump}</b></div>`+
+    `<div><span>RANGE ${L("射程","RANGE")}</span><b>${st.rng}</b></div>`+
+    `<div><span>${L("いま の 高さ","HEIGHT")}</span><b>${t?t.h:0}</b></div>`;
+
+  const growth=$("cGrowth"), wrap=$("cGrowthWrap");
+  if(u.side==="ape"){
+    if(wrap&&wrap.style) wrap.style.display="";
+    $("cGrowthLabel").textContent=L(`FRUIT GROWTH — 実による強化（上限${FRUIT_STAT_MAX}）`,`FRUIT GROWTH — cap ${FRUIT_STAT_MAX}`);
+    const rows=[
+      {c:"r",label:L("こうげき","Attack"),value:st.atk},
+      {c:"b",label:L("最大MP","Max MP"),value:u.maxmp},
+      {c:"y",label:L("すばやさ","Speed"),value:st.spd},
+    ];
+    growth.innerHTML=rows.map(r=>{
+      const pct=Math.round(clamp(r.value/FRUIT_STAT_MAX,0,1)*100);
+      return `<div class="growth"><i class="sw" style="background:${BIOME[r.c].berry}"></i>`+
+        `<span class="gl">${r.label}</span>`+
+        `<span class="gbar"><i style="width:${pct}%;background:${PCOL[r.c].l}"></i></span>`+
+        `<b>${r.value}<small>/${FRUIT_STAT_MAX}</small></b>`+
+        `<span class="gain">${L(`${BIOME[r.c].jp}の実 +${FRUIT_BUFF[r.c].gain}`,`${r.c.toUpperCase()} fruit +${FRUIT_BUFF[r.c].gain}`)}</span></div>`;
+    }).join("");
+  } else { if(wrap&&wrap.style) wrap.style.display="none"; if(growth) growth.innerHTML=""; }
+
+  const skillBox=$("cSkillBox");
+  if(u.side==="ape"){
+    if(skillBox&&skillBox.style) skillBox.style.display="";
+    $("cSkillLabel").textContent="SKILL";
+    $("cSkillCost").textContent=`MP ${skillCost(u)}`;
+    $("cSkillName").textContent=localize(st.sk.n);
+    $("cAb").textContent=localize(st.sk.d);
+  } else {
+    if(skillBox&&skillBox.style) skillBox.style.display="";
+    $("cSkillLabel").textContent=L("この人族の行動","BEHAVIOUR");
+    $("cSkillCost").textContent=L(`射程 ${st.rng}`,`RANGE ${st.rng}`);
+    $("cSkillName").textContent=localize(st.act);
+    let plan=null; try{ plan=foePlan(u); }catch(e){}
+    $("cAb").textContent=plan
+      ? L(`次の行動：${INTENT_JA[plan.want]}（${plan.dest[0]},${plan.dest[1]} へ移動）`,`Next: ${INTENT_EN[plan.want]} (moves to ${plan.dest[0]},${plan.dest[1]})`)
+      : L("次の行動：待機","Next: hold position");
+  }
+
+  const bellyBox=$("cBellyBox");
+  if(u.side==="ape"){
+    if(bellyBox&&bellyBox.style) bellyBox.style.display="";
+    $("cBellyLabel").textContent=L("BELLY — 左から出る","BELLY — first out on the left");
+    const slots=[];
+    for(let i=0;i<BELLY_MAX;i++){
+      const c=u.belly[i];
+      slots.push(c
+        ? `<div class="belly-slot${i===0?" first":""}"><i style="background:${BIOME[c].berry}"></i></div>`
+        : `<div class="belly-slot empty"></div>`);
+    }
+    $("cBelly").innerHTML=slots.join("");
+    const plan=bellyPlan(u);
+    poopIcon($("cNextPoop"),plan.kind,plan.c);
+    $("cNextPoopName").textContent=L(`次は ${plan.name}`,`Next: ${plan.name}`);
+    $("cNextPoopDesc").textContent=plan.desc;
+  } else { if(bellyBox&&bellyBox.style) bellyBox.style.display="none"; $("cBelly").innerHTML=""; }
+
+  const traits = u.side==="ape"
+    ? (u.traits.length?u.traits.map(k=>`<em style="font-style:normal;color:#e8b23c">${TRAITS[k].jp}</em>　${TRAITS[k].d}`).join("<br>"):L("特性なし","No traits"))
+    : `<em style="font-style:normal;color:#c9452e">${localize(st.act)}</em>　${L(`攻撃範囲 ${attackRangeText(st.rng)}`,`Range ${attackRangeText(st.rng)}`)}`;
+  $("cTr").innerHTML=localize(traits);
+
+  const herd=$("cHerd");
+  if(herd&&herd.replaceChildren){
+    herd.replaceChildren();
+    for(const o of cardCycleList()){
+      const d=document.createElement("button");
+      d.type="button";
+      d.className="herd-pick"+(o.id===u.id?" on":"");
+      d.title=o.name;
+      d.appendChild(spriteEl(unitSprite(o),30));
+      d.onclick=()=>openCardFor(o);
+      herd.appendChild(d);
+    }
+  }
+}
+/* 行動順や群れアイコンから開くとき用 */
+function openCardFor(u){
+  showCard(u,false);
+  const UI=window.POOPTACT_UI;
+  if(UI&&UI.state&&UI.state.ui!=="details") UI.setState({ui:"details"});
+}
+/* 詳細オーバーレイの Q・E 用。味方を先に、そのあと人族 */
+function cardCycleList(){
+  const apes=G.units.filter(u=>u.alive&&u.side==="ape");
+  const foes=G.units.filter(u=>u.alive&&u.side!=="ape");
+  return [...apes,...foes];
+}
+function cycleCard(dir){
+  const list=cardCycleList();
+  if(!list.length) return;
+  const i=list.findIndex(u=>u.id===G.cardUnit);
+  const next=list[((i<0?0:i+dir)%list.length+list.length)%list.length];
+  showCard(next,false);
+  SFX.hit&&beep(520,.03,"square",.02);
 }
 function renderLog(){
   const box=$("log"); box.innerHTML="";
@@ -1888,7 +2312,7 @@ $("bLang").onclick=()=>{
   try{ localStorage.setItem("poopulation-lang",LANG); }catch{}
   applyLanguage();
 };
-$("cClose").onclick=()=>$("card").hidden=true;
+$("bCampGo").onclick=()=>{ if(G&&G.intermission) chooseReward(G.rewardFocus??0); };
 $("bSound").onclick=ev=>{
   snd=!snd; ev.currentTarget.textContent=snd?"♪ ON":"♪ OFF";
   if(snd){ startMusic(); beep(660,.06); } else stopMusic();
@@ -1896,6 +2320,17 @@ $("bSound").onclick=ev=>{
 
 window.POOPTACT={ get state(){return G;}, get campaign(){return CAMPAIGN;}, start, SPR, APE, FOE, nextTurn, fit, saveRun, loadRun, hasSave, clearSave, saveMeta,
   get lang(){return LANG;},
+  cycleCard, openCardFor,
+  setIntentVisible(v){ INTENT_ON=v!==false; recomputeIntent(); syncRail(); },
+  paintTitleArt(){
+    const crest=document.getElementById("titleCrest");
+    if(crest) poopIcon(crest,"gold","y");
+    const cv=document.getElementById("titleCv");
+    if(cv&&typeof G!=="undefined"&&G&&G.map){
+      const g=cv.getContext("2d"); g.imageSmoothingEnabled=false;
+      g.drawImage(document.getElementById("cv"),0,0);
+    }
+  },
   get paused(){return PAUSED;},
   setPaused(v){
     PAUSED=!!v;
@@ -1940,10 +2375,17 @@ applyLanguage(false);
 newGame(false);
 applyLanguage();
 let last=performance.now();
+const titleCv=document.getElementById("titleCv");
+const titleCtx=titleCv?titleCv.getContext("2d"):null;
+if(titleCtx) titleCtx.imageSmoothingEnabled=false;
+poopIcon(document.getElementById("titleCrest"),"gold","y");
 function frame(now){
   const dt=Math.min(.05,(now-last)/1000); last=now;
   if(!PAUSED) update(dt);
   draw();
+  if(titleCtx&&!$("scTitle").hidden) titleCtx.drawImage(cv,0,0);   // タイトルの背景＝実際の戦場
+  const ib=$("intentBanner");
+  if(ib&&!ib.hidden&&performance.now()>=(G?.intentBannerUntil||0)) ib.hidden=true;
   requestAnimationFrame(frame);
 }
 fit(); requestAnimationFrame(frame);

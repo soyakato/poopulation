@@ -29,9 +29,9 @@ assert.match(tactics, /function clearStageIfReady\(\)/, "round survival uses one
 assert.match(tactics, /G\.round=Math\.min\(s\.rounds,G\.round\+1\)/, "round counter never displays beyond the current stage limit");
 assert.match(tactics, /if\(clearStageIfReady\(\)\) return;/, "defeating the final enemy clears without another world tick");
 assert.ok(!tactics.includes("G.round>LAST_ROUND"), "stage clear no longer waits for an extra round");
-assert.match(tactics, /locked\?\{kind:"GORILLA"/, "camp can unlock and recruit a gorilla type");
-assert.match(tactics, /kind:"ABILITY"/, "camp can unlock a herd ability");
-assert.match(tactics, /kind:"UPGRADE"/, "camp can grant a permanent stat upgrade");
+assert.match(tactics, /kind:"NEW GORILLA",type:"gorilla"/, "camp can unlock and recruit a gorilla type");
+assert.match(tactics, /kind:"HERD ABILITY",type:"ability"/, "camp can unlock a herd ability");
+assert.match(tactics, /kind:"PERMANENT BUFF",type:"upgrade"/, "camp can grant a permanent stat upgrade");
 assert.match(tactics, /BORN\[c\]\.filter\(\(\[type\]\)=>G\.progress\.unlocked\.includes\(type\)\)/, "birth pool respects unlocked gorillas");
 assert.match(tactics, /G\.stage<STAGE_COUNT&&s\.camp/, "stage JSON decides whether an intermission opens");
 assert.match(tactics, /enemyStageStats/, "enemy stats scale by stage");
@@ -57,6 +57,29 @@ assert.match(tactics, /if\(G\.phase==="move"&&!G\.mode&&confirmKey\)\{[\s\S]{0,2
 assert.match(tacticsShell, /<script src="tactics-engine\.js/, "battle shell loads the shared tactics engine");
 assert.match(tacticsShell, /<script src="stage-loader\.js/, "battle shell loads JSON stage support");
 assert.match(tacticsShell, /id="difficultySelect"/, "title screen exposes campaign difficulty");
+
+/* ── Claude Design「POOPULATION UI」1c/1d/1e/1f のリニューアル ── */
+assert.match(tacticsShell, /id="hudTopBar"[\s\S]*id="hudBottomBar"/, "1c: HUD is two floating bars, not panels");
+assert.ok(!tacticsShell.includes('id="forestPanel"'), "1c drops the right-hand forest panel");
+assert.match(tacticsShell, /id="intentBanner"/, "1c teaches the enemy-intent telegraph");
+assert.match(tacticsShell, /class="cmd poop" id="aPoop"/, "1c makes POOP the hero command");
+assert.match(tacticsShell, /id="roundPips"/, "1c shows rounds as pips");
+assert.match(tacticsShell, /id="difficultySelect" role="radiogroup"/, "1d difficulty is a segmented control");
+assert.match(tacticsShell, /id="titleCrest"/, "1d puts the golden poop crest on the title");
+assert.match(tacticsShell, /id="campNextBody"/, "1e previews the next stage beside the rewards");
+assert.match(tacticsShell, /id="cGrowth"/, "1f leads with fruit growth against its cap");
+assert.match(tacticsShell, /id="cHerd"/, "1f lets you switch unit from the herd strip");
+
+/* 人族の狙いは副作用なしで先読みし、実行と表示で同じ判断を使う */
+assert.match(tacticsEngine, /function foePlan\(u\)/, "enemy AI decision is a pure planner");
+assert.match(tacticsEngine, /function recomputeIntent\(\)/, "intent tiles are recomputed for the telegraph");
+assert.match(tacticsEngine, /const plan=foePlan\(u\);/, "the enemy turn runs the same plan it telegraphed");
+assert.match(tacticsEngine, /G\.intent&&G\.intent\.has\(k\)/, "targeted tiles are drawn on the board");
+assert.match(tacticsEngine, /function cycleCard\(dir\)/, "Q and E cycle the unit detail");
+assert.match(tacticsEngine, /function bellyPlan\(u\)/, "belly maps to the poop that comes out next");
+assert.match(tacticsEngine, /function openCardFor\(u\)/, "opening the detail overlay is one explicit entry point");
+assert.equal((tacticsEngine.match(/setState\(\{ui:"details"\}\)/g)||[]).length, 1,
+  "only openCardFor opens the overlay, so drawing the card each turn cannot force it open");
 assert.ok(!tacticsShell.includes("POOP_TACTICS_BOOT = "), "engine lives in tactics-engine.js, not inline");
 assert.match(tactics, /function showTileHint\(x,y\)/,"hovered and keyboard-selected tiles share one detail panel");
 assert.match(tactics, /L\("高さ","HEIGHT"\)/,"tile detail exposes terrain height in both languages");
