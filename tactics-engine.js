@@ -220,7 +220,7 @@ for(const [id,s] of Object.entries(window.POOPULATION_SPRITES?.sprites||{})){
 }
 
 /* ══════════ 音 ══════════ */
-let AC=null, snd=true, musicTimer=null, musicStep=0;
+let AC=null, snd=true, musicTimer=null, musicStep=0, musicRun=0;
 let SFXV=1, BGMV=1;
 const SAVE_KEY="poopulation-save-v2";
 const PTE=(k,d)=>{ try{ window.dispatchEvent(new CustomEvent("pt:"+k,{detail:d||{}})); }catch(e){} };
@@ -261,15 +261,19 @@ function musicTick(){
   if(i%3===0) toneAt(165,when,.18,"sine",.008);
   if(lead) toneAt(lead,when,.18,"square",.014);
 }
-function startMusic(){
+async function startMusic(){
+  const run=++musicRun;
   snd=true;
   try{
-    AC=AC||new (window.AudioContext||window.webkitAudioContext)(); AC.resume?.();
-    clearInterval(musicTimer); musicStep=0; musicTick();
+    AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+    clearInterval(musicTimer); musicTimer=null;
+    if(AC.state!=="running") await AC.resume();
+    if(run!==musicRun||!snd||BGMV<=0) return;
+    musicStep=0; musicTick();
     musicTimer=setInterval(musicTick,Math.round(60000/82/3));
   }catch(e){}
 }
-function stopMusic(){ clearInterval(musicTimer); musicTimer=null; }
+function stopMusic(){ musicRun++; clearInterval(musicTimer); musicTimer=null; }
 const SFX={
   step:()=>beep(300,.04,"square",.03), hit:()=>beep(130,.09,"square",.07,-50),
   crit:()=>{beep(200,.07,"square",.08);setTimeout(()=>beep(320,.12,"square",.08),70);},

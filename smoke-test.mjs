@@ -73,6 +73,7 @@ assert.match(tacticsShell, /id="difficultySelect" role="radiogroup"/, "1d diffic
 assert.match(tacticsShell, /class="chapter-name">第一章　うんちの目覚め</, "title leads with the correct first chapter name");
 assert.ok(!tacticsShell.includes("MISSION DOCTRINE")&&!tacticsShell.includes("NO RANDOM"), "title omits design-manifesto copy");
 assert.ok(!tacticsShell.includes('class="title-links"'), "title omits authoring and data-tool links");
+assert.match(tacticsEngine, /if\(AC\.state!=="running"\) await AC\.resume\(\);[\s\S]*if\(run!==musicRun\|\|!snd\|\|BGMV<=0\) return;[\s\S]*musicTick\(\)/, "BGM waits for AudioContext resume before scheduling notes");
 assert.match(tacticsShell, /id="campNextBody"/, "1e previews the next stage beside the rewards");
 assert.match(tacticsShell, /id="cGrowth"/, "1f leads with fruit growth against its cap");
 assert.match(tacticsShell, /id="cHerd"/, "1f lets you switch unit from the herd strip");
