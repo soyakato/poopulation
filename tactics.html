@@ -52,27 +52,34 @@
   #bellyRow i{width:22px;height:22px;display:block;background:#0b0805;box-shadow:0 0 0 2px #3a2c1c}
 
   /* コマンドデッキ */
-  #deck{display:flex;align-items:flex-end;gap:10px}
-  .cmd{width:104px;height:104px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  #hudBottomBar{left:0;right:0;bottom:0;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+                grid-template-areas:"active deck birth";align-items:end;gap:clamp(10px,1.6vw,24px);padding:0 clamp(16px,2.4vw,36px) 26px}
+  #hudActive{grid-area:active;justify-self:start}
+  #hudDeck{grid-area:deck;justify-self:center}
+  #hudBirth{grid-area:birth;justify-self:end}
+  #deck{--cmd-size:clamp(60px,min(6.8vw,12vh),104px);--cmd-gap:clamp(4px,.65vw,10px);--cmd-icon:clamp(16px,min(1.3vw,2.2vh),20px);display:flex;align-items:flex-end;gap:var(--cmd-gap)}
+  .cmd{width:var(--cmd-size);height:var(--cmd-size);flex:0 0 var(--cmd-size);box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
        border:2px solid #4a3823;background:#0b0805e6;color:#f2e6cf;font-family:"DotGothic16",sans-serif}
-  .cmd .ico{display:flex;align-items:center;justify-content:center;height:30px}
-  .cmd .cl{font-size:16px;line-height:1.1;text-align:center}
-  .cmd small{font:400 10px "Silkscreen",monospace;color:#6d5a42}
+  .cmd .ico{width:var(--cmd-icon);height:var(--cmd-icon);flex:0 0 var(--cmd-icon);display:grid;place-items:center}
+  .cmd .ico canvas{width:100%;height:80%;display:block;transform:scale(1.65);transform-origin:center bottom}
+  .cmd.poop .ico canvas{transform:scale(1.85)}
+  .cmd .ico i{display:block}
+  .sh-diamond{width:80%;height:80%;background:#c9452e;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+  .sh-fruit{width:80%;height:80%;background:#e8c33a;border-radius:50%}
+  .sh-wait{width:80%;height:25%;background:#6d5a42}
+  .cmd .cl{display:block;max-width:100%;font-size:clamp(8px,min(.85vw,1.6vh),13px);line-height:1.1;text-align:center;white-space:nowrap}
+  .cmd.skill .cl{font-size:clamp(8px,min(.78vw,1.5vh),12px)}
+  .cmd small{font:400 clamp(8px,min(.7vw,1.2vh),10px)/1.2 "Silkscreen",monospace;color:#6d5a42;white-space:nowrap}
   .cmd:hover:not(:disabled){border-color:#7a5f38;background:#1b150fee}
   .cmd:focus-visible{outline:2px solid #e8b23c;outline-offset:2px}
-  .cmd:disabled{opacity:.34;cursor:default}
+  .cmd:disabled{opacity:.55;cursor:default}
   .cmd.skill{border-color:#68d0e0;background:#0b1416e6}
   .cmd.skill small{color:#68d0e0}
-  .cmd.poop{width:132px;height:132px;border-color:#ffe08a;background:#e8b23c;color:#22160a;box-shadow:0 0 0 5px #e8b23c26,0 14px 34px #000a}
-  .cmd.poop .cl{font-size:23px}
-  .cmd.poop small{color:#4a3208}
-  .cmd.poop:hover:not(:disabled){background:#ffe08a;border-color:#fff}
+  .cmd.poop{border-color:#e8b23c;background:#3a2a10;color:#ffe08a}
+  .cmd.poop small{color:#e8b23c}
+  .cmd.poop:hover:not(:disabled){background:#2b2117;border-color:#ffe08a}
   .cmd.on{background:#e8b23c;color:#22160a;border-color:#ffe08a}
   .cmd.on small{color:#4a3208}
-  .sh-diamond{width:26px;height:26px;background:#c9452e;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);display:block}
-  .sh-fruit{width:24px;height:24px;background:#e8c33a;border-radius:50%;display:block}
-  .sh-wait{width:24px;height:6px;background:#6d5a42;display:block}
-
   /* 出生予報 */
   #birthHud{display:flex;flex-direction:column;gap:9px;align-items:flex-end}
   .birth-row{display:flex;align-items:center;gap:10px;font-size:15px}
@@ -278,26 +285,50 @@
   @media (max-width:1500px){
     .bar{width:min(180px,26vw)}
     #activePic{height:82px}
-    .cmd{width:88px;height:88px}.cmd .cl{font-size:14px}
-    .cmd.poop{width:112px;height:112px}.cmd.poop .cl{font-size:19px}
   }
   @media (max-height:820px){
     #activePic{height:72px}
-    .cmd{width:80px;height:80px}.cmd .ico{height:24px}
-    .cmd.poop{width:100px;height:100px}
     #logWrap{display:none!important}
   }
   /* 幅が足りないときはコマンドを主役に残し、周辺の文字を落とす */
   @media (max-width:1180px){
     #hudBirth .birth-row.dim,#herdMeta{display:none}
     #hudActive>div>div:nth-child(4){display:none}   /* 腹の一行 */
+    #activePic,#turnType{display:none}
+    .bar{width:min(150px,17vw)}
     .oc>span{display:none}
   }
+  @media (max-width:1100px){
+    #battlePanel{padding-bottom:clamp(230px,31vh,280px)!important}
+    #hudBottomBar{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"active birth" "deck deck";row-gap:10px;padding-bottom:12px}
+    #hudDeck{align-self:end}
+    #hudBirth{max-width:100%;overflow:hidden}
+    #hint{display:none}
+  }
   @media (max-width:900px){
-    #hudBottomBar{flex-wrap:wrap;justify-content:center;gap:10px}
-    #hudActive,#hudBirth{flex:1 1 100%;justify-content:center}
-    #hudBirth{align-items:center}
-    #hint{text-align:center}
+    #battlePanel{padding-top:150px!important}
+    #logWrap{display:none!important}
+  }
+  @media (max-width:600px){
+    #battlePanel{padding:130px 8px clamp(175px,29vh,214px)!important}
+    #hudTopBar{display:block!important;padding:12px 10px 0!important}
+    #hudStage{gap:4px!important}
+    #hudStage>div:first-child{gap:6px!important}
+    #tStage{font-size:24px!important}
+    #tStageName{font-size:16px!important}
+    #hudStage .rule{width:min(210px,56vw);height:1px}
+    #hudStage>div:nth-child(5){gap:8px!important;margin-top:2px!important;font-size:12px!important}
+    #hudOrder{position:absolute;right:8px;top:8px;gap:0!important}
+    #hudOrder>span,#order{display:none!important}
+    #btnMenu{padding:4px 8px!important}
+    #btnMenu span{font-size:10px!important}
+    #hudBottomBar{grid-template-columns:1fr;grid-template-areas:"active" "deck";justify-items:center;row-gap:6px;padding:0 2px 8px}
+    #hudActive{justify-self:center;text-align:center}
+    #hudActive>div{gap:3px!important}
+    #hudActive>div>div{justify-content:center}
+    #hudActive .bar,#hudBirth{display:none!important}
+    #turnName{font-size:20px!important}
+    #deck{--cmd-gap:4px}
     #tileHint{display:none!important}
   }
   @media (max-height:700px){
@@ -307,7 +338,7 @@
 </style>
 <script src="poop-config.js?v=6"></script>
 <script src="stage-loader.js?v=1"></script>
-<script src="tactics-engine.js?v=2"></script>
+<script src="tactics-engine.js?v=4"></script>
 </head>
 <body>
 
@@ -315,7 +346,7 @@
   <div id="stage" style="position:absolute;inset:0">
 
     <!-- ══ 盤面（全画面・クラスタはこの上に浮く） ══ -->
-    <section id="battlePanel" aria-label="戦場" style="position:absolute;inset:0;display:flex;padding:clamp(84px,10vh,110px) clamp(16px,6vw,120px) clamp(140px,17vh,180px)">
+    <section id="battlePanel" aria-label="戦場" style="position:absolute;inset:0;display:flex;padding:clamp(84px,10vh,110px) clamp(16px,6vw,120px) clamp(170px,20vh,210px)">
       <div id="frameArea" style="flex:1 1 auto;min-width:0;display:flex;align-items:center;justify-content:center">
         <div id="frame" style="position:relative;line-height:0">
           <canvas id="cv" width="336" height="292" tabindex="0" aria-label="戦場" aria-keyshortcuts="ArrowLeft ArrowRight ArrowUp ArrowDown Space Enter" style="display:block;background:#241a11;box-shadow:0 0 0 2px #3a2c1c,0 30px 70px #000000b0"></canvas>
@@ -359,7 +390,7 @@
     </div>
 
     <!-- ══ 下帯：手番のゴリラ／コマンド／出生予報 ══ -->
-    <div class="hud" id="hudBottomBar" style="left:0;right:0;bottom:0;display:flex;align-items:flex-end;justify-content:space-between;gap:clamp(10px,1.6vw,24px);padding:0 clamp(16px,2.4vw,36px) 26px">
+    <div class="hud" id="hudBottomBar">
     <div id="hudActive" style="display:flex;align-items:flex-end;gap:16px;min-width:0;flex:1 1 auto">
       <canvas id="activePic" width="24" height="26"></canvas>
       <div style="display:flex;flex-direction:column;gap:7px">
@@ -387,12 +418,12 @@
 
     <div id="hudDeck" style="flex:0 0 auto">
       <div id="deck">
-        <button class="cmd" id="aAttack" aria-keyshortcuts="1"><span class="ico"><i class="sh-diamond"></i></span><span class="cl">こうげき</span><small>1</small></button>
-        <button class="cmd skill" id="aSkill" aria-keyshortcuts="2"><span class="ico"><canvas width="20" height="16"></canvas></span><span class="cl">とくぎ</span><small>2</small></button>
-        <button class="cmd poop" id="aPoop" aria-keyshortcuts="4"><span class="ico"><canvas width="20" height="16"></canvas></span><span class="cl">うんち</span><small>4</small></button>
-        <button class="cmd" id="aEat" aria-keyshortcuts="3"><span class="ico"><i class="sh-fruit"></i></span><span class="cl">たべる</span><small>3</small></button>
-        <button class="cmd" id="aWait" aria-keyshortcuts="5"><span class="ico"><i class="sh-wait"></i></span><span class="cl">まつ</span><small>5</small></button>
-        <button class="cmd" id="aCancel" hidden><span class="ico"><i class="sh-wait" style="background:#c9452e"></i></span><span class="cl">やめる</span><small>ESC</small></button>
+        <button class="cmd" id="aAttack" aria-keyshortcuts="1"><span class="ico" aria-hidden="true"><i class="sh-diamond"></i></span><span class="cl">こうげき</span><small>1</small></button>
+        <button class="cmd skill" id="aSkill" aria-keyshortcuts="2"><span class="ico" aria-hidden="true"><canvas width="20" height="16"></canvas></span><span class="cl">とくぎ</span><small>2</small></button>
+        <button class="cmd poop" id="aPoop" aria-keyshortcuts="4"><span class="ico" aria-hidden="true"><canvas width="20" height="16"></canvas></span><span class="cl">うんち</span><small>4</small></button>
+        <button class="cmd" id="aEat" aria-keyshortcuts="3"><span class="ico" aria-hidden="true"><i class="sh-fruit"></i></span><span class="cl">たべる</span><small>3</small></button>
+        <button class="cmd" id="aWait" aria-keyshortcuts="5"><span class="ico" aria-hidden="true"><i class="sh-wait"></i></span><span class="cl">まつ</span><small>5</small></button>
+        <button class="cmd" id="aCancel" hidden><span class="ico" aria-hidden="true"><i class="sh-wait" style="background:#c9452e"></i></span><span class="cl">やめる</span><small>ESC</small></button>
       </div>
     </div>
 

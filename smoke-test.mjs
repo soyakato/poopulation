@@ -63,6 +63,11 @@ assert.match(tacticsShell, /id="hudTopBar"[\s\S]*id="hudBottomBar"/, "1c: HUD is
 assert.ok(!tacticsShell.includes('id="forestPanel"'), "1c drops the right-hand forest panel");
 assert.match(tacticsShell, /id="intentBanner"/, "1c teaches the enemy-intent telegraph");
 assert.match(tacticsShell, /class="cmd poop" id="aPoop"/, "1c makes POOP the hero command");
+assert.match(tacticsShell, /grid-template-columns:minmax\(0,1fr\) auto minmax\(0,1fr\)/, "command deck stays centered between symmetric side columns");
+assert.match(tacticsShell, /\.cmd\{width:var\(--cmd-size\);height:var\(--cmd-size\);flex:0 0 var\(--cmd-size\)/, "every command card uses the same responsive square size");
+assert.match(tacticsShell, /\.cmd \.cl\{[^}]*white-space:nowrap/, "command labels stay on one line");
+assert.match(tacticsShell, /\.cmd \.ico\{width:var\(--cmd-icon\);height:var\(--cmd-icon\)/, "every command icon uses one shared optical slot");
+assert.ok(!/\.cmd\.poop\{[^}]*(?:width|height):/.test(tacticsShell), "poop command cannot override the shared card size");
 assert.match(tacticsShell, /id="roundPips"/, "1c shows rounds as pips");
 assert.match(tacticsShell, /id="difficultySelect" role="radiogroup"/, "1d difficulty is a segmented control");
 assert.match(tacticsShell, /id="titleCrest"/, "1d puts the golden poop crest on the title");
