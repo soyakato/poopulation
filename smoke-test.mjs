@@ -62,6 +62,7 @@ assert.match(tacticsShell, /id="difficultySelect"/, "title screen exposes campai
 assert.match(tacticsShell, /id="hudTopBar"[\s\S]*id="hudBottomBar"/, "1c: HUD is two floating bars, not panels");
 assert.ok(!tacticsShell.includes('id="forestPanel"'), "1c drops the right-hand forest panel");
 assert.match(tacticsShell, /id="intentBanner"/, "1c teaches the enemy-intent telegraph");
+assert.match(tacticsShell, /#intentBanner\{[\s\S]*left:10px!important;right:10px!important;top:132px!important;transform:none!important;[\s\S]*grid-template-columns:auto minmax\(0,1fr\)/, "mobile enemy intent stays a compact horizontal banner");
 assert.match(tacticsShell, /class="cmd poop" id="aPoop"/, "1c makes POOP the hero command");
 assert.match(tacticsShell, /grid-template-columns:minmax\(0,1fr\) auto minmax\(0,1fr\)/, "command deck stays centered between symmetric side columns");
 assert.match(tacticsShell, /\.cmd\{width:var\(--cmd-size\);height:var\(--cmd-size\);flex:0 0 var\(--cmd-size\)/, "every command card uses the same responsive square size");

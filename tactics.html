@@ -324,8 +324,15 @@
     #turnName{font-size:20px!important}
     #deck{--cmd-gap:4px}
     #tileHint{display:none!important}
+    #intentBanner{
+      left:10px!important;right:10px!important;top:132px!important;transform:none!important;
+      width:auto!important;max-width:none!important;display:grid!important;
+      grid-template-columns:auto minmax(0,1fr);align-items:center!important;gap:8px!important;padding:7px 10px!important;
+    }
+    #intentBanner .px{font-size:10px!important;letter-spacing:.08em!important}
+    #intentText{min-width:0;font-size:11px!important;line-height:1.4!important}
   }
-  @media (max-height:700px){
+  @media (max-height:700px) and (min-width:601px){
     #tileHint{display:none!important}
     #intentBanner{top:70px}
   }
