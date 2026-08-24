@@ -173,97 +173,91 @@
   .herd-pick.on{border-color:#e8b23c;background:#241c13}
   .herd-pick canvas{height:30px;width:auto;display:block}
 
-  /* ── 1d タイトル：どの縮尺でも収まるように、幅と高さの両方で字を決める ── */
-  #scTitle{
-    /* 見出しの基準サイズ。横だけでなく縦にも連動させるのが要点 */
-    --tt: clamp(26px, min(6.2vw, 10.5vh), 104px);
-    --gap: clamp(10px, 1.6vh, 22px);
-  }
-  #titleBoard{position:absolute;left:0;top:0;width:100%;height:100%;opacity:.34;pointer-events:none;overflow:hidden}
+  /* ── タイトル：章の導入と開始操作だけを主役にする ── */
+  #scTitle{--title-gap:clamp(12px,1.7vh,20px);overflow-x:hidden!important}
+  #titleBoard{position:fixed;inset:0;opacity:.26;pointer-events:none;overflow:hidden}
   #titleBoard canvas{width:100%;height:100%;object-fit:cover;display:block;transform-origin:center}
-  #titleVeil{position:absolute;inset:0;background:linear-gradient(90deg,#0b0805f2 0%,#0b0805d0 46%,#0b080580 100%)}
-  #scTitle .scan-line{position:absolute;left:0;top:0;width:100%;height:1px;background:#e8b23c;opacity:.24;animation:scan 8s linear infinite;pointer-events:none}
+  #titleVeil{position:fixed;inset:0;background:#0b0805dc}
+  #scTitle .scan-line{position:fixed;left:0;top:0;width:100%;height:1px;background:#e8b23c;opacity:.18;animation:scan 10s linear infinite;pointer-events:none}
 
   .title-wrap{
-    position:relative;min-height:100%;
-    display:grid;align-content:center;justify-content:center;
-    grid-template-columns:minmax(0,820px) minmax(300px,500px);
-    gap:clamp(20px,4vw,96px);
-    padding:clamp(16px,4vh,64px) clamp(16px,5vw,140px);
+    position:relative;width:min(100%,1440px);min-height:100dvh;margin:auto;
+    display:grid;grid-template-columns:minmax(0,1.32fr) minmax(360px,.78fr);align-items:center;
+    gap:clamp(32px,4vw,64px);padding:clamp(32px,5vh,72px) clamp(24px,5vw,80px);
   }
-  .title-main{min-width:0}
-  .title-kicker{font-size:clamp(9px,calc(var(--tt)*.14),15px);letter-spacing:.44em;color:#6d5a42}
-  .title-bar{height:clamp(2px,.3vh,3px);background:#e8b23c;margin:clamp(8px,1.4vh,14px) 0 clamp(10px,1.8vh,18px)}
+  .title-main,.title-side{min-width:0}
+  .title-kicker{display:flex;align-items:center;gap:16px;font-size:clamp(9px,.8vw,12px);letter-spacing:.42em;color:#a49070;white-space:nowrap}
+  .title-kicker::after{content:"";height:2px;flex:1;background:#e8b23c}
+  .title-bar{height:2px;background:#e8b23c}
   .title-logo{
-    font-size:var(--tt);font-weight:700;line-height:.94;letter-spacing:.03em;color:#e8b23c;
-    text-shadow:calc(var(--tt)*.055) calc(var(--tt)*.055) 0 #6b3f14, calc(var(--tt)*.11) calc(var(--tt)*.11) 0 #00000090;
-    white-space:nowrap;
+    margin-top:clamp(20px,3vh,34px);font-size:clamp(34px,5.7vw,82px);font-weight:700;line-height:.9;letter-spacing:.025em;color:#e8b23c;
+    text-shadow:4px 4px 0 #6b3f14,8px 8px 0 #000;white-space:nowrap;
   }
-  .title-sub{display:flex;align-items:center;gap:clamp(10px,1.4vw,20px);margin-top:clamp(10px,1.8vh,18px)}
-  .title-sub .px{font-size:clamp(11px,calc(var(--tt)*.24),26px);letter-spacing:.5em;color:#a49070;white-space:nowrap}
+  .title-sub{display:flex;align-items:center;gap:clamp(16px,2vw,28px);margin-top:clamp(18px,2.6vh,28px)}
+  .title-sub .px{font-size:clamp(13px,1.45vw,22px);letter-spacing:.45em;color:#f2e6cf;white-space:nowrap}
 
   #scTitle .chapter{
-    margin-top:clamp(14px,3vh,44px);width:min(600px,100%);
-    border:3px solid #4a3823;background:#f2e6cf;color:#22160a;
-    padding:clamp(12px,1.8vh,20px) clamp(14px,1.6vw,24px);box-shadow:10px 10px 0 #0009;
+    margin-top:clamp(30px,5vh,52px);width:100%;border:3px solid #4a3823;background:#f2e6cf;color:#22160a;
+    padding:clamp(20px,2.4vw,30px);box-shadow:6px 6px 0 #000;
   }
-  #scTitle .chapter .tag{font-size:clamp(12px,1.4vh,15px);letter-spacing:.1em;color:#5a4526}
-  #scTitle .chapter .maxim{font-size:clamp(15px,calc(var(--tt)*.25),24px);line-height:1.5;margin-top:8px}
-  #scTitle .chapter .title-hint{margin:clamp(8px,1.2vh,12px) 0 0;padding-top:clamp(7px,1.1vh,11px);border-top:1px solid #c7b795;font-size:clamp(11px,1.5vh,14px);line-height:1.7;color:#6b5a3e}
+  #scTitle .chapter .tag{font:400 clamp(8px,.72vw,10px)/1.4 "Silkscreen",monospace;letter-spacing:.2em;color:#6b5a3e;white-space:nowrap}
+  #scTitle .chapter .chapter-name{margin-top:12px;font-size:clamp(19px,2.1vw,32px);line-height:1.2;letter-spacing:.04em;white-space:nowrap}
+  #scTitle .chapter .maxim{margin-top:16px;padding-top:15px;border-top:2px solid #6b5a3e;font-size:clamp(17px,1.35vw,21px);line-height:1.55}
+  #scTitle .chapter .title-hint{margin:10px 0 0;font-size:clamp(12px,1vw,15px);line-height:1.85;color:#5a4526}
 
-  .title-foot{display:flex;align-items:center;gap:clamp(8px,1.4vw,28px);flex-wrap:wrap;margin-top:clamp(12px,3vh,48px);font-size:clamp(11px,1.5vh,15px);color:#5c4b34}
-  .title-foot .sep{color:#3a2c1c}
-  .title-links{display:flex;gap:12px}
-  .title-links a{color:#7fae2f}
+  .title-foot{display:flex;gap:10px;margin-top:clamp(20px,3vh,32px);padding-top:14px;border-top:1px solid #3a2c1c;font-size:clamp(11px,.9vw,13px);line-height:1.7;color:#a49070}
+  .title-foot .sep{color:#4a3823}
 
-  .title-side{display:flex;flex-direction:column;gap:var(--gap);min-width:0}
-  .title-crest-wrap{display:flex;justify-content:flex-end;margin-bottom:clamp(0px,1.4vh,16px)}
-  #titleCrest{width:clamp(96px,min(13vw,17vh),260px);height:auto;display:block;filter:drop-shadow(0 0 40px #e8b23c40)}
-  .title-cta{padding:clamp(12px,2vh,20px) clamp(14px,1.6vw,24px)}
-  .title-cta>span{font-size:clamp(17px,calc(var(--tt)*.26),28px)}
-  .title-pair{display:flex;gap:clamp(8px,1vw,12px)}
-  .title-pair .mbtn{justify-content:center;gap:10px}
+  .title-side{display:flex;flex-direction:column;gap:var(--title-gap);border:2px solid #4a3823;background:#120e09e8;padding:clamp(18px,2vw,26px)}
+  .title-side-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding-bottom:14px;border-bottom:2px solid #3a2c1c}
+  .title-side-head .px{font-size:10px;letter-spacing:.18em;color:#e8b23c}
+  .title-side-head strong{display:block;margin-top:5px;font-size:19px;font-weight:400}
+  #titleSaveBadge{border:1px solid #7fae2f;padding:4px 7px;font:400 8px "Silkscreen",monospace;color:#7fae2f;white-space:nowrap}
+  #titleSave{border:2px solid #e8b23c;background:#0b0805}
+  .title-save-hd{display:flex;justify-content:space-between;gap:12px;padding:9px 12px;border-bottom:1px solid #4a3823;font-size:11px;color:#a49070}
+  .title-save-hd .px{font-size:9px;letter-spacing:.15em;color:#e8b23c}
+  .title-save-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#3a2c1c}
+  .title-save-grid div{background:#0b0805;padding:10px 12px}
+  .title-save-grid span{display:block;font-size:10px;color:#6d5a42}
+  .title-save-grid b{display:block;margin-top:4px;font:400 13px "Silkscreen",monospace;color:#f2e6cf}
+  .title-cta{min-height:58px;padding:12px 20px}
+  .title-cta>span{font-size:clamp(17px,1.4vw,21px)}
+  .title-pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .title-pair .mbtn{justify-content:center;gap:10px;min-width:0}
 
-  .title-diff{margin-top:clamp(4px,1.4vh,16px);border:2px solid #3a2c1c;background:#0b0805cc}
-  .title-diff-hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:clamp(8px,1.2vh,12px) 16px;border-bottom:1px solid #3a2c1c}
-  .title-diff-hd .px{font-size:12px;letter-spacing:.14em;color:#e8b23c}
-  #campaignMeta{font-size:clamp(11px,1.4vh,14px);color:#6d5a42;text-align:right}
-  #difficultySelect{display:flex;gap:1px;background:#3a2c1c}
-  #difficultyBlurb{margin:0;padding:clamp(8px,1.2vh,12px) 16px;font-size:clamp(12px,1.5vh,14px);line-height:1.7;color:#a49070}
+  .title-diff{margin-top:2px;border:2px solid #3a2c1c;background:#0b0805}
+  .title-diff-hd{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;border-bottom:1px solid #3a2c1c}
+  .title-diff-hd .px{font-size:10px;letter-spacing:.14em;color:#e8b23c}
+  #campaignMeta{font-size:11px;color:#6d5a42;text-align:right}
+  #difficultySelect{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:#3a2c1c}
+  #difficultyBlurb{margin:0;padding:10px 14px;font-size:12px;line-height:1.7;color:#a49070}
 
-  /* 2カラムが窮屈になったら1カラムへ。縦に積むぶん、装飾から順に落として折らずに収める */
-  @media (max-width:1240px){
-    #scTitle{--gap:clamp(8px,1.2vh,16px)}
-    .title-wrap{grid-template-columns:minmax(0,min(620px,100%));gap:clamp(12px,2vh,22px);justify-content:center;padding-block:clamp(14px,2.6vh,40px)}
-    .title-logo{font-size:clamp(26px,min(9vw,10.5vh),104px)}
-    .title-crest-wrap{display:none}
-    .title-foot{margin-top:clamp(6px,1.4vh,16px);gap:14px}
-    .title-foot>span[data-en],.title-foot .sep{display:none}
-    #scTitle .chapter{margin-top:clamp(8px,1.6vh,18px)}
-    #titleVeil{background:linear-gradient(180deg,#0b0805f2 0%,#0b0805e0 60%,#0b0805c0 100%)}
+  /* 中間幅は縦積み。PC版を縮小せず、各パネルを実寸で読む */
+  @media (max-width:1100px){
+    .title-wrap{width:min(100%,760px);grid-template-columns:1fr;align-content:start;gap:28px;padding:40px 28px 56px}
+    .title-logo{font-size:clamp(42px,9vw,72px)}
+    #scTitle .chapter{margin-top:30px}
+    .title-side{width:100%}
   }
-  @media (max-width:1240px) and (max-height:900px){
-    #scTitle .chapter .title-hint{display:none}
-  }
-  @media (max-width:1240px) and (max-height:680px){
-    #scTitle .chapter{display:none}
-    .title-foot{display:none}
-  }
-  /* 縦が短いときは装飾から削る */
-  @media (max-height:760px){
-    .title-foot{display:none}
-    .title-crest-wrap{display:none}
-    #scTitle .chapter .title-hint{display:none}
-  }
-  @media (max-height:560px){
-    #scTitle .chapter{display:none}
-    .title-wrap{padding-block:clamp(12px,2vh,24px)}
-  }
-  /* 極端に狭いとき */
-  @media (max-width:520px){
-    .title-logo{font-size:clamp(22px,10vw,52px)}
-    .title-foot,.title-crest-wrap{display:none}
-    .title-pair{flex-direction:column}
+  @media (max-width:600px){
+    .title-wrap{width:100%;min-height:auto;gap:24px;padding:28px 20px 40px}
+    .title-kicker{font-size:8px;gap:12px;letter-spacing:.32em}
+    .title-logo{margin-top:22px;font-size:clamp(28px,9vw,52px);text-shadow:3px 3px 0 #6b3f14,6px 6px 0 #000}
+    .title-sub{margin-top:18px}.title-sub .px{font-size:13px}
+    #scTitle .chapter{margin-top:28px;padding:20px;box-shadow:4px 4px 0 #000}
+    #scTitle .chapter .tag{font-size:7px;letter-spacing:.14em}
+    #scTitle .chapter .chapter-name{font-size:clamp(18px,5.3vw,22px)}
+    #scTitle .chapter .maxim{font-size:17px}
+    #scTitle .chapter .title-hint{font-size:13px}
+    .title-foot{margin-top:22px;font-size:11px}
+    .title-foot .sep{display:none}
+    .title-side{padding:16px 14px}
+    .title-save-grid{grid-template-columns:repeat(3,1fr)}
+    .title-save-grid div{padding:9px 8px}
+    .title-pair{gap:8px}
+    .title-pair .mbtn{padding:11px 8px;font-size:16px}
+    #difficultySelect{grid-template-columns:repeat(2,1fr)}
+    .diff{font-size:14px}
   }
 
   @keyframes map-pan{from{transform:scale(1.05) translate(-1%,-.6%)}to{transform:scale(1.11) translate(1.2%,.8%)}}
@@ -338,7 +332,7 @@
 </style>
 <script src="poop-config.js?v=6"></script>
 <script src="stage-loader.js?v=1"></script>
-<script src="tactics-engine.js?v=4"></script>
+<script src="tactics-engine.js?v=5"></script>
 </head>
 <body>
 
@@ -467,7 +461,6 @@
       <div class="title-wrap">
         <div class="title-main">
           <div class="px title-kicker">FOREST CHRONICLE</div>
-          <div class="title-bar"></div>
           <div class="px title-logo">POOPULATION</div>
           <div class="title-sub">
             <div class="px">TACTICS</div>
@@ -475,24 +468,34 @@
           </div>
 
           <div class="chapter">
-            <div class="tag">第一章　芽吹きの森</div>
+            <div class="tag">CHAPTER I · FOREST AWAKENING</div>
+            <div class="chapter-name">第一章　うんちの目覚め</div>
             <div class="maxim">糞は土となり、森は兵を生む。</div>
             <p class="title-hint">実を食べ、うんちで土を肥やし、成木を5ターン守れば仲間が生まれる。人族は木を伐り、森を焼く。</p>
           </div>
           <p class="sub" hidden="hidden">—</p>
 
           <div class="title-foot">
-            <span data-en="Keyboard / Gamepad / Mouse">キーボード／ゲームパッド／マウス対応</span>
-            <span class="sep">|</span>
-            <span data-en="Arrows or drag to move, Space to confirm">矢印またはドラッグで移動、スペースで決定</span>
-            <span class="sep">|</span>
-            <span class="title-links"><a href="stages.html">ステージ</a><a href="characters.html">キャラクター</a><a href="sprites.html">スプライト</a></span>
+            <span data-en="Arrows / drag: move · Space: confirm">矢印／ドラッグ：移動　・　スペース：決定</span>
           </div>
         </div>
 
         <div class="title-side">
-          <div class="title-crest-wrap">
-            <canvas id="titleCrest" width="20" height="16"></canvas>
+          <div class="title-side-head">
+            <div>
+              <span class="px">WAR RECORD</span>
+              <strong data-en="Open the chronicle">森林戦記をひらく</strong>
+            </div>
+            <span id="titleSaveBadge" hidden="hidden">SAVE FOUND</span>
+          </div>
+
+          <div id="titleSave" hidden="hidden">
+            <div class="title-save-hd"><span class="px">CURRENT SAVE</span><span data-en="Autosaved">自動保存済み</span></div>
+            <div class="title-save-grid">
+              <div><span data-en="Stage">ステージ</span><b id="titleSaveStage">—</b></div>
+              <div><span data-en="Round">ラウンド</span><b id="titleSaveRound">—</b></div>
+              <div><span data-en="Troop">群れ</span><b id="titleSaveApes">—</b></div>
+            </div>
           </div>
 
           <button class="mbtn primary title-cta" id="btnContinue" data-act="continueRun" style="display:none">
@@ -928,12 +931,19 @@ const App={
     const meta=T.saveMeta&&T.saveMeta();
     const btn=document.getElementById("btnContinue");
     if(!btn) return;
+    const save=document.getElementById("titleSave"), badge=document.getElementById("titleSaveBadge");
     btn.style.display=meta?"flex":"none";
+    if(save) save.hidden=!meta;
+    if(badge) badge.hidden=!meta;
     if(meta){
       const m=document.getElementById("continueMeta");
       if(m) m.textContent=this.lang()==="en"
         ? `STAGE ${meta.stage} · ROUND ${meta.round} · ${meta.apes} APES`
         : `ステージ${meta.stage}・ラウンド${meta.round}・${meta.apes}匹`;
+      const stage=document.getElementById("titleSaveStage"), round=document.getElementById("titleSaveRound"), apes=document.getElementById("titleSaveApes");
+      if(stage) stage.textContent=meta.stage;
+      if(round) round.textContent=String(meta.round).padStart(2,"0");
+      if(apes) apes.textContent=this.lang()==="en"?meta.apes:`${meta.apes}匹`;
     }
   },
   continueRun(){

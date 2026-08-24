@@ -22,7 +22,7 @@
     {
       "id": "normal",
       "name": { "ja": "ふつう", "en": "Normal" },
-      "blurb": { "ja": "設計どおりのバランス。森を育てながら襲撃をしのぐ。", "en": "The intended balance: grow the forest while holding off the raids." },
+      "blurb": { "ja": "森を育てながら襲撃をしのぐ。敵と森の成長は標準。", "en": "Grow the forest while holding off raids. Standard enemy and forest growth." },
       "enemyHp": 1,
       "enemyAtk": 1,
       "waveCount": 1,
@@ -73,7 +73,7 @@
     "startRoster": ["normal", "normal", "monkey"],
 
     "chapters": [
-      { "id": 1, "name": { "ja": "第一章　芽吹きの森", "en": "I — Forest Awakening" },
+      { "id": 1, "name": { "ja": "第一章　うんちの目覚め", "en": "I — Poop Awakens" },
         "blurb": { "ja": "うんちが土になり、土が森になる。まだ誰も森を狙っていない。", "en": "Poop becomes soil, soil becomes forest. Nobody is hunting it yet." } },
       { "id": 2, "name": { "ja": "第二章　伐採前線", "en": "II — Logging Front" },
         "blurb": { "ja": "斧を持った人族が来る。木を守れなければ、仲間は生まれない。", "en": "Axes arrive. No protected trees, no newborn allies." } },

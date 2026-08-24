@@ -7,27 +7,29 @@
       "baselineDraftId": "77ad9d0a-83ce-41e5-9cce-e3c5479bd20a",
       "activeDraftId": "77ad9d0a-83ce-41e5-9cce-e3c5479bd20a",
       "designSystemPath": ".superdesign/design-system.md",
-      "referenceIds": [],
+      "referenceIds": [
+        "87d4d0fa-56cd-429c-8a19-1bbe54e13633"
+      ],
       "contextFiles": [
         ".superdesign/design-system.md",
         ".superdesign/init/theme.md",
-        "tactics.html:1:209",
-        "tactics.html:1510:1690"
+        "tactics.html:1:320",
+        "tactics.html:460:930"
       ],
       "fingerprints": {
         ".superdesign/design-system.md": "57082856fb105523c67a444f4509aea71065eea7877fc4d350578899f5eecb28",
         ".superdesign/init/theme.md": "67d075a204194f341ab2b0eaa5f2ac493ac441e27efd746f074c981065962dee",
-        "tactics.html": "0b7119ee99821acfe378ba2b3854ae665d33a54c6a447c10815c28cbb46e145c"
+        "tactics.html": "c5abd4d4f492bb1582b0bc3d7ec042ca4ee6b507365a040d001bed5029f9599c"
       },
       "components": [],
       "drafts": {
         "77ad9d0a-83ce-41e5-9cce-e3c5479bd20a": {
-          "title": "POOPULATION TACTICS — 森林戦記 序章",
-          "visualDirection": "original forest war chronicle tactical RPG opening and unified battle HUD",
-          "currentVersion": 6
+          "title": "POOPULATION TACTICS — 第一章 うんちの目覚め",
+          "visualDirection": "responsive forest war chronicle title with chapter-first narrative hierarchy and consistent square pixel panels",
+          "currentVersion": 8
         }
       },
-      "updatedAt": "2026-08-24T05:09:49.3317657+09:00"
+      "updatedAt": "2026-08-24T22:04:42.0306296+09:00"
     }
   }
 }

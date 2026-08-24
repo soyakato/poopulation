@@ -1795,12 +1795,13 @@ function applyLanguage(refresh=true){
   $("lGrowth").textContent=L("成長・誕生予報","GROWTH & BIRTH"); $("lLog").textContent=L("戦況記録","BATTLE LOG"); $("lCamp").textContent=L("戦線野営","WAR CAMP");
   $("campCopy").innerHTML=L("<b>達成後：</b>実の強化／次代の編成／森の記録","<b>AFTER CLEAR:</b> fruit boosts / roster / forest record");
   const titleMeta=saveMeta(), titleStage=titleMeta?titleMeta.stage:1;
-  $("scTitle").querySelector(".chapter .tag").textContent=chapterName(titleStage)||L("第一章　芽吹きの森","Chapter I — Forest Awakening");
+  $("scTitle").querySelector(".chapter .chapter-name").textContent=chapterName(titleStage)||L("第一章　うんちの目覚め","Chapter I — Poop Awakens");
   $("scTitle").querySelector(".maxim").textContent=L("糞は土となり、森は兵を生む。","Poop becomes soil; the forest raises an army.");
   $("scTitle").querySelector(".title-hint").textContent=L(
     `実を食べ、うんちで土を肥やし、成木を${BIRTH_TREE_TURNS}ターン守れば仲間が生まれる。人族は木を伐り、森を焼く。`,
     `Eat fruit, fertilise the soil with poop, and hold a mature tree for ${BIRTH_TREE_TURNS} turns to gain an ally. The humans fell trees and burn the forest.`);
-  $("bStart").textContent=L("あたらしくはじめる","NEW RUN"); $("bStartSilent").textContent=L("音なしではじめる","START SILENTLY");
+  const startLabel=$("bStart").querySelector("span")||$("bStart");
+  startLabel.textContent=L("あたらしくはじめる","NEW RUN"); $("bStartSilent").textContent=L("音なしではじめる","START SILENTLY");
   $("bAgain").textContent=L("もういちど","TRY AGAIN"); $("bReset").textContent=L("ステージ再開","RESTART STAGE");
   $("scCamp").querySelector(".sub").textContent=L("戦果をひとつ選んで、群れを次のステージへ。","Choose one reward, then lead the troop to the next stage.");
   if(refresh&&typeof G!=="undefined"){
